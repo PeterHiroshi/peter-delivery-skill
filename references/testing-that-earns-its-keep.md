@@ -52,15 +52,16 @@ mutating. Assume every new assertion is vacuous until proven otherwise.
 | route accepts what UI forbids | route handler test |
 | structural invariant | source scan |
 
-**`moodio-agent` is node-only with no jsdom (`CLAUDE.md:20`), so rows 2–4 have
-no automated home in that repo today.** Until that changes, they are covered by
-looking, and that must be stated rather than implied.
+**Check whether the repo's suite actually reaches the row you need.** A project
+whose config states "no jsdom, test pure logic not components" has no automated
+home for rows 2–4 — those are covered by looking, and that must be stated rather
+than implied.
 
 ## Source-scan tests
 
-The repo uses them (`__tests__/generation-rules/*`) for invariants no pure
-function exposes — "which surface renders", "which validator is called". They
-are legitimate, and two cautions apply:
+Some repos use them for invariants no pure function exposes — "which surface
+renders", "which validator is called". They are legitimate, and two cautions
+apply:
 
 - **They match text, so they match comments too.** Anchor patterns; mutate to
   confirm.
@@ -81,16 +82,20 @@ moving.
 **If a gate is costing more than it returns, say so and move on.** Peter would
 rather have the honest signal than the ceremony.
 
-## What to run in `moodio-agent`
+## Running the gates
 
-```bash
-npx tsc --noEmit                                       # typecheck gate
-npx vitest run --exclude '**/llm-integration*'         # full suite
-npx vitest run __tests__/generation-rules \
-              __tests__/kie-kling-frames.test.ts       # generation-rules CI job
-npx eslint <only the paths you touched>                # never repo-wide --fix
-npx next build                                         # catches what tsc does not
-```
+Use the commands the repo actually defines — `package.json` scripts, `Makefile`,
+`tox.ini`, `pom.xml`, and especially `.github/workflows/`, which shows what
+truly blocks a merge. Do not invent commands, and do not assume the last
+project's commands apply here.
 
-Report counts, not "all green" — Peter reads numbers and they show movement
-(409 → 462 tests means the gate grew, not just passed).
+Two habits that transfer:
+
+- **Scope the linter to files you touched.** A repo-wide auto-fix will reformat
+  hundreds of files you did not touch and bury your change.
+- **Run the build, not just the typechecker.** They catch different things.
+
+**Report counts, not "all green."** Peter reads numbers, and they show movement:
+"462 passed, up from 409" says the gate grew; "all green" hides it. If a named
+CI job covers your area, run that exact command so the local result and CI mean
+the same thing.

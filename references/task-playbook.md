@@ -30,10 +30,14 @@ session that produced this skill.
 Fix it there. Guarding at the point of observation is defence in depth, never
 the fix. A wrong value has an origin; find the correct→faulty transition.
 
-### 4. Check both surfaces
+### 4. Check every surface that renders it
 
-In `moodio-agent`, agent vs canvas node. If a condition uses `menuState.mode`,
-suspect it immediately (see `moodio-agent.md`).
+Whenever one component is reached from more than one host, screen, or entry
+point, verify the fix on **every** one. Suspect any condition keyed on a field
+the hosts set differently — that is the classic "works here, not there" shape,
+and it is easy to declare fixed after checking only the one Peter mentioned.
+
+See `references/projects/` for a note on the repo at hand, if one exists.
 
 ### 5. Fix, pin, mutate
 

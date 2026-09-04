@@ -33,12 +33,26 @@ cannot get this wrong** — there is nothing to forget.
 
 Convention → construction.
 
-## The check, before adding any prop
+## The check, before adding any parameter
 
-**Can the component compute this from state it already holds?**
+**Can the callee compute this from what it already holds?**
 
-- **Yes** → derive it. Do not accept the prop.
-- **No, genuinely host-specific** → pass it, *and* pin the branch count.
+- **Yes** → derive it. Do not accept the parameter.
+- **No, genuinely caller-specific** → pass it, *and* pin the branch count.
+
+The examples above are React props, but the shape is language-independent:
+
+| Stack | Same failure |
+| --- | --- |
+| React / Vue | a prop only one parent passes |
+| Java / Spring | a config value each caller must set, defaulted to something harmless |
+| Python | a keyword argument with a default that silently disables a feature |
+| Go | a struct field one constructor forgets to populate |
+| Any service | a header/flag each client must remember to send |
+
+In every case the default is *plausible* rather than *loud* — which is why the
+omission ships. A required-but-defaulted input is the anti-pattern; either
+derive it, or make its absence fail.
 
 ## Pinning legitimate divergence
 

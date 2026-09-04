@@ -16,28 +16,38 @@ Anything that changes what a user sees or can do:
 
 ## Choosing the tool
 
-Two paths exist. They are not interchangeable, and the repo has an opinion.
+Two paths exist. They are not interchangeable, and some repos restrict which
+is allowed.
 
 | Tool | Use for | Notes |
 | --- | --- | --- |
-| **gstack `/browse`** | headless screenshots of a local dev server | `moodio-agent`'s `CLAUDE.md` says to use it for browsing |
+| **gstack `/browse`** | headless screenshots of a running local server | fast, no interaction |
 | **`chrome-devtools` MCP** | driving a real browser: click, fill, inspect DOM/console | `take_screenshot`, `navigate_page`, `click`, `list_pages`, `evaluate_script` |
 
-`moodio-agent/CLAUDE.md` forbids `mcp__claude-in-chrome__*` and points to
-`/browse`. **That prohibition names `claude-in-chrome`, not `chrome-devtools`** —
-a different server. When interaction is needed (open a popover, toggle a
-switch), `chrome-devtools` is the appropriate tool; a headless screenshot cannot
-click.
+**Check the repo's agent instructions first** — some restrict which browser
+tooling is allowed. Read such a rule precisely: a prohibition naming one MCP
+server (e.g. `claude-in-chrome`) does not cover a different one
+(`chrome-devtools`). Do not over-apply a restriction into a blanket "I cannot
+look", and do not ignore one either.
 
-If in doubt, ask Peter which he prefers rather than guessing — trigger 3 of the
-ask rule if it involves starting servers on his machine.
+A headless screenshot cannot click. When the state that matters requires
+interaction — open a popover, toggle a switch, attach a file — you need the
+browser-driving tool.
+
+For non-web UI (mobile, desktop, CLI output), the principle is unchanged even
+though the tool differs: simulator screenshots, platform UI tests, or asking
+Peter to look. *See it before claiming it.*
+
+If starting a server or installing anything on his machine is involved, ask
+first (trigger 3 of the ask rule).
 
 ## The loop
 
 ```
-1. dev server running (npm run dev, :3000) — ask before starting one for him
+1. local server running (the repo's own dev command) — ask before starting one
 2. navigate to the surface
-3. put it in the state that matters (attach media, pick the model, open panel)
+3. put it in the state that matters (the data, the selection, the toggle, the
+   panel actually open) — not the default state
 4. screenshot
 5. compare against the spec / his screenshot / the stated requirement
 6. differences → fix them BEFORE reporting

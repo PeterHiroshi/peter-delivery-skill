@@ -44,18 +44,28 @@ Peter's single largest time sink is acting on a "done" that meant "the checks I
 happen to be able to run are green." Never use one signal to stand in for
 another.
 
-### 2. Anything that changes what renders → look at it before delivering
+### 2. Know what the test suite CANNOT see — then cover that gap yourself
 
-Non-negotiable for: UI, copy, layout, conditional rendering, i18n.
+Before trusting a green run, answer: **does this suite observe the kind of
+defect I could be shipping?** Every stack has a blind spot, and it is usually
+exactly where the acceptance criterion lives.
 
-The vitest suite in `moodio-agent` is **node-only, no jsdom** (`CLAUDE.md:20`).
-It structurally cannot see a render bug. Do not let a green suite imply the UI
-is right.
+| If the criterion is | The suite usually cannot see it unless |
+| --- | --- |
+| what renders / copy / layout | it mounts components (jsdom/RTL, Vue Test Utils, XCTest UI…) |
+| an HTTP contract | it exercises the route, not just the handler function |
+| a query result | it runs against a real schema, not a mock |
+| a build artifact | the build itself runs in CI |
+| concurrency / ordering | it forces the interleaving |
 
-How to look — see
-[`references/visual-verification.md`](references/visual-verification.md) for the
-exact commands and the tool choice. If truly blocked, say so in those words and
-let Peter decide.
+Check the config, not your memory: `vitest.config`, `jest.config`, `conftest.py`,
+`pom.xml` surefire config, `go test` tags. A project stating "no jsdom, test pure
+logic not components" is telling you render bugs have **no automated home** —
+then looking is not optional, it is the only coverage.
+
+For anything that renders, see
+[`references/visual-verification.md`](references/visual-verification.md). If
+genuinely blocked, say so in those words and let Peter decide.
 
 ### 3. One report → enumerate the whole class before fixing
 
@@ -206,12 +216,19 @@ respond when Peter pushes back — are in
 [`references/task-playbook.md`](references/task-playbook.md). Read it when
 starting a task, not when stuck.
 
-## Project knowledge
+## Project context
 
-`moodio-agent` specifics — the composer's two surfaces, the mode engine
-boundary, i18n rules, worktree and dependency traps — live in
-[`references/moodio-agent.md`](references/moodio-agent.md). Read it when the
-task touches that repo.
+Peter works across ~90 repos in many stacks. **Assumptions carried from the last
+project are a reliable source of wasted time.**
+
+Before coding in a repo you have not touched recently, run the seven questions in
+[`references/project-onboarding.md`](references/project-onboarding.md) — what the
+gates do *not* cover, which package manager is authoritative, whether you are in
+a worktree where ignored paths are invisible, where truth lives, the i18n
+contract, what must not be touched, and local conventions.
+
+Accumulated notes for specific repos live in `references/projects/`. Read the one
+for the repo at hand if it exists; add to it when you learn something costly.
 
 ## Working style
 
