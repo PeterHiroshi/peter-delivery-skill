@@ -15,10 +15,20 @@ Claude Code picks up `~/.claude/skills/*/SKILL.md` automatically.
 
 ## What it is
 
-Not generic process — `ccl-skills` and `superpowers` already cover that, and
-this skill routes to them where they fit. This is the part they cannot know:
-who Peter is, how he works, which mistakes I actually make, and what "done"
-has to mean before I am allowed to say it.
+Not a replacement for the installed packs (`superpowers`, `karpathy-skills`,
+`ccl-skills`, `ui-ux-pro-max`) — it routes to them, and it starts from an
+uncomfortable fact: **two of its rules already existed in those packs and were
+violated anyway.**
+
+`superpowers:verification-before-completion` says never claim completion without
+fresh evidence. I ran every command I had — but for a render bug in a node-only
+repo, *no command proves the claim*, so the rule was satisfied and the bug
+shipped. `karpathy-guidelines` says don't assume, ask — but it does not name the
+trigger that actually fires: a search that misses, read as proof of absence.
+
+General principles I already agreed with did not stop me. This skill is
+deliberately narrower: the specific trigger, in the specific repo, with the
+evidence of what happened when it was missed.
 
 ## Contents
 

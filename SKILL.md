@@ -6,8 +6,12 @@ description: Use at the START of any coding task for Peter (feature, bug fix, re
 # Delivery contract (Peter)
 
 Peter uses me to get his time back. Every rule here exists because breaking it
-already cost him hours. This is not generic process — generic process is what
-`ccl-skills` and `superpowers` already provide, and they are routed to below.
+already cost him hours — each is traced to a specific session in
+[`references/failure-modes.md`](references/failure-modes.md).
+
+This does not replace the installed packs (`superpowers`, `karpathy-skills`,
+`ccl-skills`, `ui-ux-pro-max`); it closes the gaps that let me fail *while
+following them*. See "This skill does not replace the packs" below.
 
 **The measure of success is not "the task is done". It is "Peter did not have
 to find my bugs for me."**
@@ -141,18 +145,54 @@ assertions — including one that passed because it matched a string inside a
 comment. Break the code, confirm the specific test fails, restore. See
 [`references/testing-that-earns-its-keep.md`](references/testing-that-earns-its-keep.md).
 
+## This skill does not replace the packs — it closes their gaps
+
+Peter has `superpowers`, `karpathy-skills`, `ccl-skills`, `ui-ux-pro-max` and
+others installed. **Two of the rules above already exist there, and I violated
+them anyway.** That is the honest starting point:
+
+| Existing skill | Says | Why I still failed |
+| --- | --- | --- |
+| `superpowers:verification-before-completion` | "no completion claims without fresh verification evidence" | I *did* run every command I had. **Its gap: it assumes a command exists that proves the claim.** For a render bug in a node-only repo, none does — so the iron law was satisfied and the bug shipped anyway |
+| `karpathy-guidelines` §1 | "Don't assume. If uncertain, ask." | Generic. **Gap: it does not name the trigger that fires most** — a search that misses being read as proof of absence |
+| `superpowers:systematic-debugging` | root cause before fixes | Good, and it scopes to *one* bug. **Gap: nothing tells me to enumerate the whole class** the reported bug belongs to |
+
+So the rules here are deliberately narrower than the packs': they name the
+**specific** trigger, in the **specific** repo, with the evidence of what
+happened when it was missed. A general principle I already agreed with did not
+stop me; a concrete trigger has a chance.
+
+**Use the packs.** `verification-before-completion` before any completion claim,
+`systematic-debugging` on any bug, `karpathy-guidelines` while writing. This
+skill adds what they cannot know: which criterion has no command, which repo
+hides its design file, and which two surfaces must both be checked.
+
 ## Routing: which heavyweight skill, if any
 
 Peter's read is correct — `ccl-skills` has broad coverage but its review gates
 still miss UI defects. That is a **category mismatch**, not a skill defect.
 
+Always in play, regardless of task:
+
+- `superpowers:verification-before-completion` — before any completion claim
+- `karpathy-guidelines` — while writing code (simplicity, surface assumptions)
+- `superpowers:systematic-debugging` — the moment there is a bug
+
+Then by task shape:
+
 | Task | Route |
 | --- | --- |
-| **UI / interaction / visual** | This contract + visual self-check. **Skip `code-review`** — it reads diffs, it cannot see a render |
+| **UI / interaction / visual** | This contract + **look at it**. `ui-ux-pro-max` for design *choices* (palette, type, a11y). **Skip `code-review`** — it reads a diff and cannot see a render |
+| Bug, cause unknown | `systematic-debugging`, or `ccl-skills:defect-diagnosis` for the heavier evidence ladder |
 | Pure logic, backend, data flow | `ccl-skills:product-rd-workflow` → its dispatch. Worth the ceremony |
-| Bug with unknown cause | `ccl-skills:defect-diagnosis` — evidence-before-verdict is genuinely valuable |
 | Money / permissions / data loss / migrations | `ccl-skills:feature-risk-router`, then `code-review` in **challenge** mode |
 | Needs test layer decided | `ccl-skills:testing-strategy` |
+| Multi-step feature | `superpowers:writing-plans` → `executing-plans` |
+
+**Category check before invoking anything heavy:** does this tool observe the
+thing that decides success? `code-review` reads diffs. `ui-ux-pro-max` supplies
+design knowledge. Neither watches a component render. Running them on a render
+bug is how "the full process ran and bugs still shipped" happens.
 
 **Do not spend more time configuring a gate than the gate can return.** In the
 session that produced this skill I burned time on `review_gate.sh` plan schemas
