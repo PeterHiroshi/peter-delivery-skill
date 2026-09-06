@@ -52,8 +52,14 @@ migrations, flags, and anything intentionally unchanged.
 
 ## Lark message
 
-**Always after an approved PR, unprompted.** English regardless of conversation
-language. 1–3 sentences, pasteable, with the link.
+**After an approved PR, unprompted — except for icestonetech projects.** English
+regardless of conversation language. 1–3 sentences, pasteable, with the link.
+
+**Not for `IcestoneTech/*` repos** (e.g. `math_ai`). Peter said so on 2026-09-06
+after PR #374 there: the hand-off is already the `gh pr comment` automated
+review, the PR link commented on the Jira issues, and the chat notification to
+Linc. Decide by the git remote's organisation, not the directory name. See
+[`projects/math_ai.md`](projects/math_ai.md).
 
 Written for a teammate scrolling a channel deciding whether it concerns them —
 not for a reviewer reading the diff.

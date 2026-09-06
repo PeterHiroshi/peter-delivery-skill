@@ -119,8 +119,12 @@ bullets and ask if that is enough.
 Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
 publishing it. Approval for one push does not carry to the next.
 
-**After an approved PR, always write the Lark message unprompted** — short,
-English, pasteable. See [`references/deliverable-formats.md`](references/deliverable-formats.md).
+**After an approved PR, write the Lark message unprompted** — short, English,
+pasteable — **except for icestonetech projects** (git remote org `IcestoneTech/*`,
+e.g. `math_ai`): there the PR hand-off is the `gh pr comment` review, the PR link
+on Jira, and the chat notification to Linc — no Lark text. Decide by the remote's
+org, not the directory name. See
+[`references/deliverable-formats.md`](references/deliverable-formats.md).
 
 ### 7. Prefer deriving over passing
 
