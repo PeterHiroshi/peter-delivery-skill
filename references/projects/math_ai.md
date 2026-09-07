@@ -48,3 +48,55 @@ Notes that cost time to learn. Read before working in this repo.
   develop". Check develop itself (temp detached worktree + `.env` copy) before
   calling anything a baseline. On 2026-09-06, 13 "baseline" failures were all
   green on develop.
+
+## Release pipeline (LFX-344, live since 2026-09-07)
+
+`develop` → **dev**. `release/x.y.z` deploys **nothing**. Tag `vX.Y.Z` → **prod**.
+One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
+`promote-release`. Runbook: `docs/runbooks/release.md`.
+
+- **A workflow must be *registered* before `workflow_dispatch` works, and registration
+  needs it on the default branch (or a push event that fires it).** A dispatch-only
+  workflow that lives on `develop` returns **404**, not a permission error. Once
+  registered, "Use workflow from" can select any branch — so this is a one-time cost per
+  new dispatch-only workflow, not a per-change one.
+- `main` was a 2-commit shell 1715 commits behind `develop` until 2026-09-07. Now it is
+  the release record, moved only by `promote-release` (or a hand fast-forward when a run
+  goes red). A local hook blocks Claude from pushing to `main` — hand Peter the command.
+- `promote-release` is gated on `conclusion == 'success'`. A release that deploys fine but
+  fails a *verification* step leaves `main` and `develop` without it, silently.
+- **Never re-run a pre-cutover `Deploy Backend` / `Deploy Frontend` run** from the Actions
+  UI: a re-run executes the old workflow file and deploys `develop` to production.
+
+## Infra traps
+
+- **INTL AWS creds need `amplify:GetJob`**, not just `StartDeployment`/`GetApp`/`GetBranch`
+  — the deploy polls the job instead of trusting `start-deployment`'s 200. Admin profile
+  for IAM work is `icestonetech-admin` (account `014498621858`); the CI user is
+  `limfx-backend-ci-ecr-push`, policy `frontend-s3-amplify-deploy`. Verify a grant with
+  `aws iam simulate-principal-policy`, not by re-reading the JSON.
+- **`gh api` list endpoints paginate at 10.** `environments/<env>/variables` with 13 vars
+  reports 10 and looks like two are missing. Always `--paginate ...?per_page=100` before
+  claiming anything is absent.
+- **The CN host rate-limits SSH.** Repeated `sshpass` connections start returning
+  `Connection closed` / `Permission denied`; back off ~10s and retry rather than
+  concluding the host is down. Batch work into one connection or write to a remote file
+  and fetch it. `scp` failing while a following `ssh` "succeeds" means the script was
+  never uploaded — check before trusting the run.
+- **My network cannot reach `limfx.cn` / `.tech` from here.** A timeout on the CN site
+  proves nothing; verify from inside the host (`curl 127.0.0.1:8002/health`) and ask Peter
+  for the browser check. `limfx.ai` is reachable.
+- The CN site moved `limfx.tech` → **`limfx.cn`** (2026-09). Support address is
+  `support@limfx.cn`, and it appears in the **published** privacy policy and terms — a
+  change there needs the mailbox to exist first.
+- CN frontend does **not** get `VITE_API_BASE_URL` injected: it derives the API base from
+  `window.location.hostname`, so it is same-origin and CORS never fires. That is why a
+  stale `CORS_ORIGINS` (still `limfx.tech` weeks after the move) caused no visible
+  breakage. INTL bakes the base in at build time, so its bundle is region-specific.
+- `backend/Dockerfile:42` bakes `ENV APP_ENV="prod"`. An env file that omits `APP_ENV`
+  therefore runs in production mode with `env_guard` **fully disabled**. The deploy passes
+  `-e APP_ENV` explicitly; a manual `docker run` must too.
+- `create_async_redis_client` resolves the Redis db two different ways (TLS-without-verify
+  reads the URL path; everything else goes through `from_url`, where `?db=` wins).
+  `resolve_redis_database()` in `redis_utils` is the single rule — never re-parse a Redis
+  URL by hand.
