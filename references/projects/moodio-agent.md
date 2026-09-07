@@ -136,3 +136,40 @@ CLI is `meegle` (not `meegle-cli`). Space `ozn2tr` = `6a7b389acc3b9c910ee856fe`
 
 Field keys: `field_06d87b` links to Features, `field_a54610` repro steps,
 `field_e5d9b7` expected, `field_a5a12e` actual, `field_cf2c88` environment.
+
+## Files that defeat grep (2026-09-07)
+
+`components/ui/mention-textbox/MentionTextbox.tsx` contains non-UTF-8 bytes, so
+`file` reports it as `data` and **plain `grep` returns nothing and exits
+silently** — no error, no match. That cost a wrong conclusion ("this file has no
+suggestion implementation, it must live elsewhere") until `head -c` showed the
+imports were right there.
+
+- Use `grep -a` on any file where a confident grep comes back empty.
+- Read it with `python3 -c "open(p,'rb').read().decode('utf-8','replace')"`.
+- Edit it in **bytes** (`open(p,'rb')` / `replace` / `open(p,'wb')`), never a
+  whole-file text rewrite, or the odd bytes are destroyed. Check `file <path>`
+  still reports `data` and `git diff --stat` shows only your lines.
+
+This is the concrete form of "a search that misses is not proof of absence."
+
+## The generation mode engine: measure, never reason about caps
+
+Three times in one session I predicted a mode's behaviour from the model name
+and was wrong; each time a throwaway vitest that printed a matrix corrected me
+in under a minute.
+
+- **Kling v2.6 has ONE frame slot** (KIE disables the end frame), so a single
+  image fills it. **Kling v3 has first + last**, so it takes two. Predicting
+  "v2.6 refuses, v3 deadlocks" was backwards.
+- A fresh `@entity` mention contributes the entity's **first image only** (the
+  default pick), not every published image. A prediction computed over all of
+  them greys out things the UI correctly allows.
+- An element is counted per FAMILY, not per model: `familyElementDelivery`
+  returns slot / flatten / none, and only the flatten families tear it into
+  images.
+
+Write the probe (`__tests__/zz*.test.ts`, `writeFileSync` to `/tmp` because
+vitest swallows console.log on pass) and delete it after. State the matrix, not
+the intuition — and when the browser disagrees with the prediction, check the
+prediction first.
