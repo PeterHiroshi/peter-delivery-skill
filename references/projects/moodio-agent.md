@@ -173,3 +173,26 @@ Write the probe (`__tests__/zz*.test.ts`, `writeFileSync` to `/tmp` because
 vitest swallows console.log on pass) and delete it after. State the matrix, not
 the intuition — and when the browser disagrees with the prediction, check the
 prediction first.
+
+## The remote DB is slow enough to fake a bug (2026-09-07)
+
+Uploading a file through the canvas asset picker took **10–15 seconds** end to
+end against the dev RDS: presign → S3 PUT → confirm → create asset → wire →
+toast. I checked the result after ~4 seconds, saw no toast and no wire, and
+reported a "silent refusal" defect. Waiting the full time showed the toast
+firing correctly and the video correctly left unwired.
+
+- Before calling an async UI path broken, **poll until the terminal artifact
+  appears** (the canvas card, the toast, the row), not once after a fixed wait.
+- Watch toasts with a `MutationObserver` installed BEFORE the action; a toast
+  that came and went is invisible to a later DOM query, which is the other way
+  this looks like a silent failure.
+- Distinguish "did not happen" from "has not happened yet." Peter's report
+  named the upload tab specifically, and picking from the library worked — that
+  asymmetry was a timing difference, not a code-path difference.
+
+Related trap on the same canvas: state left over from BEFORE a fix does not
+disappear. A video wired into an image node under the old code is still wired
+after the fix, still renders as an unused input, and reads exactly like the bug
+recurring. Check when the offending row was written before treating a
+reproduction as current.
