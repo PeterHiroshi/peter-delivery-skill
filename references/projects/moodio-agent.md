@@ -247,3 +247,28 @@ reads as "no data" rather than "wrong URL".
 that had nothing to do with the change. `git checkout -- package-lock.json`
 before staging — this is the concrete form of the "stray files in commits"
 trap above.
+
+## Verifying rendered UI without a login (2026-09-08)
+
+The chrome-devtools MCP profile is usually locked by another session's Chrome,
+and there is no dev login short of OTP against the shared RDS. What worked for
+the onboarding-guide v2 pass, end to end, with screenshots of every beat:
+
+- Launch a private headless Chrome (`--headless=new --user-data-dir=<scratch>
+  --remote-debugging-port=9333 "--remote-allow-origins=*"`) and drive it with
+  `puppeteer-core` installed in the scratchpad.
+- `proxy.ts` treats every path under `/auth/` as public. A throwaway
+  `app/auth/<x>/page.tsx` that mounts the real component with in-code config
+  renders with all providers and no session. Delete it before committing.
+- Locale is the `NEXT_LOCALE` cookie; dark mode is `localStorage.theme`
+  (next-themes with `attribute: "class"` — setting `.dark` by hand is undone).
+- Start the dev server detached with a log file. `npm run dev | head -200`
+  killed the server with SIGPIPE halfway through a run.
+- No repo edits while a browser run is in flight: Fast Refresh remounts the
+  component and a scripted flow restarts from the top, which looks like a bug.
+- A worktree can pass tsc/vitest with an empty `node_modules` (Node resolves
+  up to the main checkout); Turbopack cannot. `npm install` there, then
+  `git checkout package-lock.json`.
+
+Also: `npm run dev` in a worktree re-adds the "This is NOT the Next.js you
+know" block to CLAUDE.md; that diff is expected noise.
