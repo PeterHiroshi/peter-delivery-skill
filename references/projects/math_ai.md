@@ -100,3 +100,28 @@ One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
   reads the URL path; everything else goes through `from_url`, where `?db=` wins).
   `resolve_redis_database()` in `redis_utils` is the single rule — never re-parse a Redis
   URL by hand.
+
+## Model credentials are region-scoped — the registry card names are logical (2026-09-08)
+
+- `config/i18n/regions.yaml` declares the real env vars per region (`INTL_KIMI_*`,
+  `CN_KIMI_*` with legacy fallback to bare `KIMI_*`). Anything that does
+  `os.getenv("KIMI_API_KEY")` is **empty on INTL** and only works locally / in CN.
+  Codex found it via a prod symptom (`model registry cannot resolve kimi-k2.6` →
+  `answer_contract_incomplete`, 5 of 7 solves in 24h); the fix was three call sites
+  (registry, admin relay panel, equiv_gate Pass-2). When a bug is "env var not read",
+  grep the bare name across `app/` — the reported site is never the only one.
+- Test-order trap: `tests/api/conftest.py` `setdefault`s `INTL_KIMI_*` for the whole
+  session at import, and `app.region.get_region` is `lru_cache`d. A test that sets a
+  bare `KIMI_*` and expects it to win passes alone and fails in the full run once
+  some earlier test left the region cached as INTL. Any registry/credential test must
+  `delenv` the `CN_/INTL_` variants **and** clear both region caches.
+- Running one test file alone can trip `env_guard` ("APP_ENV=development 却绑定了生产资源")
+  at collection; the same test passes inside a larger file list. Reproduce with the
+  list, not the single file, before calling anything broken.
+- A worktree has no `.venv` / `node_modules`: use the main checkout's
+  `backend/.venv/bin/python` (it imports `app` from the worktree cwd, verified via
+  `app.__file__`) and symlink `frontend/node_modules`. `ruff`/`pyflakes` are not
+  installed and CI runs no backend linter.
+- Red-before-green needs care when the new test imports a new symbol: on the old
+  code it errors at collection, which proves nothing. Make a temp copy without the
+  import (or `-k` the new-symbol cases out) so the remaining cases fail on assertions.
