@@ -125,3 +125,21 @@ One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
 - Red-before-green needs care when the new test imports a new symbol: on the old
   code it errors at collection, which proves nothing. Make a temp copy without the
   import (or `-k` the new-symbol cases out) so the remaining cases fail on assertions.
+
+## Squashed merge-backs break the prod history gate (2026-09-08, v1.0.4 burned)
+
+- `check_tag_gates.sh` gate 4 requires every commit on `main` to be an ancestor of the
+  tag. The `release: sync vX.Y.Z back to develop` PRs for v1.0.2 (#381) and v1.0.3
+  (#385) were **squash-merged** (single-parent commits), so develop carried copies of
+  main's content but none of its SHAs. Tag `v1.0.4` cut from develop failed
+  `history:` and is burned (never move a tag).
+- Detect before tagging: `git merge-base --is-ancestor origin/main origin/release/X.Y.Z`.
+  A merge-back that "looks merged" is not enough — count parents
+  (`git rev-list --parents -n1 <sha> | wc -w` = 3 for a real merge).
+- Recovery per runbook: new `release/X.Y.(Z+1)` from the blocked release branch,
+  `git merge --no-ff origin/main` (conflicts only in the three version files → take
+  the release side), bump to the next patch, push, CI, tag. The next Promote Release
+  merge-back must be merged with "Create a merge commit" or the same thing recurs.
+- Do not run `scripts/release/bump_version.sh` with a local `uv` older than CI's:
+  `uv lock` rewrote `uv.lock` from revision 3 to 1 (3.7k-line churn). Restore the
+  lock and edit only the root package's `version` line.
