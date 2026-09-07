@@ -22,11 +22,18 @@ Both are documented with evidence in
 [`references/failure-modes.md`](references/failure-modes.md). Read it once if
 you have not; it is the *why* behind everything below.
 
-1. **Substituting available evidence for required evidence.** Running
-   tsc/vitest/eslint and reporting "done" when the acceptance criterion was
-   visual or interactive. Green gates are not the deliverable.
-2. **Filling an information gap with my own assumption instead of asking.**
-   Especially: treating "I did not find it" as "it does not exist."
+1. **Substituting available evidence for required evidence.** Every instance is the
+   same shape: I check the thing I *can* check and report on the thing I *cannot*.
+   - tsc/vitest green, reported as "done", when the criterion was visual (2026-09-04)
+   - a dozen sampled keys, reported as "all keys present" (2026-09-07)
+   - a file written, reported as "applied", without reading it back from the process
+     that consumes it (2026-09-07)
+   - a run's green badge, reported as "deployed", when every deploy job had skipped
+     (2026-09-07)
+2. **Filling an information gap with my own assumption instead of asking — or testing.**
+   Treating "I did not find it" as "it does not exist"; stating a platform limitation
+   from memory and building a plan on it (2026-09-07: `workflow_dispatch` — Peter
+   challenged it, a two-minute probe showed I was wrong).
 
 ## Non-negotiables
 
@@ -126,7 +133,58 @@ on Jira, and the chat notification to Linc — no Lark text. Decide by the remot
 org, not the directory name. See
 [`references/deliverable-formats.md`](references/deliverable-formats.md).
 
-### 7. Prefer deriving over passing
+### 7. A config change is not live until the thing that reads it has re-read it
+
+Writing a value is not applying it. Every layer has its own moment of reading, and
+the gap between "the file says X" and "the running process sees X" is where a fix
+looks done and isn't.
+
+| Layer | Applies the change when |
+| --- | --- |
+| Docker `--env-file` | the container is **created** — `docker restart` re-runs the process with the *old* env; you must `rm` + `run` |
+| GitHub Actions env vars | the next run starts; an in-flight run keeps the old values |
+| A pipeline's own YAML | the run that starts *after* the merge — **re-running an old run executes the old file** |
+| CORS / allow-lists in an env file | same as the process that read them (see Docker above) |
+
+Verify at the layer that consumes it, never at the layer you wrote:
+`docker exec <c> printenv KEY`, not `grep KEY .env`. On 2026-09-07 a restart was
+declared as the fix for a missing key; the container had been *created* before the
+edit, so the key never arrived and production kept failing for another twenty minutes.
+
+### 8. A green run that did nothing is worse than a red one
+
+Before reporting a pipeline as successful, ask **what it actually did**, not what it
+concluded. Skipped is not passed.
+
+- On 2026-09-07 a `Deploy` run finished **green with all four CD jobs skipped** — it
+  built everything and deployed nothing. A tag would have reported a successful
+  release over an untouched production.
+- The cause was a GitHub rule worth remembering: a job whose upstream carries an `if:`
+  with a status function is **skipped** unless it states its own `if:`. Silent, green.
+- The reverse also happens: `v1.0.0` deployed everything correctly and went **red** on a
+  verification step that lacked an IAM permission. The merge-back was gated on
+  `conclusion == success`, so a fully successful release never reached `main`.
+
+Read the per-job results, not the run's badge. When a run is red, establish whether
+the *deliverable* failed or only the *check* did — they need opposite responses.
+
+### 9. Enumerating a sample and reporting it as complete
+
+"I checked the keys and they're all there" after comparing a dozen hand-picked ones is
+a false statement, and Peter will find the missing one. On 2026-09-07 that pattern
+missed `QUICK_ROUTER_API_KEY` — absent on all three hosts, with production v4 throwing
+`RuntimeError` every time it was needed. Peter asked "did you really check them all?"
+and the answer was no.
+
+Diff the **whole set** mechanically (`comm -23 <(keys a) <(keys b)`), and say which
+method you used. If you sampled, say you sampled.
+
+Related trap from the same session: paginated APIs. `gh api .../variables` returns 10
+by default; two variables that existed were reported as missing because they sat on
+page 2. Any "X is missing" claim from a list endpoint needs `--paginate` before it is
+worth saying out loud.
+
+### 10. Prefer deriving over passing
 
 Before adding a prop/param a host must supply, ask: **can the component compute
 this itself from state it already has?**
@@ -153,6 +211,8 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 5 | New assertions mutation-tested | new tests added |
 | 6 | **Explicitly listed what I did NOT verify** | always |
 | 7 | Design doc confirmed before code | non-trivial change |
+| 8 | **Read the value back where it is consumed**, not where I wrote it | any config / env / infra change |
+| 9 | **Checked what the run did, job by job** — green ≠ deployed, skipped ≠ passed | any pipeline change |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
@@ -233,6 +293,27 @@ contract, what must not be touched, and local conventions.
 
 Accumulated notes for specific repos live in `references/projects/`. Read the one
 for the repo at hand if it exists; add to it when you learn something costly.
+
+## Keep this skill current (standing instruction, Peter 2026-09-07)
+
+This file is the record of what has actually cost Peter time. It is only worth what
+gets written back into it.
+
+**At the end of any task that produced a durable lesson, update this skill and push it.**
+Not "if it feels noteworthy" — if the session contained any of the following, it goes in:
+
+- a mistake I made that a rule here would have prevented (→ sharpen that rule with the
+  new evidence, do not add a near-duplicate)
+- a mistake no rule covers (→ new rule in **Non-negotiables**, with the date and the
+  concrete failure; abstract rules without a scar do not change behaviour)
+- a repo-specific trap, credential path, or environment quirk (→
+  `references/projects/<repo>.md`, creating it if absent)
+- a correction Peter made to my reasoning (→ wherever the wrong reasoning would recur)
+
+Then commit and push to `origin` (`PeterHiroshi/peter-delivery-skill`). The repo is
+Peter's, the push is expected, and it does not need separate approval the way a project
+push does. Keep entries short and evidence-bearing: what happened, what it cost, what to
+do instead. Delete rules that stop earning their place.
 
 ## Working style
 

@@ -157,3 +157,55 @@ rhetorical; nothing structural changed; the next instance was inevitable.
 
 This skill exists to change the mechanism — a checklist that gates the word
 "done", not a resolution to be more careful.
+
+---
+
+## 2026-09-07 — LFX-344 release pipeline: four failures in one session
+
+Peter's own words that triggered two of these: *"你确定都加上了吗，我怎么没有看到 quick
+router 相关的信息呢"* and *"为什么不能直接使用 develop 分支上已经支持的 workflow 呢"*.
+Both times he was right and my prior statement was wrong.
+
+### 1. Sampling reported as a complete check
+
+I compared ~12 hand-picked env keys between the reference files and the production hosts
+and said "keys are complete, nothing to add". Peter asked about QuickRouter. A real diff
+(`comm -23`) showed `QUICK_ROUTER_API_KEY` **missing on all three hosts** — and production
+v4 had been throwing `RuntimeError: model registry cannot resolve sonnet-5-qr-s5` on every
+modeler call, in both regions, for a day.
+
+**Rule 9.** Diff the whole set mechanically, or say explicitly that you sampled.
+
+### 2. Believing a write instead of reading it back
+
+Peter added the key; I ran `docker restart` and declared it fixed. `--env-file` is read at
+container **creation**, so the key never entered the process. Twenty more minutes of
+production failure, plus a needless restart. `docker exec printenv` — the check that would
+have caught it in five seconds — was only run after the second attempt.
+
+**Rule 7.** Verify at the consuming layer.
+
+### 3. A green run that deployed nothing
+
+`Deploy` run 34078062770 finished **success** with all four CD jobs skipped. Cause: a job
+that depends on a conditional job (`if:` with `!cancelled()`) and states no `if:` of its own
+is silently skipped. Had this been a tag, it would have reported a successful release over
+an untouched production. Found only by reading the per-job list of a run I could have taken
+at face value.
+
+The mirror image happened the next day: `v1.0.0` deployed **everything correctly** and went
+red, because the verification step called `amplify:GetJob` without the IAM permission. The
+merge-back is gated on `conclusion == 'success'`, so a good release never reached `main`.
+
+**Rule 8.** Green ≠ deployed. Red ≠ broken deliverable. Read the jobs.
+
+### 4. Stating a platform limitation without testing it
+
+I said `workflow_dispatch` "only works for files on the default branch", so the release
+workflows could not run from `develop`. Peter pushed back. Testing it: an **already
+registered** workflow dispatches from any branch fine — `deploy.yml` did, and it is not on
+`main`. The real constraint is *registration*, which needs the default branch (or a push
+event) **once**. My version implied a recurring cost that does not exist.
+
+**Rule 4 extended:** a claimed platform limitation is a factual claim. Probe it before
+building a plan on it — especially when the plan's cost falls on Peter.
