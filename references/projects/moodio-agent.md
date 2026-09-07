@@ -196,3 +196,54 @@ disappear. A video wired into an image node under the old code is still wired
 after the fix, still renders as an unused input, and reads exactly like the bug
 recurring. Check when the offending row was written before treating a
 reproduction as current.
+
+## Two views of the script, one chip mark (2026-09-08)
+
+`ScriptReader` (read view) and `ScriptLineEditor` (TipTap) draw the SAME
+`cs-entity` mark and are deliberately pixel-identical, and `CollabDocBody`
+swaps one for the other on a line click. So "the control stopped working" on
+a script surface is very often **not** a dead handler — it is the other view.
+
+- The reader's chips are `EntityHoverCard` popover triggers.
+- The editor's are ProseMirror decorations / mention nodes with **no React
+  tree**, so they cannot host a popover and had no click at all.
+- A chip nested in the reader's `<p onClick>` fired BOTH: opened the card and
+  started an edit session, which unmounted the trigger. That was Meegle
+  14558542.
+
+**Check which view is mounted before believing a click is lost.** The tell in
+a screenshot: the kind toolbar (场景标题/动作描述/角色…) and 保存 are the
+editor; a caret sitting *inside* a highlight is the editor too.
+
+### Measuring it in the browser
+
+`document.querySelector('.ProseMirror')` is a **bad** editor probe on this
+page — the cover/logline fields are ProseMirror too, so it is truthy before
+any edit starts. I read that as "the editor mounted" and briefly believed my
+own fix had failed. Use instead:
+
+- `chip.closest('.ProseMirror')` — is THIS chip in an editor?
+- the ProseMirror **count** (1 = idle chrome, 2 = script body editing)
+- `document.body.innerText.includes('场景标题')` for the kind toolbar
+
+Same session, same shape: a synthetic `Escape` on `document` does not reach
+the editor's ProseMirror keymap, so it looked like my card had swallowed the
+editor's "done" key. Dispatch on the editor element. **When a browser probe
+disagrees with the code, suspect the probe first.**
+
+### Seeding a script to test entity chips
+
+Dev accounts here have workstations with entities but **empty scripts**, so
+no chips render. Seed one:
+`PATCH /api/workstation/<id>/script` with `{content, contentDoc:null,
+baseContentUpdatedAt:null}` whose text contains the entity names verbatim —
+the read view's live name matcher makes the chips. Routes are plural
+(`/entities`, `/episodes`); `/entity` and `/episode` 404 into `[]`, which
+reads as "no data" rather than "wrong URL".
+
+### npm install rewrites package-lock.json
+
+`npm install` in a fresh worktree drifted `package-lock.json` by 473 lines
+that had nothing to do with the change. `git checkout -- package-lock.json`
+before staging — this is the concrete form of the "stray files in commits"
+trap above.
