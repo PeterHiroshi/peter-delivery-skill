@@ -184,6 +184,23 @@ by default; two variables that existed were reported as missing because they sat
 page 2. Any "X is missing" claim from a list endpoint needs `--paginate` before it is
 worth saying out loud.
 
+**A failed verification query is not a negative result.** On 2026-09-07, fanning out
+16 PRs, six `gh pr create` calls hit `Post "https://api.github.com/graphql": EOF`.
+The `gh pr list` run to check what actually existed hit the *same* transient error,
+printed nothing, and the `comm -23` diff built on it duly reported all 16 bases as
+missing — one step from creating 10 duplicate PRs. Ten of them existed.
+
+The shape to recognize: **the error path and the empty result look identical once the
+output reaches a pipe.** `cmd | sort > f` swallows the failure; `wc -l` then says 0,
+and 0 reads as "none exist" rather than "I did not find out."
+
+- Check for the error string before treating output as data. Retry the *check*, not
+  just the action.
+- The mechanical whole-set diff of rule 9 is only as good as the set it diffs. A
+  correct `comm` over a silently-empty input produces a confidently wrong answer.
+- After any batch operation, re-query and assert the **count** matches what was
+  intended (`16 PRs / 16 bases`, no duplicates) — not just that the last call succeeded.
+
 ### 10. Prefer deriving over passing
 
 Before adding a prop/param a host must supply, ask: **can the component compute
@@ -197,6 +214,27 @@ Rationale and the concrete case in
 [`references/reuse-over-duplication.md`](references/reuse-over-duplication.md).
 This one rule accounts for roughly half the bugs in the session that produced
 this skill.
+
+### 11. A file supplied by the requester still has to be checked against this repo
+
+Copying an attachment verbatim feels safe — it is the requester's own file, and
+changing it looks like overstepping. But a config file's *semantics* depend on the
+directory layout it lands in, and the person who wrote it does not necessarily know
+yours.
+
+On 2026-09-07 the `robots.txt` attached to a Moodio SEO requirement carried
+`Disallow: /assets/`, plainly meaning "do not index the brand logos." In that repo
+`vite build` also emits the hashed `index-*.js` / `index-*.css` bundle into
+`/assets/`. Shipping it as supplied would have told Googlebot not to fetch the code
+that renders a client-side site — silently defeating the very requirement the file
+came from. Nothing would have failed; the site would just have stopped ranking.
+
+Before copying any supplied config into place, ask **what does this path/key/pattern
+actually match in this repo?** — then verify with the tool that consumes it
+(`urllib.robotparser` over the built file, not the source), the same way rule 7
+demands. When a deviation is warranted: do not change it unilaterally, present the
+options with the evidence, and once decided, record the deviation *at the source
+file* so the difference does not later read as a copy error.
 
 ## Definition of done
 
@@ -213,6 +251,8 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 7 | Design doc confirmed before code | non-trivial change |
 | 8 | **Read the value back where it is consumed**, not where I wrote it | any config / env / infra change |
 | 9 | **Checked what the run did, job by job** — green ≠ deployed, skipped ≠ passed | any pipeline change |
+| 10 | **Re-queried and asserted the count matches** — and did not read a failed query as an empty result | any batch / fan-out operation |
+| 11 | **Checked what a supplied file's patterns match in THIS repo** | copying a requester's config in |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
