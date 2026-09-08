@@ -586,3 +586,22 @@ Dev DB query without psql: `node -e` with `pg` from the worktree's node_modules 
 `DATABASE_URL` parsed from `.env` (`ssl: {rejectUnauthorized:false}`).
 Open: a canvas-connected chat's tray element is not enforced (the draft-node handler
 needs an element tile on the desktop).
+
+## The first real Kling element run: parsing was right, the clip was wrong (2026-09-09)
+
+Peter's canvas-node request looked element-less (`inputAssetIds` only) — by design:
+`kling_elements` is `WIRE_DERIVED_VIDEO_PARAMS`; the route reads the element tile
+(`metadata.elementId`) and hydrates the row. Proof was one query away:
+`select params->'kling_elements', error from video_generations order by created_at
+desc` showed the element fully hydrated and fal's refusal:
+`video_duration_too_long: Maximum is 10.05 seconds` (a 33.6s clip, measured with
+`probeMediaDurationFromUrl` on the signed URL from that row). Nothing had checked
+the length at creation. Cap now in `lib/elements/video-limit.ts` (10s), judged in
+both editors and both writers.
+
+- When Peter pastes a request body and asks "does the backend parse this", the
+  answer is in the generation row it produced, not in the body.
+- `tsx` scripts in this repo must be `.mts` (top-level await) and query uuid
+  columns with `id::text like`.
+- Provider facts worth remembering: fal sends a video-bearing element as a VIDEO
+  element only; KIE requires a description; KSyun takes images only.
