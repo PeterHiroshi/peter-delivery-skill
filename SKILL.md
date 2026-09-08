@@ -506,7 +506,7 @@ Then by task shape:
 
 | Task | Route |
 | --- | --- |
-| **UI / interaction / visual** | This contract + **look at it**. `ui-ux-pro-max` for design *choices* (palette, type, a11y). **Skip `code-review`** — it reads a diff and cannot see a render |
+| **UI / interaction / visual** | This contract + **look at it**. `ui-ux-pro-max` for design *choices* (palette, type, a11y), then [`references/ui-design-principles.md`](references/ui-design-principles.md) for the judgements Peter has already made (no action gated on a fetch, primary task in the first viewport, geometry as evidence). **Skip `code-review`** — it reads a diff and cannot see a render |
 | Bug, cause unknown | `systematic-debugging`, or `ccl-skills:defect-diagnosis` for the heavier evidence ladder |
 | Pure logic, backend, data flow | `ccl-skills:product-rd-workflow` → its dispatch. Worth the ceremony |
 | Money / permissions / data loss / migrations | `ccl-skills:feature-risk-router`, then `code-review` in **challenge** mode |
