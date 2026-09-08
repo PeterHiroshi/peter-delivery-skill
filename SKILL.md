@@ -429,6 +429,23 @@ came back with 「中键拖动功能怎么又没了,拆东墙补西墙呀你是�
   `/tmp` review packet, which is where I restored them from. Uncommitted work that
   matters should be committed before any restructuring, not held in the worktree.
 
+### 18. A value read back after a mechanical rewrite cannot tell "original" from "synthesized"
+
+On 2026-09-09 (LFX-451) the reply bubble showed `Final answer: Final answer: (1) 0 (2) 1`.
+The fix kept the explainer's human sentence *only if* the conclusion step already stated
+every locked value; otherwise the step was overwritten with the mechanical
+`Final answer: …` line. The helper that fetched "the human-readable sentence" ran **after**
+that overwrite, re-read the conclusion step, found every locked value in it (of course —
+the machine line contains them all) and returned the machine line as the sentence. Peter
+saw it within minutes of running the branch.
+
+- If a mutation can replace X with a synthesized value that satisfies the same predicate
+  as a genuine X, then "read X back and re-check the predicate" is not a detector. Capture
+  the decision at the point of mutation (return it, tag it) and pass it forward.
+- The offline harness that validated the fix used a case where the sentence *passed*, so
+  the rewrite branch was never exercised. Test the branch where the guard fails, not only
+  the one where it succeeds.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -455,6 +472,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 16b | **Waited for the CI review bot, fixed what it got right, and replied on each thread** | any repo whose pipeline runs an automated reviewer |
 | 17 | **Re-read the original requirement text after a clarifying answer**, checking the whole answer and not just the part choosing between my options | any clarification received |
 | 18 | **Checked a deletion against the written requirement**, not against my own possibly-mis-framed question | removing any working behaviour |
+| 19 | **Captured a guard's decision at the mutation site instead of re-reading the mutated value** | any "keep original unless…" logic |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
