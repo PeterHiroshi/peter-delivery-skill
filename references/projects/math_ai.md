@@ -143,3 +143,33 @@ One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
 - Do not run `scripts/release/bump_version.sh` with a local `uv` older than CI's:
   `uv lock` rewrote `uv.lock` from revision 3 to 1 (3.7k-line churn). Restore the
   lock and edit only the root package's `version` line.
+
+## Prod forensics and local suite (LFX-451, 2026-09-08)
+
+- **Read the prod session before reading code.** INTL prod Mongo is Atlas; the backend
+  container has the creds: `ssh limfx-server-aws`, then
+  `sudo docker exec backend /app/.venv/bin/python <script>` with
+  `INTL_MONGODB_URL` / `INTL_MONGODB_DB_NAME` from its env. Collections:
+  `adk_sessions_sessions` (state.artifacts[].steps, canonicalAnswer, `_v4.locked_parts`,
+  `solveTracesByArtifactId` with the ModelIR), `adk_sessions_events` (user text, tool
+  call args, model reply text). That dump settled all three LFX-451 root causes in one
+  query — including the fact that the tool call carried no `locale` arg.
+- `docker logs backend` only covers the current container; a redeploy since the incident
+  means no logs. Do not plan on them.
+- Jira skill works with system python3 too: `SSL_CERT_FILE=$(python3 -c 'import
+  certifi;print(certifi.where())')`. The backend venv is not required.
+- **Running the whole backend suite locally trips `env_guard`** ("Redis database 0 是生产库")
+  because `backend/.env` points at Redis db 0 and `tests/conftest.py` lets `.env` override
+  `os.environ`. In a worktree, edit the *copied* `.env` to `REDIS_DATABASE=2` (0/1 are prod
+  per `config/production_bindings.yaml`); `REDIS_URL=` on the command line is overridden.
+  Targeted file lists pass without this because they never import `app.db` at collection.
+- `answer_lock_check` (v4 explain) used to accept a locked value only as the *suffix* of a
+  math run. CJK conclusions pass because Chinese characters split runs; English sentences
+  are one run, so any value not at the end was "missing" and the explainer's conclusion got
+  replaced by the mechanical `(1) … (2) …` string. A rule that looks language-neutral can
+  still be language-biased — test it with an English sentence, not only a Chinese one.
+- zsh: `grep -rn X app --include=*.py` fails with "no matches found" — quote the glob
+  (`--include='*.py'`). It cost several empty tool rounds in one session.
+- vitest only collects `**/*.{test,spec}.*` under the project; a probe test written in the
+  scratchpad is silently "No test files found". Put probes under `src/**/__tests__/` and
+  delete them afterwards.
