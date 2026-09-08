@@ -142,6 +142,27 @@ git remote get-url origin   # decide by the ORG in this, not the folder
 | `IcestoneTech/*` (e.g. `math_ai`) | **No Lark text.** The `gh pr comment` review, the PR link on Jira, and the chat notification to Linc |
 | anything else | Ask which hand-off applies, once, and record the answer in `references/projects/<repo>.md` |
 
+**Then wait for the CI review bots and act on what they say** (standing
+instruction, Peter 2026-09-08). Any repo whose pipeline runs an automated
+reviewer — Copilot on GitHub, or the equivalent elsewhere — has not finished
+reviewing when `gh pr create` returns. Poll for the review, read every comment,
+fix what is right, and reply on each thread saying what changed or why it was
+declined. Do not wait to be asked, and do not treat the bot's verdict as
+advisory noise.
+
+```bash
+gh pr view <n> --json reviews --jq '.reviews[].body'
+gh api repos/<owner>/<repo>/pulls/<n>/comments --paginate \
+  --jq '.[] | "[\(.user.login)] \(.path):\(.line // .original_line)\n\(.body)\n---"'
+gh api -X POST repos/<owner>/<repo>/pulls/<n>/comments/<comment-id>/replies -f body="..."
+```
+
+On PR #581 Copilot found two stale comments in one pass. One of them was not
+just wording: the module header advertised a `⌘/Ctrl + drag to zoom` mode that
+the canvas never constructed, so the branch was reachable from tests alone.
+**A comment that contradicts the code is often dead code wearing a
+description** — check which of the two is wrong before editing the comment.
+
 Write it for a teammate scrolling a channel deciding whether it concerns them:
 what changed, why they should care, anything they must act on (migration, flag,
 blocking decision), and the link. **Two or three plain sentences — a colleague's
@@ -431,6 +452,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 14 | **Named the known-good route from the repo note and took it first**; improvised only after it failed today | any sub-task the notes already cover |
 | 15 | **Queried the recorded answer (DB row / live log / a `console.log`) before reasoning from code** | any "why did this fail at runtime" question |
 | 16 | **Wrote the hand-off text (Lark, or the org's equivalent) in the same reply as the PR link** — decided from `git remote get-url origin` | every PR created |
+| 16b | **Waited for the CI review bot, fixed what it got right, and replied on each thread** | any repo whose pipeline runs an automated reviewer |
 | 17 | **Re-read the original requirement text after a clarifying answer**, checking the whole answer and not just the part choosing between my options | any clarification received |
 | 18 | **Checked a deletion against the written requirement**, not against my own possibly-mis-framed question | removing any working behaviour |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
