@@ -302,6 +302,44 @@ legitimately choose, because I never checked whether the UI offered it as a real
 option. **When you "clean up" a value as invalid, first check whether the product
 lets the user pick it.**
 
+### 15. Take the known-good path first, and cap the improvised one
+
+The notes in `references/projects/<repo>.md` are a record of routes that ALREADY
+WORKED. Reading them is not the same as taking them. On 2026-09-08 (Meegle
+14588335) the repo note said, in order: the MCP browser profile is usually locked,
+launch a private headless Chrome, drive it with puppeteer-core. I read that, then
+still spent a stretch trying the MCP tool, then copying a Chrome profile, then
+hand-decrypting its cookie store with Keychain + openssl — three dead ends the note
+had already ruled out, before doing exactly what it said.
+
+**Before starting any sub-task that has a note, name the route from the note and
+take it. Improvise only after it has actually failed here, today.**
+
+The same session shows the reverse failure — improvising when the cheap
+authoritative source was one query away:
+
+| What I did | What settled it | Cost |
+| --- | --- | --- |
+| Read routing code, ran 2000 weighted-shuffle draws to prove KIE was primary | One `console.log` of the resolved order, and the raw dev-server log | Two confident, opposite, WRONG conclusions |
+| Inferred the failure cause from the `error` column | `select params, error from video_generations` — the params were right there | Three rounds of guessing |
+| Reasoned about which provider KIE-vs-Volcengine ran | The stdout Peter already had open | An entire exchange |
+
+The pattern: **when the system already records the answer, query it before
+reasoning about it.** A DB row, a stdout log, a `console.log` in the live path.
+Reading code tells you what SHOULD happen; those tell you what DID.
+
+Practical cap, per sub-task:
+
+- **Two failed attempts at the same sub-goal → stop and switch class of evidence.**
+  Not a third variation of the same approach. Move from reading to measuring, or
+  from measuring to asking Peter for the artifact he can see and I cannot.
+- **Say which route you are taking and why** ("the repo note's headless-Chrome
+  recipe", "querying the generations table"), so a wrong choice is visible to
+  Peter immediately instead of after the third dead end.
+
+Related: rule 4 (ask rather than assume) names WHEN to ask; this names when to stop
+improvising and reach for the evidence that already exists.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -322,6 +360,8 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 12 | **Harness reads the product's data path, and the review env carries the new data** | any verification that mounts a component with in-code data |
 | 13a | **Checked what remounts the component holding a ref/latch** (`key=` on ancestors) | any fix using a ref to remember |
 | 13b | **Guarded on the value, not the event**, where a value guard is possible | any "only do this once" effect |
+| 14 | **Named the known-good route from the repo note and took it first**; improvised only after it failed today | any sub-task the notes already cover |
+| 15 | **Queried the recorded answer (DB row / live log / a `console.log`) before reasoning from code** | any "why did this fail at runtime" question |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
@@ -403,6 +443,12 @@ contract, what must not be touched, and local conventions.
 
 Accumulated notes for specific repos live in `references/projects/`. Read the one
 for the repo at hand if it exists; add to it when you learn something costly.
+
+**Reading it is not taking it.** Those notes are routes that already worked, and
+the cost of re-deriving one is measured in this session's dead ends, not in
+theory. Before each sub-task (get a browser up, find why a run failed, verify a
+render), name the route the note gives and take that first — see rule 15. If no
+note covers it, that sub-task is the one worth writing up afterwards.
 
 ## Keep this skill current (standing instruction, Peter 2026-09-07)
 

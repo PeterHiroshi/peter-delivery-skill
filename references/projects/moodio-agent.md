@@ -428,3 +428,46 @@ gate that was green does not observe the defect class.
   here; two `mouse.down/up` pairs (clickCount 1 then 2) did. A synthetic
   `dispatchEvent(new MouseEvent("dblclick"))` proves the handler; the
   two-click sequence proves the interaction.
+
+## The fastest route to "why did this generation fail" (2026-09-08)
+
+Reading the submit/provider code to explain a runtime failure produced two
+confident and opposite WRONG answers in one session. The system records the
+answer; query it.
+
+**1. The generation row is the first stop, and `params` matters as much as `error`.**
+
+```bash
+# `pg` is a dependency; `psql` is not installed.
+node -e '...' # new pg.Client({connectionString: DATABASE_URL, ssl:{rejectUnauthorized:false}})
+select created_at, model_id, provider, status, params, error from video_generations
+where ... order by created_at desc limit 10
+```
+
+- `provider` NULL + an error naming a provider means **every** provider failed:
+  the row keeps only the LAST attempt. Before the failover chain was persisted
+  (this branch), the primary's objection was nowhere in the database.
+- `params` carries the actual submitted values — `aspect_ratio`, `duration`,
+  `reference_video_duration`. A failure whose message blames one thing is often
+  explained by a value sitting in there (`duration: "auto"` on a model whose enum
+  has no `"auto"`).
+- `failure_explanation` holds the LLM's own verdict with a `category`
+  (`user_error` / `system_error` / `transient`). It is frequently right when the
+  regex classifier is not — worth reading before theorising.
+
+**2. The dev server's stdout beats the database for provider ordering.** The
+failover loop logs `provider "X" failed for <model>; trying next provider` per
+attempt, and each provider logs its own request before submitting (`[Kie Submit]
+Request:`). Absence of a provider's line is real evidence it was skipped; the
+database cannot show that. Peter usually has this open — ask for it.
+
+**3. When code and observation disagree, add one `console.log` and ask for a
+retry.** One line printing the resolved variant order settled a question that
+2000 simulated weighted-shuffle draws could not, because the draws were of the
+code's intent, not the run's behaviour.
+
+Error classification is looser than it looks: `ModelNotOpen`,
+`AuthenticationError` and the env-var errors all fall through to
+`generic_failure`, NOT `invalid_parameters`. Do not assume a user-facing message
+implies a matching classification — run the exact stored string through
+`classifyVideoError` before claiming a mislabel.
