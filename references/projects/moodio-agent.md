@@ -272,3 +272,54 @@ the onboarding-guide v2 pass, end to end, with screenshots of every beat:
 
 Also: `npm run dev` in a worktree re-adds the "This is NOT the Next.js you
 know" block to CLAUDE.md; that diff is expected noise.
+
+## Measure a proposed fix against the whole catalog BEFORE coding (2026-09-08)
+
+Meegle 14583245: the adaptive-duration switch was dead on a canvas node dragged
+out of a video asset. Root cause was a three-valued field the UI shows as two —
+`videoGenerationMode` is `""` for a node whose mode was never picked, which
+`locateModel` resolves to the model's default for DISPLAY while every
+mode-keyed decision reads the raw `""` as "no mode".
+
+Peter approved a plan (option A) that a ten-line script then proved wrong, in
+two separate ways:
+
+- Sending the displayed mode as `modeId` on submit regressed **11 of 14**
+  visible models — a fresh node could no longer run plain text-to-video, because
+  attaching a mode attaches a mask and `applyMask` only intersects.
+- Resolving the mode on the display side ALONE made the client lie about
+  billing: the switch would work, the user picks 7s, and the server (still
+  receiving a null mode id) coerces to `"auto"` and bills adaptive. A dead
+  control is an annoyance; a control that silently changes billing is a money
+  bug.
+- The obvious fallback (seed the default mode at node creation) regressed
+  **14 of 17** — the same narrowing, moved earlier.
+
+What actually worked was letting auto-flow persist the mode it had ALREADY
+decided was correct, gated on that mode being `selectable` for the current
+inputs: 44 write cases, **0** admission regressions, measured the same way.
+
+Lessons that generalize past this repo:
+
+- In a model/mode/capability matrix, **never reason about a fix from one
+  model.** Write the throwaway script that runs every model x every input shape
+  and prints the diverging rows. Each of the three rejected variants looked
+  correct in prose and died in under a minute of enumeration.
+- When a control's state also PREDICTS a server decision (billing, admission),
+  the client and server must be judged with the same inputs. Ask "what does the
+  server see for this exact node?" before changing what the client shows.
+- A sentinel like `""` that one code path resolves and another reads raw is the
+  defect, not the symptom. Grep every consumer; here only 3 of ~10 call sites
+  resolved it, and `lib/desktop/node-inputs.ts` had already documented the rule
+  ("resolve the mode the way every other surface does") that the others missed.
+- `nextModeAfterChange` returns `null` for two opposite reasons — "stay, this is
+  legal" and "nothing legal exists". Overloaded returns like this are where a
+  plausible fix quietly hardens a broken state.
+
+Mutation testing earned its keep again: a test asserting the omni relaxation
+stays off for `video-edit` passed for the wrong reason (the product check
+already excluded it, so the clause under test never ran). Two mutants survived
+before the assertions were re-aimed at the clauses that actually decide. One
+clause (`pins.duration === undefined` on an omni container) is currently
+unreachable — no container is both omni and duration-pinning — so no test can
+kill it; say that rather than writing a test that pretends to cover it.
