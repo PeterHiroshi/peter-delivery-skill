@@ -446,6 +446,26 @@ saw it within minutes of running the branch.
   the rewrite branch was never exercised. Test the branch where the guard fails, not only
   the one where it succeeds.
 
+### 18. A feature that ends in a provider call is verified at the provider's request body
+
+On 2026-09-09 (Meegle 14583294) the Kling reference-version entrance was "done" three
+times over at the UI — dialog, Details section, picker tab, guide bar, all screenshotted
+and mutation-tested — and Peter asked the only question that mattered: does the picked
+version reach the model provider as its `elements` parameter, "否则一切都是徒劳". The
+dev database held four generations with `kling_elements` ever, none from a library
+element: the path had never run. Tracing it end to end found a soft link — on the chat
+surface the attachment reached the agent as a text line and nothing forced it into the
+staged generation.
+
+- For any feature whose value is a call to an external system, the deliverable is the
+  request body that system receives. Write the test that drives the production path from
+  the surface's first server-side shape to the mocked network call, per provider, and
+  mutate each link.
+- Query what the system has recorded (`select params from …generations where …`) before
+  reasoning from code. Zero or four rows is the answer to "has this ever run".
+- Anywhere an LLM sits between the user's choice and the request, ask what ENFORCES the
+  choice. "The prompt tells it to" is not enforcement.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -474,6 +494,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 18 | **Checked a deletion against the written requirement**, not against my own possibly-mis-framed question | removing any working behaviour |
 | 19 | **Captured a guard's decision at the mutation site instead of re-reading the mutated value** | any "keep original unless…" logic |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
+| 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a

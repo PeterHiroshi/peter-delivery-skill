@@ -567,3 +567,22 @@ facing strings changed in five locales twice. When the two sources name one
 thing differently, make it an explicit numbered question with both literal
 strings — it is cheap to answer and expensive to rename later. Code and API
 names stay put either way.
+
+
+## Where a Kling element is delivered, and what proves it (2026-09-09)
+
+Chat: tray → message parts `{type:"element", elementId, name}` → agent `<GENERATE>`
+refs `{kind:"element", elementId}` (now also enforced from `turnElementRefs`,
+`lib/agents/agent-2/core/turn-element-refs.ts`) → `routeRefs` →
+`params.kling_elements[{libraryElementId}]`. Node: wired tile row →
+`nodeVideoInputFromAssetRow` → `mapNodeInputsToVideoParams`. Both →
+`hydrateKlingElementsFromLibrary` (row title/prompt/imageIds win; `@name` realigned)
+→ `submitVideoGeneration` → `applyParamMapping` → provider. fal: `elements`
+(frontal/reference URLs); KIE: `kling_elements` unchanged (its own name; 422 on empty
+description); KSyun: mint `advanced-custom-elements`, then `element_list`.
+Test: `__tests__/kling-elements-reach-provider.test.ts` — mocks `@/lib/db`,
+`@/lib/storage/s3`, `@/lib/kie/client`, `@fal-ai/client`, global fetch.
+Dev DB query without psql: `node -e` with `pg` from the worktree's node_modules and
+`DATABASE_URL` parsed from `.env` (`ssl: {rejectUnauthorized:false}`).
+Open: a canvas-connected chat's tray element is not enforced (the draft-node handler
+needs an element tile on the desktop).
