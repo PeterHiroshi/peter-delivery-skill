@@ -236,6 +236,22 @@ demands. When a deviation is warranted: do not change it unilaterally, present t
 options with the evidence, and once decided, record the deviation *at the source
 file* so the difference does not later read as a copy error.
 
+### 12. A harness that feeds the component your own data verifies the code, not the product
+
+On 2026-09-08 the onboarding guide v2 was screenshotted end to end through a
+throwaway page that mounted the real player with `DEFAULT_GUIDE_CONFIG` from code.
+Every beat matched the mockup. Peter then reviewed on the same dev server and saw
+none of it — the app reads its script from the database, the dev database still held
+the v1 script, and the migration that would have published v2 had never been run
+there. Eight bug reports, all "the feature is missing", all explained by the harness
+having bypassed the data path the product uses.
+
+It is rule 7 again, one layer up: the component was right, the served value was
+old. Before calling rendering verified, make the harness read what the product
+reads (the DB, the API, the flag), and make the review environment carry the new
+data — run the migration on dev, or say in the first line of the report that it
+has not been run and what the reviewer will therefore see.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -253,6 +269,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 9 | **Checked what the run did, job by job** — green ≠ deployed, skipped ≠ passed | any pipeline change |
 | 10 | **Re-queried and asserted the count matches** — and did not read a failed query as an empty result | any batch / fan-out operation |
 | 11 | **Checked what a supplied file's patterns match in THIS repo** | copying a requester's config in |
+| 12 | **Harness reads the product's data path, and the review env carries the new data** | any verification that mounts a component with in-code data |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
