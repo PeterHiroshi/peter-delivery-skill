@@ -346,3 +346,27 @@ twice, and after killing it Next refused to start because `.next/dev/lock`
 still named my dead server — `rm .next/dev/lock` and restart. The RDS host
 also failed DNS for a few minutes (`ENOTFOUND` in the dev log); it cleared on
 its own, so re-check before concluding the DB is down.
+
+## "Not my change" is a verdict, not the end of the search (2026-09-08)
+
+While fixing 14583245, Peter asked why the agent panel had no Adaptive
+switch. I traced `hideAdaptive={!isNode}`, confirmed it predated my commit,
+explained it, and stopped. He came back: the aspect-ratio `adaptive` option was
+missing too. It is the SAME flag, in the same file, twelve lines away —
+`hideAdaptive` both skips the duration switch and filters `"auto"`/`"adaptive"`
+out of every enum dropdown.
+
+Establishing that a symptom is not your regression answers the blame question,
+not the scope question. When a flag or condition explains one reported symptom,
+enumerate every consumer of that flag before replying — this is rule 3 applied
+to a shared flag rather than to a UI surface, and it is easy to skip precisely
+because the "is it mine?" answer feels like a conclusion.
+
+Also worth keeping: before pushing, check whether the base branch moved under
+you and whether it touched YOUR files. Here `main` had gained a large Agent-mode
+PR that also modified `chat-input.tsx`. `git merge-tree` said no textual
+conflict, but the honest check was merging into a scratch worktree and re-running
+tsc plus the full suite there (436 files / 5536 tests) — and re-verifying the
+SEMANTIC premise, that `videoWorkflowActive` still covers the agent composer, so
+the fix reaches that panel too. A clean merge is not the same as a still-correct
+change.
