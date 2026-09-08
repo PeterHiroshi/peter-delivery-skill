@@ -528,3 +528,42 @@ already stated twice.
   `kling_elements` in the params is per model AND mode (Kling O3 drops it under
   plain image reference) and is the run's CAPACITY, judged by the admission
   engine at attach; it is not what a product-level "Kling models" rule keys on.
+
+## Three corrections on one dialog: the unit of selection came from the wrong source (2026-09-09)
+
+Meegle 14583294 again, the composer's Asset cards dialog. The issue's item 6
+says, verbatim, "每个 L1 的实体类别下，都有专属的元素文件夹，每个元素的 ui 组件
+使用原来的组件" — the folder holds ELEMENTS, drawn with the original element
+tile. I built it three ways before landing there: elements as tiles but every
+card tickable (wrong gate), then cards as the unit with "attach the latest
+version" (wrong unit — invented from img6 plus Peter's shorthand "Kling-ready
+cards"), then elements as tiles again. Peter's third message was "请细读 issue
+描述后做出正确的判断".
+
+- The issue text outranks a screenshot and outranks a later chat shorthand.
+  When a correction changes the SHAPE of a feature (what a tick means), quote
+  the issue's sentence in the reply before rebuilding — if the sentence does
+  not support the new shape, the correction was about something else.
+- "Treat X as a kind of Y" (元素当成特殊的 asset card) is a modelling hint:
+  same grid, same checkbox, a different tile — not a new dialog.
+- Keep the rules pure and pinned (`dialogItems` / `dialogItemGate`); the third
+  rewrite was one file plus a test because the first two had not been.
+
+## An annotated screenshot's arrow is the spec, not its caption (2026-09-09)
+
+Item 4 said "视频上传入口……增加 '当前资产卡片标记素材' 的选择入口". The
+screenshot's red arrow pointed at the picker's TAB ROW, labelled 资产卡片,
+before Library. I read the words, added a "This card" row inside the Library
+tab's source column, and Peter reported the feature as "还没有实现" — it was
+there, in a place he never looked. Where an arrow lands is the placement
+requirement; the caption only names the thing.
+
+## Wording: the mockup's, unless the issue overrides it — and ask which (2026-09-09)
+
+"Element" (issue) vs "reference version" (mockup) for the same rows. I chose
+the issue's noun in the design doc; Peter later chose the mockup's button
+label ("New reference version") and "versions are special asset cards". User-
+facing strings changed in five locales twice. When the two sources name one
+thing differently, make it an explicit numbered question with both literal
+strings — it is cheap to answer and expensive to rename later. Code and API
+names stay put either way.
