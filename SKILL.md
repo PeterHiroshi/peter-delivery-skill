@@ -126,11 +126,30 @@ bullets and ask if that is enough.
 Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
 publishing it. Approval for one push does not carry to the next.
 
-**After an approved PR, write the Lark message unprompted** — short, English,
-pasteable — **except for icestonetech projects** (git remote org `IcestoneTech/*`,
-e.g. `math_ai`): there the PR hand-off is the `gh pr comment` review, the PR link
-on Jira, and the chat notification to Linc — no Lark text. Decide by the remote's
-org, not the directory name. See
+**The moment `gh pr create` prints a URL, the PR is not delivered yet — the
+hand-off text is part of it, and it is written in the SAME reply, unprompted.**
+Waiting to be asked has cost Peter a round trip more than once (2026-09-08, PR
+#580). Which hand-off depends on the remote's organisation, so read it rather
+than guessing from the directory name:
+
+```bash
+git remote get-url origin   # decide by the ORG in this, not the folder
+```
+
+| Remote org | Hand-off, written unprompted with the PR link |
+| --- | --- |
+| `JerryYang666/*` (moodio-agent, moodio-landing) | A Lark message: English, 1–3 sentences, pasteable |
+| `IcestoneTech/*` (e.g. `math_ai`) | **No Lark text.** The `gh pr comment` review, the PR link on Jira, and the chat notification to Linc |
+| anything else | Ask which hand-off applies, once, and record the answer in `references/projects/<repo>.md` |
+
+Write it for a teammate scrolling a channel deciding whether it concerns them:
+what changed, why they should care, anything they must act on (migration, flag,
+blocking decision), and the link. **Two or three plain sentences — a colleague's
+chat message, not a release note.** Lead with the thing people actually noticed;
+extra fixes are "plus two smaller fixes in the same area", not a second paragraph
+of equal weight. No em-dash-stitched clauses, no "comprehensive"/"robust", no
+error strings unless a teammate must recognise them. Read it aloud: if it sounds
+like a summary of a summary, cut it again. Anti-patterns and a worked example in
 [`references/deliverable-formats.md`](references/deliverable-formats.md).
 
 ### 7. A config change is not live until the thing that reads it has re-read it
@@ -362,6 +381,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 13b | **Guarded on the value, not the event**, where a value guard is possible | any "only do this once" effect |
 | 14 | **Named the known-good route from the repo note and took it first**; improvised only after it failed today | any sub-task the notes already cover |
 | 15 | **Queried the recorded answer (DB row / live log / a `console.log`) before reasoning from code** | any "why did this fail at runtime" question |
+| 16 | **Wrote the hand-off text (Lark, or the org's equivalent) in the same reply as the PR link** — decided from `git remote get-url origin` | every PR created |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
