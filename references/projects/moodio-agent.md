@@ -505,3 +505,26 @@ and the disabled flag, never a card's box.
   all correct while the component was invisible.
 - The mutation check works here: re-adding the wrapper puts the heights back
   to 2px in one run.
+
+## A question framed on my model of the problem gets an answer to my model (2026-09-08)
+
+Meegle 14583294, the composer's Asset cards dialog. Peter's requirement was
+"on Kling models only Kling-ready cards are selectable". I had gated on
+whether the selected MODE declares `kling_elements`, saw a Kling text-to-video
+composer let every card through, and asked him a three-option question whose
+options were all phrased around "models that declare the param". He picked
+"keep the current behaviour" — of my framing — and I reported the screenshot
+as not-a-bug. His next message: "不对，kling 系列模型只要选择资产卡片，就只能
+选择 kling 就绪的". One more round, and it was the SAME requirement he had
+already stated twice.
+
+- Before asking a clarifying question, restate the requirement in HIS words in
+  the question body. If the options don't contain his literal phrasing
+  ("Kling 系列模型"), the question is about my implementation, not his need.
+- "You already told me this" is the signal that I re-derived a rule from the
+  code instead of from the requirement. Grep the conversation for the phrase
+  before proposing a new reading of it.
+- The registry's `family` field is the semantic "Kling series" — eleven ids.
+  `kling_elements` in the params is per model AND mode (Kling O3 drops it under
+  plain image reference) and is the run's CAPACITY, judged by the admission
+  engine at attach; it is not what a product-level "Kling models" rule keys on.
