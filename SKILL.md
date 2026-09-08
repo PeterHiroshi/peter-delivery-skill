@@ -334,6 +334,21 @@ had already ruled out, before doing exactly what it said.
 **Before starting any sub-task that has a note, name the route from the note and
 take it. Improvise only after it has actually failed here, today.**
 
+It happened again on 2026-09-08 (Meegle 14552800), on a sub-task as ordinary as
+"get the dev server up". `references/projects/moodio-agent.md` already said, in
+one section: `npm ci` fails on this repo (lockfile out of sync, pre-existing on
+main) so use `npm install`; and **do not symlink a worktree's `node_modules`**
+because Turbopack will not follow it. I ran `npm ci` (failed), then symlinked
+(Turbopack panicked: "Symlink [project]/node_modules is invalid, it points out
+of the filesystem root"), then fell back to a full `cp -R` of 647 packages. Both
+dead ends were spelled out in the note I had already read. Peter was waiting the
+whole time.
+
+The trigger to catch: **the moment a sub-task is "environment setup" in a repo
+that has a note, open the note's environment section FIRST and follow it
+literally.** Reading it earlier in the session does not count — the routes only
+help if they are taken at the moment of use.
+
 The same session shows the reverse failure — improvising when the cheap
 authoritative source was one query away:
 
@@ -359,6 +374,40 @@ Practical cap, per sub-task:
 Related: rule 4 (ask rather than assume) names WHEN to ask; this names when to stop
 improvising and reach for the evidence that already exists.
 
+### 16. A clarifying answer resolves the question I ASKED — re-read the source after it
+
+On 2026-09-08 (Meegle 14552800) the ticket said "鼠标模式下缩放支持：command+鼠标
+中键". I offered Peter two readings and he answered "鼠标中键就是鼠标滚轮,它可以点击,
+采用第二种". I heard "option 2 of your list" and built ⌘ + middle-button **drag** =
+zoom. He had actually said, in the first half of the same sentence, that 中键 IS the
+scroll wheel — the requirement was ⌘ + **wheel scroll**. I shipped the wrong feature,
+he tested it, and the real bug (`metaKey` missing from the wheel handler's zoom
+condition, so ⌘ + two-finger scroll panned on a Mac trackpad) stayed unfixed.
+
+- After any clarification, **re-read the original requirement text with the answer in
+  hand** and check the whole answer, not the part that selects between my options.
+  Peter's answers often carry the reasoning that makes my options wrong.
+- An answer that restates a term ("X 就是 Y") is a correction of my framing, not a
+  vote. Treat it as the more authoritative half of the sentence.
+
+### 17. Never delete working code on the strength of my own badly-framed question
+
+Same session, immediately after. Having built the wrong gesture, I asked "middle-drag
+pan — keep or remove?" and Peter said 移除. I deleted the whole feature. But
+requirement **1** of that same ticket is "支持鼠标中键移动画布" — middle-drag pan was
+explicitly asked for. My question had silently bundled it with the wrong ⌘ + drag zoom
+I had just built, so his answer was about my mistake, not about the requirement. He
+came back with 「中键拖动功能怎么又没了,拆东墙补西墙呀你是」.
+
+- Before deleting anything, check the deletion against the **written requirement**, not
+  against the last thing said in chat. If they disagree, say so and ask — do not let my
+  own confused question authorize destroying a requirement.
+- When my question was ambiguous, the answer inherits the ambiguity. Narrow the
+  question and re-ask rather than acting on it.
+- Recovery: the files were never committed, but the full text survived inside a
+  `/tmp` review packet, which is where I restored them from. Uncommitted work that
+  matters should be committed before any restructuring, not held in the worktree.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -382,6 +431,8 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 14 | **Named the known-good route from the repo note and took it first**; improvised only after it failed today | any sub-task the notes already cover |
 | 15 | **Queried the recorded answer (DB row / live log / a `console.log`) before reasoning from code** | any "why did this fail at runtime" question |
 | 16 | **Wrote the hand-off text (Lark, or the org's equivalent) in the same reply as the PR link** — decided from `git remote get-url origin` | every PR created |
+| 17 | **Re-read the original requirement text after a clarifying answer**, checking the whole answer and not just the part choosing between my options | any clarification received |
+| 18 | **Checked a deletion against the written requirement**, not against my own possibly-mis-framed question | removing any working behaviour |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
@@ -407,7 +458,8 @@ happened when it was missed. A general principle I already agreed with did not
 stop me; a concrete trigger has a chance.
 
 **Use the packs.** `verification-before-completion` before any completion claim,
-`systematic-debugging` on any bug, `karpathy-guidelines` while writing. This
+`systematic-debugging` on any bug, `andrej-karpathy-skills:karpathy-guidelines`
+while writing. This
 skill adds what they cannot know: which criterion has no command, which repo
 hides its design file, and which two surfaces must both be checked.
 
@@ -419,8 +471,14 @@ still miss UI defects. That is a **category mismatch**, not a skill defect.
 Always in play, regardless of task:
 
 - `superpowers:verification-before-completion` — before any completion claim
-- `karpathy-guidelines` — while writing code (simplicity, surface assumptions)
+- `andrej-karpathy-skills:karpathy-guidelines` — while writing code (simplicity,
+  surface assumptions)
 - `superpowers:systematic-debugging` — the moment there is a bug
+- `ccl-skills:code-review` — after changing code, before the landing hand-off
+
+**Invoke these by their plugin-qualified names**, exactly as listed. A bare
+`karpathy-guidelines` is not resolvable; the Skill tool needs the
+`<plugin>:<skill>` form.
 
 Then by task shape:
 

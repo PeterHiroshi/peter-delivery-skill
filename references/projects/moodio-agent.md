@@ -37,6 +37,17 @@ install` writes *through* the link and pollutes the main checkout.
 
 Before improvising an environment fix: **ask** (trigger 3).
 
+**The working recipe for a fresh worktree, in order** (2026-09-08: I ignored
+this section and burned Peter's time on `npm ci` → symlink → `cp -R`, exactly
+the two failures named above):
+
+1. `ls node_modules | wc -l` — `[ -d node_modules ]` is NOT a check; a worktree
+   can carry an empty `node_modules/` that passes the directory test and still
+   has zero packages.
+2. `npm install` in the worktree. Not `npm ci` (fails, see above), not a
+   symlink (Turbopack rejects it), not `cp -R` (slow, and drifts).
+3. Then `npm run dev`. Expect `package-lock.json` to drift; do not stage it.
+
 ### Stray files in commits
 
 `git add -A` in a worktree has twice swept in a 13k-line `pnpm-lock.yaml`. Check
