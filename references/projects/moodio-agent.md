@@ -482,3 +482,26 @@ Error classification is looser than it looks: `ModelNotOpen`,
 `generic_failure`, NOT `invalid_parameters`. Do not assume a user-facing message
 implies a matching classification — run the exact stored string through
 `classifyVideoError` before claiming a mislabel.
+
+## A wrapper around a percentage-padding box collapses it (2026-09-08)
+
+Meegle 14583294, the fix that broke the feature. The composer's card button
+gets its height from a spacer `<div style="padding-bottom: 114%">` — the same
+`coverAspectPadding` trick `AssetBoard` uses, because WebKit mis-sizes
+`aspect-ratio` in a grid track. Percentage padding resolves against the
+CONTAINING BLOCK, so the button must be the grid cell itself.
+
+To keep a `title` tooltip alive on a `disabled` button I wrapped each card in
+a plain `<div>`. The grid then sized the wrapper, the wrapper's height came
+from the (zero-base) spacer, and every card collapsed to **2px**: the dialog
+rendered an empty grid while the sidebar still counted the cards. Peter found
+it; my own harness run had "passed" because I only asserted the sidebar text
+and the disabled flag, never a card's box.
+
+- Never wrap a percentage-padding box in a layout-participating element.
+  `display: contents` would survive, or put the attribute on the box itself.
+- **Assert geometry, not just presence.** `getBoundingClientRect().height` of
+  the thing the user is supposed to see, every run. Text and aria state were
+  all correct while the component was invisible.
+- The mutation check works here: re-adding the wrapper puts the heights back
+  to 2px in one run.
