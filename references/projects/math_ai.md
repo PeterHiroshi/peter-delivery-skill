@@ -173,3 +173,33 @@ One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
 - vitest only collects `**/*.{test,spec}.*` under the project; a probe test written in the
   scratchpad is silently "No test files found". Put probes under `src/**/__tests__/` and
   delete them afterwards.
+
+## Offline end-to-end check of the v4 delivery chain (LFX-451 D5, 2026-09-09)
+
+You do not need a live solve to test explainer/prompt changes against a real problem.
+Pull `modelir` + `execution` + `locked_parts` + `problemText` for a prod artifact
+(`solveTracesByArtifactId[<id>].v4`, see the forensics note above), then rebuild the
+outcome locally:
+
+```python
+recs = {f"arm{i}": {"final_status": "solved",
+        "attempts": [{"attempt": 0, "modelir": modelir, "execution": execution}]} for i in range(2)}
+outcome = V4Outcome("resolved", vote(recs), recs, 1)
+r = build_step1_result(outcome, problem_text, output_language_directive(locale), "solution")
+kept = _synchronize_final_answer_step(r.payload["steps"], r.payload["finalAnswer"], locale,
+                                      locked=r.payload["_v4"]["locked_parts"])
+solve_reply_text(r.payload["finalAnswer"], kept)
+```
+
+One real explainer call per run (kimi via the local `.env`, region CN). Run EN and ZH.
+This is what proved the conclusion-rule + lock-check + bubble chain in ~40 s, where a
+prod round trip is a deploy. Also the fast way to A/B a prompt rule: mutate
+`explain.EXPLAIN_TASK` in the script, no file edit.
+
+Traps met on the way:
+- `render_answer_statement` must not crash when a locked value is a relation/set
+  (`Eq(sym, (m>0)&(m<4))` → sympy TypeError); the first version took down
+  `build_step1_result`'s try-block and silently produced the mechanical step.
+- A modeler-invented `propositions` target (e.g. "second derivative > 0", label "1")
+  became an answer part `{1}` and made every explainer conclusion fail the lock check.
+  Structural test: the problem text must actually enumerate that label ((1) / ①).
