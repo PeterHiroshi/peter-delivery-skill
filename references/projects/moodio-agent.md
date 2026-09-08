@@ -370,3 +370,32 @@ tsc plus the full suite there (436 files / 5536 tests) — and re-verifying the
 SEMANTIC premise, that `videoWorkflowActive` still covers the agent composer, so
 the fix reaches that panel too. A clean merge is not the same as a still-correct
 change.
+
+## The prototype's Composer is not in the prototype (2026-09-08)
+
+Meegle 14583294: the issue's screenshots mixed three sources — the mockup
+`Standalone (2).html` (the asset Details panel's `Kling O3 / 3.0 adaptation`
+block, search `klSetList` / `klPick`), a real build (`Omni reference`,
+`Type a message…`), and a designer drawing of a composer "Asset cards" dialog
+that exists in **no** file. The mockup's Composer is a `<dc-import
+name="Composer">` whose template is not embedded; grepping the file for
+composer copy (`Make a card Kling-ready`, `ASSET TYPE`) returns 0 and that is
+not proof the dialog was never designed — say which screenshot has no source
+and design from the screenshot, flagged.
+
+Also from that session:
+
+- A local branch `feat/kling-element-entry-points` (2026-09-04, never pushed)
+  holds a spec + plan for the same feature and two liftable files
+  (`components/chat/element-tile.tsx`, `lib/video/element-support.ts`). Check
+  `git branch -a` for `feat/*` siblings before designing from scratch.
+- `lib/elements/hydrate.ts` admits a `libraryElementId` only when
+  `projects.userId === userId` (5 sites). Workstation collaborators cannot
+  generate with any library element, minted ones included — a 400 at submit.
+- Every `element_details` rewrite goes through `buildElementDetails`, which
+  drops unknown keys (`hydrate.ts:541,614`, `elements/[id]/route.ts:315`).
+  A tag stored there must be carried explicitly at each writer.
+- `meegle` CLI: `workitem get --project-key 6a7b389acc3b9c910ee856fe
+  --work-item-id <id>`; attachments via `attachment +download "<url>"
+  --project-key … --work-item-id … --output <path>` (positional URL, not
+  `--file-url`). Comments: `comment list`.
