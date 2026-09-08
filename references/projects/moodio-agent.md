@@ -399,3 +399,32 @@ Also from that session:
   --work-item-id <id>`; attachments via `attachment +download "<url>"
   --project-key … --work-item-id … --output <path>` (positional URL, not
   `--file-url`). Comments: `comment list`.
+
+## tsc cannot see a server module in the client bundle (2026-09-08)
+
+Meegle 14583294: a client component imported three constants from
+`lib/workstation/entity-elements.ts`, which imports `lib/db` and `lib/storage/s3`
+(sharp, pg). `npx tsc --noEmit` was green; the dev server refused to compile
+every page that mounts the chat composer ("Can't resolve 'child_process'",
+`fs`, `net`, `tls`) with a 15-line import trace. Rule 2 in its purest form: the
+gate that was green does not observe the defect class.
+
+- Any module a `"use client"` file imports must be free of `@/lib/db`,
+  `@/lib/storage/s3`, `@/lib/elements/helpers` (imports the db) and friends,
+  transitively. Split "rules" (pure) from "writes" (db) at design time.
+- Start the dev server BEFORE calling a UI change verified, and grep its log
+  for `Can't resolve` — it is the only compile check that follows the client
+  import graph.
+- The harness recipe now needs a fetch stub for `/api/collection`,
+  `/api/projects`, `/api/library/tree`, `/api/assets`, `/api/uploads` too:
+  `lib/redux/services/base-query.ts:52` redirects the whole page to
+  `/auth/login` on any 401, so mounting `AssetPickerModal` (RTK queries)
+  bounced the harness to the login screen mid-flow.
+- Port 3000 was retaken by another session's worktree server between my
+  kill and my start; `next dev` silently moved to 3001 and I spent ten minutes
+  reading a 404 from the other worktree's code. Check the dev log's `Local:`
+  line before the first request.
+- puppeteer `click({clickCount: 2})` did NOT fire React's `onDoubleClick`
+  here; two `mouse.down/up` pairs (clickCount 1 then 2) did. A synthetic
+  `dispatchEvent(new MouseEvent("dblclick"))` proves the handler; the
+  two-click sequence proves the interaction.
