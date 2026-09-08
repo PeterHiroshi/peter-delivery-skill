@@ -323,3 +323,26 @@ before the assertions were re-aimed at the clauses that actually decide. One
 clause (`pins.duration === undefined` on an omni container) is currently
 unreachable — no container is both omni and duration-pinning — so no test can
 kill it; say that rather than writing a test that pretends to cover it.
+
+## Onboarding guide admin: "not verified" is not a disclosure, it is a gap (2026-09-08)
+
+The admin page (`app/(dashboard)/admin/onboarding-guide/page.tsx`) needs a
+session, so the no-login harness cannot render it. I added a derived-content
+note for the Editor scene, reported it as "not verified, tsc only", and moved
+on. Peter opened the admin and there was no Editor scene at all: the page
+groups nodes by `stage` nodes, but the tutorial enters the editor through the
+`edit-tab` hotspot, so the scene never existed. The note could never show.
+One extra review round for Peter.
+
+What to do instead: any page-level logic I cannot render gets **extracted into
+a pure function and tested against the shipped config** (now
+`lib/onboarding-guide/admin-scenes.ts` + its test). "Tsc only" on view logic
+that decides *whether something appears* is no evidence — the types were fine
+and the scene was still missing. Before writing "not verified", ask whether a
+15-line extraction would make it verifiable; it usually would.
+
+Also from the same day: port 3000 was retaken by another session's worktree
+twice, and after killing it Next refused to start because `.next/dev/lock`
+still named my dead server — `rm .next/dev/lock` and restart. The RDS host
+also failed DNS for a few minutes (`ENOTFOUND` in the dev log); it cleared on
+its own, so re-check before concluding the DB is down.
