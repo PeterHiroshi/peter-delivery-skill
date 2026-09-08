@@ -274,6 +274,34 @@ at all. Without that step I would have reported both as verified.
 Related: rule 12 (harness bypassing the product's data path) and rule 2 (knowing what
 the suite cannot see). This is the third variant — the harness mounts the wrong layer.
 
+### 14. A latch must outlive what it latches — and a value guard beats a lifecycle guard
+
+Meegle 14588335 took FOUR attempts because three of them guarded an effect with a
+latch that reset at exactly the wrong moment:
+
+1. latched a derived boolean that a mode change flipped false→true
+2. latched a different boolean that a data-load flipped false→true
+3. latched an identity — correct value, but the ref lived in a component the host
+   mounts `key={node.id}`, so selecting a node rebuilt it as null
+
+Each fix looked right, passed its tests, and Peter came back with the same bug.
+
+Two rules came out of it:
+
+- **Before trusting a ref/latch, ask what remounts the component that holds it.**
+  Grep for `key=` on its ancestors. A ref in a `key`-ed subtree is per-instance
+  memory, not per-entity memory, and the two look identical until the key changes.
+- **Prefer guarding on the VALUE over guarding on the EVENT.** "Don't overwrite a
+  value that is already set" needs no memory at all, so no lifecycle can defeat it.
+  The final fix was one line — `if (params.aspect_ratio != null) return;` — after
+  three attempts at remembering *when* to skip.
+
+The other half: an independent review (`/codex`) found both the remount and a
+second bug I had shipped — a heal-on-read that discarded a value the user could
+legitimately choose, because I never checked whether the UI offered it as a real
+option. **When you "clean up" a value as invalid, first check whether the product
+lets the user pick it.**
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -292,6 +320,8 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 10 | **Re-queried and asserted the count matches** — and did not read a failed query as an empty result | any batch / fan-out operation |
 | 11 | **Checked what a supplied file's patterns match in THIS repo** | copying a requester's config in |
 | 12 | **Harness reads the product's data path, and the review env carries the new data** | any verification that mounts a component with in-code data |
+| 13a | **Checked what remounts the component holding a ref/latch** (`key=` on ancestors) | any fix using a ref to remember |
+| 13b | **Guarded on the value, not the event**, where a value guard is possible | any "only do this once" effect |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
