@@ -252,6 +252,28 @@ reads (the DB, the API, the flag), and make the review environment carry the new
 data — run the migration on dev, or say in the first line of the report that it
 has not been run and what the reviewer will therefore see.
 
+### 13. A harness only verifies the layers it actually mounts — prove it by reverting
+
+On 2026-09-08 (Meegle 14588335) two defects were fixed in the same session. The
+browser harness mounted `GenerationConfigBar` directly. Fix A lived there and was
+genuinely verified. Fix B lived one level up in `chat-input.tsx`, which the harness
+never mounted — so the run "passed" while observing nothing about it.
+
+The tell was cheap and I nearly skipped it: **revert each fix separately and re-run.**
+Reverting A brought its defect straight back (attribution proven). Reverting B changed
+*nothing* — which is not a pass, it is the harness announcing it cannot see that code
+at all. Without that step I would have reported both as verified.
+
+- After a green harness run, revert each change alone. A result that does not move
+  means the harness does not exercise it. Say so instead of counting it as verified.
+- The same run also caught a wrong fix: the first attempt put a latch ref *inside* the
+  component the popover unmounts, so it was recreated null on every open and could
+  never fire. Static reading called it correct; the browser called it unchanged. A
+  latch must outlive what it latches.
+
+Related: rule 12 (harness bypassing the product's data path) and rule 2 (knowing what
+the suite cannot see). This is the third variant — the harness mounts the wrong layer.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -270,6 +292,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 10 | **Re-queried and asserted the count matches** — and did not read a failed query as an empty result | any batch / fan-out operation |
 | 11 | **Checked what a supplied file's patterns match in THIS repo** | copying a requester's config in |
 | 12 | **Harness reads the product's data path, and the review env carries the new data** | any verification that mounts a component with in-code data |
+| 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
