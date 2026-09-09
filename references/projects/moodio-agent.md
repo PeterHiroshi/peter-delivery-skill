@@ -767,3 +767,34 @@ states, never a hint's text.
   `WorkstationStoreContext.Provider` (the hook is context-bound; there is no
   global `setState`), and stub `/entities/<id>/assets` + `/elements`. The
   picker's Asset card tab needs the same `/assets` stub.
+
+## Wheel events have no capture: a native stopper freezes a trackpad pan (2026-09-10)
+
+Meegle 14620356: panning the Desktop canvas with a two-finger swipe froze the
+moment the pan slid the selected node's composer under the cursor. Every
+`pointer*` theory was a dead end — pan-by-drag uses `setPointerCapture` and is
+immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
+`wheel` listener, ~3655), hit-tested at the cursor on every event, and
+`NodeComposerHost` (`node-composer.tsx`) stopped every wheel on its div.
+
+- Three wheel interceptors sit on the canvas surface: `node-composer.tsx`
+  (was blanket → now `lib/composer-wheel.ts`: keep only when the focused
+  `.ProseMirror` overflows on the swipe's dominant axis, never for ⌘/Ctrl),
+  `entity-zone-card.tsx:233` (already conditional on `scrollWidth`), and
+  `assets/CanvasMediaPreview.tsx:240` (a modal, off-canvas). Any new native
+  wheel listener inside the canvas tree must let the event through unless it
+  actually consumes it, or it recreates this bug.
+- Peter's rule for the composer: the canvas ALWAYS pans; the prompt text
+  scrolls only while the editor is focused. Not "scroll if scrollable".
+- The 23-frame GIF was read with `ffmpeg -i x.gif frames/%02d.png` + a PIL
+  frame-diff: pan frames differ by ~15M, frozen frames by <0.2M. That
+  located the freeze frame and the cursor position without guessing.
+- Composer harness without a session: `app/auth/wheel-harness/page.tsx`
+  mounting `NodeComposerHost` with a generator asset cast from
+  `{ assetType: "generator", metadata: { mode: "image", prompt: "" }, … }`
+  and no-op callbacks renders the real TipTap editor (`.ProseMirror` is the
+  overflow-y:auto scroller AND the focusable element). Drive wheel with
+  `page.mouse.move` + `page.mouse.wheel` (real hit-testing), modifiers via
+  `page.keyboard.down("Meta")`, text via `document.execCommand("insertText")`.
+  The composer persists its draft across reloads, so a second run starts
+  with the previous text.

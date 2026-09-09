@@ -306,6 +306,18 @@ at all. Without that step I would have reported both as verified.
 
 - After a green harness run, revert each change alone. A result that does not move
   means the harness does not exercise it. Say so instead of counting it as verified.
+- **Prove the probe touched the file before reading its run.** On 2026-09-10 (Meegle
+  14620356) the revert probe used relative paths, the Bash cwd had drifted to the
+  scratchpad after an earlier `cd $S && node …`, so `cp`/`python` failed, the "reverted"
+  run executed the FIXED code and printed 8/8 PASS. Only a `grep -c REVERT-PROBE` line
+  in the same command exposed it. Use absolute paths in every probe, print the
+  mutation's evidence (grep count) in the same output as the run, and treat a probe
+  that changes nothing as unexecuted, not as "the fix didn't matter".
+- **Reset the harness state between checks.** Same session: earlier pans had pushed
+  the prompt box above the container's clipped top, so the last check's wheel landed
+  on the page outside the canvas and read as "0 events reached — fix broken". Two
+  diagnostics later it was geometry. Each check starts from a known state, or it
+  measures the checks before it.
 - The same run also caught a wrong fix: the first attempt put a latch ref *inside* the
   component the popover unmounts, so it was recreated null on every open and could
   never fire. Static reading called it correct; the browser called it unchanged. A
