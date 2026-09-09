@@ -55,6 +55,24 @@ the two failures named above):
 
 ## Testing reality
 
+### "Cannot find package 'server-only'" in vitest = empty node_modules (2026-09-09)
+
+Two share-link test files failed with `Cannot find package 'server-only'`
+in a fresh worktree. `vitest.config.ts` aliases `server-only` to
+`next/dist/compiled/server-only/empty.js`, so the alias needs `next`
+INSTALLED IN THE WORKTREE — and `ls node_modules | wc -l` was 0. I proved
+the failure was not in my diff (stash, re-run on the clean tree, same
+error) and reported it as pre-existing. True, but the cause was step 1 of
+the recipe above, which I had not run. `npm install` made both pass.
+
+- A module-not-found in vitest on a worktree is an install question first,
+  a code question second. Check the package count before any other theory.
+- Do not run `npm install` while a `git rebase` is mid-flight: it rewrote
+  `package-lock.json` at the instant `rebase --continue` ran, which refused
+  with a misleading "must edit all merge conflicts". `git checkout --
+  package-lock.json`, then continue. Install before the rebase or after it.
+
+
 - Node-only vitest, **no jsdom/RTL** (`CLAUDE.md:20`). Render bugs have no
   automated home. See `testing-that-earns-its-keep.md`.
 - `__tests__/generation-rules/` is a **named CI job**, deliberately redundant
