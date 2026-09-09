@@ -194,8 +194,10 @@ Field keys: `field_06d87b` links to Features, `field_a54610` repro steps,
   `gh api -X POST …/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'`
   and `gh pr edit <n> --add-reviewer copilot-pull-request-reviewer` return
   success and change nothing (`reviewRequests` stays empty). The re-request
-  button exists only on the PR page. Reply on the thread with what changed,
-  then tell Peter the button is his to press.
+  button exists only on the PR page — and it is not needed: **Copilot
+  re-reviews on its own after every push**, ~2 minutes later, resolving the
+  threads it considers addressed and opening new ones. Reply on the thread,
+  push, and poll for a second review from `copilot-pull-request-reviewer`.
 - Copilot's first pass lands ~3 minutes after `gh pr create`; poll every 20s.
   Its inline comment ids are what `…/comments/<id>/replies` wants.
 
