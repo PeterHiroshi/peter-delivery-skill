@@ -466,6 +466,44 @@ staged generation.
 - Anywhere an LLM sits between the user's choice and the request, ask what ENFORCES the
   choice. "The prompt tells it to" is not enforcement.
 
+### 19. Verify the SURFACE the change touched, not the change — write the sweep before the run
+
+Meegle 14583294, 2026-09-09, three passes in one day, and Peter found a defect after
+each: the Create-page button opened no dialog (a second desktop key I never opened);
+the three-column form overflowed (my harness was 560px wide, the real panel 460); a
+hint rendered as a raw i18n key (a `{param}` I never passed, in a locale I never
+looked at); a version with no video showed a video tile in its hover flyout (the
+sibling element that renders the same row); a node lost its attached card once the
+video landed (the completion path that REBUILDS the metadata). Every one was on the
+surface my change touched and outside the path my verification walked. Peter's words:
+"有很多问题之前都没有及时发现，现在只能打回来再重新搞".
+
+The pattern is one omission repeated: I verified the code I wrote, at the size I
+built it, in the locale I read, on the model I picked, through the path I coded.
+Before the browser run, enumerate the dimensions the changed surface has and sweep
+them — that enumeration is the test-case register the `ccl-skills:testing-strategy`
+skill asks for, and it is written BEFORE the harness, not after Peter's screenshot:
+
+- **width**: the real container's width (measure it in Peter's screenshot or the
+  layout code), not the harness default;
+- **locale**: all five, asserting the rendered strings from the catalog and that no
+  `namespace.key` text appears; every `{param}` key needs a values object (now a
+  static test, `i18n-params-are-passed.test.ts`);
+- **row/data shape**: every combination the rules allow (images / video / audio /
+  legacy both), on EVERY element that renders the row — the row, its meta, its
+  flyout, its edit form;
+- **model family**: every family the gate covers, off the registry, including the
+  ones that take nothing (Kling 2.6);
+- **write paths**: every builder that rewrites the data the UI reads (completion
+  converters, reruns, spawns, PATCH allow-lists) — grep the field name across
+  lib/ and app/ and read each hit;
+- **cross-tab / second key**: any cache keyed by an id the page can have more
+  than one of.
+
+Then write the register with a verdict column (`pass` / `pass-browser` / `blocked`
+/ `live-only` / `gap`) and hand THAT over. A green run over the path I coded is not
+a verification of the feature; it is a verification of my typing.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -495,6 +533,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 19 | **Captured a guard's decision at the mutation site instead of re-reading the mutated value** | any "keep original unless…" logic |
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 | 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
+| 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
 
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
