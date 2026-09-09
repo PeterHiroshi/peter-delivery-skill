@@ -798,3 +798,15 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
   `page.keyboard.down("Meta")`, text via `document.execCommand("insertText")`.
   The composer persists its draft across reloads, so a second run starts
   with the previous text.
+- Follow-up from Peter's real-app check: once the pan stopped freezing, the
+  composer could slide under the docked agent chat and the scene strip — and
+  painted OVER them, because `NODE_COMPOSER_LAYER_Z = 45` (and the selection
+  bars at z-50/60) had been chosen to beat the panels (#318). Peter's rule:
+  canvas floats sit UNDER all shell chrome (now `CANVAS_FLOAT_Z = 20`, pinned
+  by `__tests__/canvas-float-layering.test.ts`). The z is applied by
+  DesktopCanvas's wrapper div, not by `NodeComposerHost`, so the composer
+  harness cannot see it; DesktopCanvas takes 145 props and is not worth a
+  harness — source test + Peter's eyes on :3000.
+- A fix that lets a gesture travel further changes what the surface can
+  OVERLAP. After unfreezing a pan, sweep what the moving thing can now be
+  carried under/over (panels, strips, pills) before hand-off.
