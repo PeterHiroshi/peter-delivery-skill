@@ -163,6 +163,26 @@ CLI is `meegle` (not `meegle-cli`). Space `ozn2tr` = `6a7b389acc3b9c910ee856fe`
 ("Moodio 3.0"). Bugs are `issue`; template `1553817` (普通缺陷). The
 `FeishuProjectMcp` MCP tools return `UserDisabled` — use the CLI.
 
+**The CLI's token lives ~2 hours** (`meegle auth status` → `expires_in_minutes`);
+after that every command returns `AUTH_REQUIRED` with "Re-run with
+--device-code". That is not a broken install — it is expiry, and the fix is a
+login that works without a browser on my side (2026-09-09, Peter: "这个未来都是
+必要的工具"):
+
+```bash
+meegle auth status                                    # check FIRST, every session
+meegle auth login --device-code --host project.larksuite.com --phase init
+#  → prints client_id, device_code, user_code and verification_uri_complete
+#    (https://project.larksuite.com/b/auth/mcp?channel=meegle-cli&mode=device&usercode=XXXXX-XXXXX)
+#  Give Peter that URL to open (one click, he is already signed in), then:
+meegle auth login --device-code --host project.larksuite.com --phase poll \
+  --client-id <client_id> --device-code-value <device_code>   # blocks up to 600s; --once for one poll
+```
+
+`--phase init` is harmless to run while a valid token exists. The issue body
+is `work_item_fields[].value` on `workitem get` (markdown with image links);
+comments via `meegle comment list --project-key … --work-item-id …`.
+
 Field keys: `field_06d87b` links to Features, `field_a54610` repro steps,
 `field_e5d9b7` expected, `field_a5a12e` actual, `field_cf2c88` environment.
 
@@ -623,3 +643,48 @@ both editors and both writers.
   columns with `id::text like`.
 - Provider facts worth remembering: fal sends a video-bearing element as a VIDEO
   element only; KIE requires a description; KSyun takes images only.
+
+## A module-level client cache keyed by one id is stale for every other key (2026-09-09)
+
+Meegle 14583294 follow-up: "the Asset cards button opens no dialog on the Create
+page". `useDesktopEntitiesWithImages` caches per desktop id; the Assets tab and
+the Create tab are two desktops of one workstation, and the entities-changed
+event refetched only MOUNTED readers. Save a version on Assets, come back to
+Create → the held snapshot still had no versions → the button became a door.
+Both composers share the cache, which is why "both panels" was the report.
+
+- When a report says "works on page A, not on page B" and both read one cache,
+  ask what KEY each page reads and what invalidates the keys nobody is watching.
+- The fix that survives: mark every held key stale on the event, refetch on the
+  next mount while still serving the held data. Extracted as a pure store
+  (`lib/desktop/entities-snapshot.ts`) so the rule has a node test.
+- Harness that proved it: two readers of the real hook with `window.fetch`
+  stubbed for `/api/desktop/*/entities`, unmount one, fire the event, remount,
+  assert the fetch count and the version. Reverting the hook alone made the
+  remounted reader stay at one fetch — the revert check, not the green run, is
+  the evidence. The stub's kind rows need `sortOrder` + `createdAt` or
+  `mentionPalettes` throws `localeCompare` inside the hook.
+
+## "Only X may be selected" hides "X and Y are delivered differently" (2026-09-09)
+
+The same issue's second half. The 2026-09-08 rule "on Kling only Kling-ready
+cards tick" was a UI gate standing in for a delivery rule Peter actually
+cared about: a card's reference VERSION goes through `kling_elements`; a card
+itself goes through references, "和其他模型一样". Enumerating the class showed
+three server paths each deciding element-vs-reference by its own rule (≥2
+images, a Seedance mint) and none by "is it a version" — a node with two picked
+images and the direct video mode with a real-person card both sent a plain
+card as a Kling element.
+
+- A selection gate in the UI is never the enforcement; ask what the provider
+  receives for each thing the gate lets through, per path.
+- The marker that settled it was on the DATA (`entityId` on the element ref),
+  read at every delivery site, with a mutation guard test proving the marker
+  alone decides. Kling entrances enumerated off `listFamilies()`/`familyCells`
+  are 11 cells (4 with kling delivery: O3 omni + video-edit over media, v3
+  image-to-video + first-last over frames); `kling-v3-omni` and
+  `kling-o3-video-reference` are NOT in any family cell — cover them through
+  `getModelEntrance(id)` over `VIDEO_MODELS` as well.
+- Redefining a rule moves fixtures: `mention-admission.test.ts` needed a
+  two-image card on Kling v2.6 as its dead end once a one-image card fit a
+  frame. Write down WHY the fixture moved in the test.
