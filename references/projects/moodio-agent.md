@@ -186,6 +186,19 @@ comments via `meegle comment list --project-key … --work-item-id …`.
 Field keys: `field_06d87b` links to Features, `field_a54610` repro steps,
 `field_e5d9b7` expected, `field_a5a12e` actual, `field_cf2c88` environment.
 
+## PR mechanics on this repo (2026-09-09, PR #591)
+
+- **Vercel shows `fail / Deployment was blocked` on every PR** (checked 588,
+  589, 590, 591). It is not a signal about the branch; do not chase it.
+- **Copilot cannot be re-requested from the CLI.** Both
+  `gh api -X POST …/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'`
+  and `gh pr edit <n> --add-reviewer copilot-pull-request-reviewer` return
+  success and change nothing (`reviewRequests` stays empty). The re-request
+  button exists only on the PR page. Reply on the thread with what changed,
+  then tell Peter the button is his to press.
+- Copilot's first pass lands ~3 minutes after `gh pr create`; poll every 20s.
+  Its inline comment ids are what `…/comments/<id>/replies` wants.
+
 ## Files that defeat grep (2026-09-07)
 
 `components/ui/mention-textbox/MentionTextbox.tsx` contains non-UTF-8 bytes, so
