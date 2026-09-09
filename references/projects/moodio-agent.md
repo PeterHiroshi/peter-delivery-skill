@@ -688,3 +688,26 @@ card as a Kling element.
 - Redefining a rule moves fixtures: `mention-admission.test.ts` needed a
   two-image card on Kling v2.6 as its dead end once a one-image card fit a
   frame. Write down WHY the fixture moved in the test.
+
+## A missing i18n value renders the KEY, and only a screenshot shows it (2026-09-09)
+
+Third pass of Meegle 14583294, the three-field reference-version form. Every
+node test was green, the browser drive was 10/10 — and the screenshot showed
+`workstation.assetCanvas.kling.videoRefsHint` printed verbatim under the
+video field, plus its neighbour's hint overflowing into the next column.
+The string carries `{maxVideo}` and I had called `t("videoRefsHint")` with
+no values: next-intl renders the key and logs an error (Next's "1 Issue"
+badge in the corner is that error). My drive asserted labels and disabled
+states, never a hint's text.
+
+- Any string with a `{param}` needs its values at EVERY call site; grep the
+  catalog for `{` on the keys you add and check each `t(key, …)`.
+- Assert the copy the user reads, or look at the picture. The "1 Issue"
+  badge in a screenshot is a console error — read it before calling the run
+  clean.
+- Harness for `EntityKlingSection` without a session: provide
+  `WorkstationRuntimeContext.Provider` with a hand-made runtime, a store from
+  `createWorkstationStore()` + `setState({entities})` in
+  `WorkstationStoreContext.Provider` (the hook is context-bound; there is no
+  global `setState`), and stub `/entities/<id>/assets` + `/elements`. The
+  picker's Asset card tab needs the same `/assets` stub.
