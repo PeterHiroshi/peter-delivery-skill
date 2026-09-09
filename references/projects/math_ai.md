@@ -203,3 +203,8 @@ Traps met on the way:
 - A modeler-invented `propositions` target (e.g. "second derivative > 0", label "1")
   became an answer part `{1}` and made every explainer conclusion fail the lock check.
   Structural test: the problem text must actually enumerate that label ((1) / ①).
+- **Before proposing to loosen a gate, grep the tests for the gate's name.** Plan A for the
+  graph gate ("trust the explainer's intent again") would have broken
+  `test_direct_answer_cannot_invent_graph_for_non_visual_problem`, a deliberate product
+  decision pinned in code. Reading that test first turned the plan into
+  "intent AND ModelIR has a curve/relation" (`v4/figure.py`) — same benefit, no regression.
