@@ -810,3 +810,47 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
 - A fix that lets a gesture travel further changes what the surface can
   OVERLAP. After unfreezing a pan, sweep what the moving thing can now be
   carried under/over (panels, strips, pills) before hand-off.
+
+## Video extension / prompt templates (2026-09-10, Meegle 14620855)
+
+- `long-video` became `video-extend` (product `extend`). Its three controls
+  are MODE params declared on the container (`ModeContainer.params`), not
+  registry params; `applyModeToParams`, `videoSpecs` and the submit path
+  are the three places that read them. `ModeContainer.hides` pins a param
+  to its default with no control; `promptTemplate` binds
+  `lib/generation/prompt-templates.ts` slots to params. The row keeps the
+  user's text under `params.prompt_template.source`; every user-facing
+  reader of a stored prompt goes through `lib/video/display-prompt.ts`
+  (a static test enforces the allow-list).
+- **VideoDurationControl's `adaptiveLocked`/`hideAdaptive` must be keyed on
+  `param.name === "duration"`** wherever a second seconds param renders
+  through it. Passing the host's lock to `extend_duration` showed "Auto"
+  and a dead slider on all three surfaces; only the browser caught it.
+- The chat card explains a pinned ratio from the pin's CAUSE
+  (`videoConstraints(...).pins.aspect_ratio.cause`), not its value: a mode
+  pin and a frame pin both read `adaptive`.
+- DB check before designing: `video_generations` had zero long-video rows
+  ever (`params->>'duration'='30'` + a video ref), so the id could be
+  replaced without an alias. Query with a CJS script and
+  `NODE_PATH=$WT/node_modules node q.cjs` — the worktree's `pg` is not
+  resolvable from the scratchpad otherwise.
+
+### Dev server / browser mechanics that cost time today
+
+- `nohup npm run dev > log 2>&1 &` inside one Bash tool call died when the
+  call ended (silently, no error in the log, port closed). Start it in a
+  subshell: `(nohup npm run dev > "$SP/dev.log" 2>&1 &)`, then poll with
+  `curl -s -o /dev/null -w "%{http_code}"`.
+- The `:3000` holder was another worktree's server that Peter's browser was
+  actively hitting (`/create/...` requests in ITS log). Killing it per the
+  standing rule is right, but say so in the report the moment it happens.
+- gstack's `browse` binary at `~/.claude/skills/gstack/browse/dist/browse`
+  answered every command with `error: Script not found "text"` (a
+  bun-compiled binary with its scripts missing). Do not iterate on it; go
+  straight to the private headless Chrome + `puppeteer-core` recipe above
+  (`npm i puppeteer-core@23` in the scratchpad, `puppeteer.connect({browserURL})`).
+- Volcengine Ark docs (`docs.volcengine.com/docs/82379/1520757`) render
+  client-side: WebFetch, curl and the headless-text route all return the
+  page shell. The repo's own record (`lib/video/providers/ark.ts` comments,
+  `docs/plans/2026-09-03-...md` §12) is the readable source; ask Peter to
+  confirm the enum rather than spending a third attempt.
