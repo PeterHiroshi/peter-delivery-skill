@@ -322,6 +322,45 @@ the onboarding-guide v2 pass, end to end, with screenshots of every beat:
 Also: `npm run dev` in a worktree re-adds the "This is NOT the Next.js you
 know" block to CLAUDE.md; that diff is expected noise.
 
+## Driving the Desktop canvas through chrome-devtools MCP (2026-09-09)
+
+Meegle 14551516, verified end to end in the real app with Peter's login. What
+cost time and what finally worked:
+
+- **The MCP profile lock is another VS Code Claude session's Chrome**, launched
+  with `--remote-debugging-pipe` (no TCP port), so nothing can attach to it.
+  `ps -o ppid` up from the Chrome pid names the owner. Ask Peter, then kill the
+  Chrome pid (not the MCP) — the profile keeps his `moodio_refresh_token`, so
+  the relaunched browser is logged in.
+- **A node composer collapsed a few seconds after every MCP click.** Cause:
+  the canvas's "跟随 Agent" (follow) mode was on and kept re-panning; the
+  canvas deselects assets that leave the view (`DesktopCanvas.tsx`, the
+  `hiddenSelected` effect), and a composer that unmounts mid-request saves
+  the optimized prompt as PLAIN text (`promptRich`/`entityRefs` null) — which
+  looks exactly like "chips not created". Turn follow mode off first
+  (button label matches /正在跟随/, a plain JS `.click()` works).
+- **Select a node from in-page JS, not by uid**: find the collapsed hint text
+  (`选中此节点即可打开创作框`), `elementFromPoint` at its centre, dispatch
+  pointerdown/mousedown/pointerup/mouseup/click with `pointerId`/`isPrimary`.
+  React's handlers fire. Snapshot uids drift every time the canvas moves.
+- **Pan with synthetic `WheelEvent`s** (plain wheel = pan, no selection
+  change); type into TipTap with `document.execCommand("insertText")`.
+- **Do the whole flow in ONE `evaluate_script`** (select → type → click →
+  poll a `window.fetch` wrapper for the response → probe DOM → re-fetch the
+  node's metadata). A tool boundary is where the composer got lost.
+- Seed fixtures through the product's own routes from the page context:
+  `POST /api/desktop/<id>/assets` `{assets:[{assetType, metadata, posX, posY,
+  width, height}]}` and `POST …/edges` `{edges:[{sourceAssetId,
+  targetAssetId}]}`; they need a reload to show. "Plain desktop" means no row
+  in `workstations.desktop_id` AND none in `workstation_episodes.desktop_id`
+  — the episode desktops are named "… — 第 N 集".
+- DOM hooks: mention chips `[data-mention-id]`, entity ref cards
+  `[class*='composer-card-chip']`, wired inputs `button[aria-label='移除']`,
+  the optimize button by text `优化提示词`.
+- Ledger check for any LLM feature: `llm_turns` by `surface`, joined to
+  `llm_calls` (purpose/model/status/tokens). Quote string keys in
+  `json_build_object` with `\x27` inside `node -e` one-liners.
+
 ## Measure a proposed fix against the whole catalog BEFORE coding (2026-09-08)
 
 Meegle 14583245: the adaptive-duration switch was dead on a canvas node dragged
