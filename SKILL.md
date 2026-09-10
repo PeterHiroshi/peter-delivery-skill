@@ -125,6 +125,15 @@ Stop and ask — do not assume — when:
 3. Fixing the environment means changing his machine (installs, deletes, config)
 4. He relays third-party feedback whose original text I cannot see
 
+**A claim about what a function does is verified at THAT function, not at its
+sibling.** On 2026-09-11 (LFX-453, PR #397) I told Peter and wrote in a code
+comment that "the backend canonicalises short/long locale codes", having read
+`_canonical_locale` being used by `resolve_output_locale`. The route I was
+relying on called `set_request_locale`, which did an exact match and dropped
+`en` silently. Copilot caught it. Before writing "X handles Y" in a comment, a
+reply, or a PR body, open X's body — the one on the call path — and quote the
+line that does it; a neighbouring helper with the right name is not evidence.
+
 **"I did not find it" ≠ "it does not exist."** Report the search, not a verdict:
 
 > I searched that 15MB file for DURATION / RESOLUTION / QUANTITY and got no

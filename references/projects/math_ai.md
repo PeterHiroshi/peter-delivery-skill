@@ -257,4 +257,10 @@ amend voids the verdict, so run it once per candidate and read `status`,
 findings are input defects of a packet-bounded reviewer, not code defects: verify X
 yourself and move on. `contracts/shared-types.ts` and `proof_types.py` are generated
 from `contracts/api-spec.yaml` by `scripts/generate-proof-contracts.sh` — a spec edit
-is not complete until that has been rerun and the diff is only your field.
+is not complete until that has been rerun and the diff is only your field. A field the
+server always emits goes in the schema's `required` list, or codegen makes it
+`int | None` in Python and the reviewer flags the nullability mismatch.
+
+Copilot on this repo is not automatic on hotfix PRs into `release/x.y.z` (it was on
+#394 into `develop`): request `copilot-pull-request-reviewer` with `gh pr edit --add-reviewer`
+right after `gh pr create`, and again after each fix push. It answers in ~10 min.
