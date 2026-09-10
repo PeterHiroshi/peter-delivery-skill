@@ -854,3 +854,26 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
   page shell. The repo's own record (`lib/video/providers/ark.ts` comments,
   `docs/plans/2026-09-03-...md` §12) is the readable source; ask Peter to
   confirm the enum rather than spending a third attempt.
+
+### Seedance 2.5 extension: provider facts settled by live runs (2026-09-10)
+
+- **KIE `bytedance/seedance-2-5` cannot run a video extension.** Five dev
+  runs — duration -1 and a concrete 4 alike, ratio adaptive, one reference
+  video, the extension prompt — all came back as fresh 4-second LANDSCAPE
+  reference clips from a portrait source. Its schema has no task type. Do not
+  offer KIE as a failover for `video-extend`; the mode is Ark-only
+  (`ModeContainer.providers`), 503 when no Ark provider is available.
+- **Ark's Seedance 2.5 guide, table 全模态生视频任务:** 视频编辑 needs
+  `ratio: adaptive` + `duration: -1`; 视频延长 needs `ratio: adaptive` ONLY
+  (duration unrestricted). The repo's `ark.ts` comment and the 2026-09-03
+  engine design had folded the two together; I copied it and sent -1 for
+  extension until Peter pasted the table. A rule "recorded in the repo from
+  a doc" is still second-hand — when the page will not render for me, ask
+  Peter for the screenshot before building on it.
+- The dev Ark account has NOT activated `doubao-seedance-2-5-260628`
+  (`ModelNotOpen`, account 2124768954); every extension on dev fails there.
+  Production is expected to have it. `docs.volcengine.com` renders
+  client-side; WebFetch/curl/headless-text all return the shell.
+- Checking "which provider ran and what was sent" = one query on
+  `video_generations.params` (`submission_meta.attempts` holds the failover
+  chain). Do this before theorising — it settled all three questions today.
