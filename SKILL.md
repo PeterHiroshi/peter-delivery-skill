@@ -452,6 +452,15 @@ came back with 「中键拖动功能怎么又没了,拆东墙补西墙呀你是�
   uncommitted edits in it (plus Peter's). **Commit locally BEFORE the first revert
   probe**, and restore a probe by reversing the exact edit (the same
   assert-count-then-replace script that applied it), never by `git checkout`.
+- Two more from the same day's wrap-up. (a) `git add <deleted-path> && git commit
+  --amend` failed on the pathspec and the `&&` chain silently skipped the amend; I
+  read "ok" from the script and moved on with the OLD commit in place. After any
+  amend/commit, read `git show --stat HEAD` — the command's exit is not the commit's
+  content. (b) `git checkout -- <file>` restores to HEAD, and HEAD was my own earlier
+  commit, so a "revert" left that commit's 3-line addition in the file and in the
+  next amend. Reverting my own work means `git checkout <base>...` (the branch base),
+  and a final `git diff <base>...HEAD --stat` must list only the files the change
+  needs.
 
 ### 18. A value read back after a mechanical rewrite cannot tell "original" from "synthesized"
 
