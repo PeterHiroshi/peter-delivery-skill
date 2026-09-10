@@ -560,6 +560,31 @@ Then write the register with a verdict column (`pass` / `pass-browser` / `blocke
 / `live-only` / `gap`) and hand THAT over. A green run over the path I coded is not
 a verification of the feature; it is a verification of my typing.
 
+### 20. "Reasoned from code, not seen" is the line that names where the guard test goes
+
+On 2026-09-10 (Meegle 14589462, PR #602) the fix closed the asset picker at
+upload hand-over. I read that the Camera/Voice tabs call `onUpload` and THEN
+`onClose`, saw that a toggle would reopen the picker, and made the upload
+handler's close idempotent — then wrote in the report "the upload-then-close
+order was checked by reading code, not in a browser". Copilot's first pass
+found that `onClose` reaches the host's `onOpenChange`, which was STILL the
+toggle. I had made one side of a double call idempotent and left the other.
+
+- A double-call is fixed only when BOTH callers land on the same idempotent
+  path. Grep for every site that reaches the state (`onOpenChange=`,
+  `onClose=`, the setter itself), not just the one I am editing.
+- The sentence "checked by reading, not verified" in my own report is not a
+  disclaimer — it is the address of the missing guard test. Write that test
+  BEFORE `gh pr create`; the bot will otherwise write it for me as a finding.
+  Here it was a 60-line source pin (`setIsAssetPickerOpen((v) => !v)` must
+  not exist; dismiss and upload share `closeAssetPicker`), mutation-checked.
+- Run the test suite BEFORE the push, not in parallel with it. Same session:
+  `vitest` and `git push` went out in one message, the suite failed on a
+  source-proximity pin (`handleAssetPickerUpload[\s\S]{0,400}wire…`) my
+  comments had pushed past 400 chars, and the branch was already on origin.
+  In this repo, long explanations go in a docblock ABOVE the identifier a
+  pin anchors on; body comments count toward the window.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
