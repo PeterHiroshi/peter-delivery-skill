@@ -1063,3 +1063,19 @@ and both were needed:
   deletion of the caption, layout otherwise untouched. **When a ticket line
   can be read as symptom OR requirement, say both readings in the first
   report and ask, before building the layout that keeps the thing.**
+- **The real bug was only visible on the real canvas** (rule 13 exactly): the
+  standalone harness mounted `MediaLightbox` alone and passed; on the Create
+  canvas in Safari, an on-screen `<pre>` event log INSIDE the component showed
+  pointerdown target=VIDEO but pointerup/click target=the canvas container.
+  Mechanism: HeroUI's modal is a DOM portal, but React bubbles synthetic
+  events along the REACT tree, so `DesktopCanvas`'s container
+  `onPointerDown` still ran and took `setPointerCapture` (marquee/pan) —
+  capture retargets the release, Safari's native controls need it, Chrome's
+  don't. Guard: `isCanvasContainerEvent(e.currentTarget, e.target)` at the
+  top of every container handler that can start a gesture. General rule for
+  this repo: **any modal/popover rendered inside DesktopCanvas's React tree
+  bubbles into the container's handlers** — check `contains(target)` before
+  acting. Driving Peter's logged-in Safari tab with `cliclick` worked; the
+  lightbox opens on a double-click on the card's PICTURE (the card's own
+  transport bar at its bottom swallows dblclick), and the play button of a
+  landscape clip is ~30px above the video's bottom edge, not at the modal's.
