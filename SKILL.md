@@ -313,6 +313,12 @@ at all. Without that step I would have reported both as verified.
   in the same command exposed it. Use absolute paths in every probe, print the
   mutation's evidence (grep count) in the same output as the run, and treat a probe
   that changes nothing as unexecuted, not as "the fix didn't matter".
+  It struck again on 2026-09-10 (Meegle 14621810): one `cd $S && npm i
+  puppeteer-core` moved the persistent shell's cwd to the scratchpad, and the
+  very next `grep DATABASE_URL .env` + `require("pg")` failed with "no such
+  file" / MODULE_NOT_FOUND — a fake environment problem. Never `cd` in the
+  Bash tool; run scratchpad installs as `npm --prefix $S i …` or in a
+  subshell `( cd $S && … )`, and keep every later path absolute.
 - **Reset the harness state between checks.** Same session: earlier pans had pushed
   the prompt box above the container's clipped top, so the last check's wheel landed
   on the page outside the canvas and read as "0 events reached — fix broken". Two

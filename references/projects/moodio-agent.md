@@ -183,6 +183,12 @@ meegle auth login --device-code --host project.larksuite.com --phase poll \
 is `work_item_fields[].value` on `workitem get` (markdown with image links);
 comments via `meegle comment list --project-key … --work-item-id …`.
 
+Exact CLI shapes that worked (2026-09-10, Meegle 14621810): `meegle workitem
+get --project-key ozn2tr --work-item-id <id>` (there is NO work-item-type flag;
+the description sits in `work_item_fields[].value` with key `description`),
+`--fields field_a54610 --fields …` for the custom fields, and
+`meegle comment list --project-key ozn2tr --work-item-id <id>`.
+
 Field keys: `field_06d87b` links to Features, `field_a54610` repro steps,
 `field_e5d9b7` expected, `field_a5a12e` actual, `field_cf2c88` environment.
 
@@ -920,3 +926,34 @@ code and a fix read as "not working"; later my own server was killed from
 outside. **Before every browser run**:
 `lsof -p $(lsof -tiTCP:3000 -sTCP:LISTEN) | grep cwd` must print THIS
 worktree. Kill and restart otherwise (Peter's rule), and say so.
+
+## A real OTP login in headless Chrome, no Peter needed (2026-09-10)
+
+Meegle 14621810 (welcome-page modal login not reflected) needed the REAL
+sign-in path, not an `/auth/<x>` harness. It is cheap here because the dev
+RDS is reachable and the OTP is a row:
+
+- Fresh incognito context (`browser.createBrowserContext()`) so no cookie
+  from a previous run leaks in.
+- Type a throwaway email (`meegle<id>-<label>-<ts>@example.test`) into the
+  form; `POST /api/auth/request-otp` creates the user and the `otps` row
+  whether or not the email is delivered.
+- Read the code with `pg` (resolved from the WORKTREE's node_modules —
+  there is no `psql` on this machine): `select o.code from otps o join
+  users u on u.id=o.user_id where u.email=$1 and o.is_used=false order by
+  o.created_at desc limit 1`. Poll; the insert lags the response slightly.
+- New users get the consent checkbox: `[role=dialog] input[type=checkbox]`
+  `.click()`. Click the first `[data-slot=segment]` of the HeroUI InputOtp
+  and `keyboard.type(code)`; the form auto-submits on the last digit.
+- `delete from users where email=$1` at the end — the cascade removes the
+  OTP and refresh-token rows. Say in the report that throwaway rows were
+  written to the dev DB.
+- The `admit_gate` flag was ON in dev (`feature_flags` row), so a fresh user
+  really lands on /welcome; check that row before trusting a /welcome repro.
+- Print the mutation evidence in the same output as the run
+  (`grep -c refreshUser app/welcome/page.tsx` → 0 before, 2 after) so the
+  before/after pair cannot be a cwd or Fast-Refresh accident.
+
+Port 3000 was held by another worktree's `next-server`; `lsof -p <pid> |
+grep cwd` names the worktree, and per the standing rule the holder is killed
+rather than moving to another port.
