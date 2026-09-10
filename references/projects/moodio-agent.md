@@ -1018,3 +1018,42 @@ the user is and only Generate creates the node (same model the media-tile
 regen composer already had). When a design moves the user's focus on its
 own, prototype it before committing the mechanism; one browser run would
 have shown it.
+
+## Verifying a Safari-only bug for real (2026-09-10, Meegle 14354221)
+
+The report was "the play/pause button does nothing in Safari's video
+preview". Playwright's WebKit and the real Safari answered different halves,
+and both were needed:
+
+- **Playwright WebKit** measures geometry: `elementFromPoint` over the native
+  control bar named the element on top of the play button (the lightbox's
+  title pill). Install it in the scratchpad: `npm --prefix $S i playwright`
+  then `npx --prefix $S playwright install webkit` from the OFFICIAL CDN —
+  the npmmirror host used for Chromium has NO `webkit-mac-26-arm64` build
+  (404), so the mirror trick from the memory note does not apply here.
+- **Real Safari** reproduces the click. `safaridriver --enable` needs a
+  password (not available), but System Events is permitted and `cliclick`
+  is installed, so: `open -a Safari <url>`, `cliclick m:x,y` / `c:x,y`,
+  `screencapture -C -x` (with cursor). Screen points = screenshot px / 2
+  on this Retina display. Put an on-screen `<pre>` in the harness that logs
+  the `<video>`'s play/pause/playing events and every window-level
+  pointer/click with its target — the screenshot then carries the evidence
+  without WebDriver. Add `?auto=1` so the lightbox opens without a click;
+  note that an auto-open has no user gesture, so Safari leaves the video
+  paused (expected, not the bug).
+- Two traps in the harness: the cookie-consent banner covers the bottom of
+  the page on a fresh profile (set cookie `moodio_cc=denied`), and a click
+  6px off the play button lands between buttons and reads as "button does
+  nothing". Screenshot WITH the cursor before concluding a click missed or
+  failed.
+- Mechanism found: any caption `absolute bottom-*` inside a lightbox sits on
+  the native control bar whenever the video reaches the viewport bottom;
+  Safari draws its controls at the element's bottom edge, and the pill grows
+  to 80vw for a prompt-length title, so it covered the play button. Fix was
+  a column layout with the caption in its own row — and the image branch
+  then needed `maxHeight: 100%` instead of `100dvh`, or the zoom frame
+  clipped tall pictures. Verify the SIBLING branch (image) of a layout
+  change, not only the one the bug was on.
+- A source-level guard test that greps for the old classes matched the
+  component's own comment describing them; scope such regexes to
+  `className="…"`.
