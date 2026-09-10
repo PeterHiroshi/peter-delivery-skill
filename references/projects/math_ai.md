@@ -239,3 +239,22 @@ Other traps from the same session:
   Search: `GET /search/jql?jql=…&fields=…`. Bug issue type id is in `jira-config.json`.
 - `cd backend && …` in the Bash tool moved the persistent cwd again; the next relative
   `.venv/bin/python` failed. Absolute paths, subshells only.
+
+## Independent review route that worked (LFX-453, 2026-09-10)
+
+`ccl-skills:code-review` gate, challenge mode, no plan file, one round per candidate:
+
+```bash
+export CODE_REVIEW_SKILL_DIR=<expanded ccl-skills code-review dir from the session skill list>
+bash $CODE_REVIEW_SKILL_DIR/scripts/review_gate.sh --mode challenge --stage build \
+  --cwd "$PWD" --base origin/<target-branch> --implementer-family anthropic \
+  --challenge-budget 1 --challenge-index 1 --focus "<what to break>" --timeout 900 --total-timeout 1500 > out.json
+```
+
+Claude is excluded by family; the Codex lane reviewed (~3–5 min per round). Every
+amend voids the verdict, so run it once per candidate and read `status`,
+`candidate_sha256`, `findings[*].failure_path`. "Evidence gap / packet excludes X"
+findings are input defects of a packet-bounded reviewer, not code defects: verify X
+yourself and move on. `contracts/shared-types.ts` and `proof_types.py` are generated
+from `contracts/api-spec.yaml` by `scripts/generate-proof-contracts.sh` — a spec edit
+is not complete until that has been rerun and the diff is only your field.

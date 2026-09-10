@@ -591,6 +591,29 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
 | 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
 
+**A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
+On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking
+expression as `Item(preview=f"…" if a else "")`; the real defect was
+`preview = f"…" if a else ""` then `Item(preview=preview)`. The fixture passed,
+the scanner ignored `ast.Name`, and the guard was green over the exact bug it
+was written for. Independent review (Codex lane, four challenge rounds) found
+that, then that my fix kept only the *last* assignment (a later `preview = ""`
+untainted it), then that my "skip dicts with a `role` key" prompt exemption also
+skipped the API's own history messages, which carry a role. Three rounds on one
+test. The rules: paste the original defect's lines into the fixture unchanged;
+taint conservatively (any assignment, any branch); scope an exemption by the
+exact shape of the thing exempted (bare `{role, content}`), not by one key it
+shares with the data you protect. And the behavioural test that asserts the
+*output* (`preview == ""`) is what actually caught the bug in the probes — keep
+both, and say which one moved.
+
+The same review also found a `||` that kept a stale count when an empty array
+was authoritative (`session.artifacts?.length || s.artifactsCount`), and a live
+update computing `stepsCount` from the active artifact while the reload path
+summed all artifacts. **A field the client patches locally must be derived by
+the same rule the server uses on reload** — put that rule in one helper and
+test it against the server's semantics.
+
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
 comment. Break the code, confirm the specific test fails, restore. See
