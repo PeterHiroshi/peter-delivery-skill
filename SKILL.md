@@ -93,6 +93,29 @@ one — and found a bug Peter had not reported.
 **If you find yourself thinking "later I should audit the rest" — that audit is
 the first action, not a follow-up.**
 
+**Enumerate by MECHANISM, not by the reported string.** On 2026-09-10 (math_ai,
+LFX-453) Peter sent one screenshot: a Chinese subtitle "1 个产物 · 共 2 步" on the
+English sidebar. `grep 产物` found exactly one site and would have been the whole
+fix. Naming the mechanism first — *the backend synthesizes user-facing text, the
+client renders it verbatim* — and scanning for THAT (an AST walk over every
+`content=` / `title=` / `preview=` slot in `backend/app`) found 13 more sites in
+the same class, plus an account-page map keyed by Chinese literals that was
+missing four of the backend's labels. Peter's own words on this class: 「这不是特别
+案例了已经」. The steps that work:
+
+1. Say in one sentence what the defective *mechanism* is (not what the string is).
+2. Write the throwaway scanner for the mechanism; print every hit with a verdict
+   (fix / prompt-not-display / allowlist-with-reason / follow-up ticket).
+3. Turn the scanner into a committed guard test so the class cannot regrow, and
+   mutation-test the guard on the original defect's shape.
+
+i18n corollary that decided the fix shape: **text composed on a GET endpoint can
+never follow the UI language** — the backend has no locale on that request.
+Either send structured data (counts, keys) and let the client localize, or route
+through the config-driven catalog (`region.localized_message` in math_ai). A
+frontend map keyed by the backend's Chinese sentence is the same defect wearing a
+translation table.
+
 ### 4. Ask when the answer lives with Peter, not in the code
 
 Stop and ask — do not assume — when:

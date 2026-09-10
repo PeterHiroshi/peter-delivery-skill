@@ -158,11 +158,16 @@ One `deploy.yml`; release flow in `prepare-release` / `prepare-hotfix` /
   means no logs. Do not plan on them.
 - Jira skill works with system python3 too: `SSL_CERT_FILE=$(python3 -c 'import
   certifi;print(certifi.where())')`. The backend venv is not required.
-- **Running the whole backend suite locally trips `env_guard`** ("Redis database 0 是生产库")
+- **Running the backend suite locally trips `env_guard`** ("Redis database 0 是生产库")
   because `backend/.env` points at Redis db 0 and `tests/conftest.py` lets `.env` override
-  `os.environ`. In a worktree, edit the *copied* `.env` to `REDIS_DATABASE=2` (0/1 are prod
-  per `config/production_bindings.yaml`); `REDIS_URL=` on the command line is overridden.
-  Targeted file lists pass without this because they never import `app.db` at collection.
+  `os.environ`; `REDIS_URL=` on the command line is overridden. Anything that imports
+  `app.main` (most of `tests/api`, `tests/services`) fails at collection. **Cheapest route
+  (2026-09-10, no worktree, `.env` untouched):** a `-p` plugin in the scratchpad that wraps
+  `dotenv.load_dotenv` — call the real one with an explicit `dotenv_path=<abs backend/.env>`
+  (the wrapper changes the caller frame, so the default path search finds nothing), then set
+  `REDIS_DATABASE=15` and pop `REDIS_URL`. Run
+  `PYTHONPATH=$S V4_OFFLINE=1 backend/.venv/bin/python -m pytest -p envguard_testdb …` from
+  `backend/`. Real Redis use in tests (rare) lands on db 15, never on 0/1.
 - `answer_lock_check` (v4 explain) used to accept a locked value only as the *suffix* of a
   math run. CJK conclusions pass because Chinese characters split runs; English sentences
   are one run, so any value not at the end was "missing" and the explainer's conclusion got
@@ -208,3 +213,29 @@ Traps met on the way:
   `test_direct_answer_cannot_invent_graph_for_non_visual_problem`, a deliberate product
   decision pinned in code. Reading that test first turned the plan into
   "intent AND ModelIR has a curve/relation" (`v4/figure.py`) — same benefit, no regression.
+
+## Browser verification without a backend (hotfix 1.0.9 / LFX-453, 2026-09-10)
+
+The local backend cannot run (its `.env` is bound to real DBs and prod Redis), and dev
+serves `develop`, not the branch. For a UI change whose input is one API response, the
+route that worked first time:
+
+1. `node mock_api.js` on **8002** (the `API_BASE` fallback for `localhost`, see
+   `frontend/src/api/resolveApiBase.ts`) answering only the endpoint under test with the
+   patched backend's exact shape, plus `/api/auth/me`; everything else 404 is fine.
+2. `VITE_API_BASE_URL=http://localhost:8002 npx vite --port 5199 --strictPort` in
+   `frontend/` (the `dev` script runs type generation first; plain `vite` skips it).
+3. The chrome-devtools MCP profile is locked ("browser is already running") — do not fight
+   it. `npm --prefix $S i puppeteer-core@23`, launch `/Applications/Google Chrome.app/…`
+   headless with `userDataDir: $S/chrome-profile`, and seed auth in
+   `evaluateOnNewDocument`: `auth_token`, `auth_user` (JSON with `id/email/role`), and
+   `i18n_lang` (`en-US` / `zh-CN`). `/dashboard` then renders the sidebar from the mock.
+4. Assert from the DOM (`.session-item .session-title / .session-preview`) and screenshot
+   both locales. This is a rule-12 harness (my data, not the product's DB): say so.
+
+Other traps from the same session:
+- `jira_request(method, path, data)` takes paths **relative to `/rest/api/3`** and returns
+  `(data, err)`; `templates.adf_builder.adf` wants `(type, text)` tuples, not strings.
+  Search: `GET /search/jql?jql=…&fields=…`. Bug issue type id is in `jira-config.json`.
+- `cd backend && …` in the Bash tool moved the persistent cwd again; the next relative
+  `.venv/bin/python` failed. Absolute paths, subshells only.
