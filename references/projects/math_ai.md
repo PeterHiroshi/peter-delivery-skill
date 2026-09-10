@@ -263,4 +263,4 @@ server always emits goes in the schema's `required` list, or codegen makes it
 
 Copilot on this repo is not automatic on hotfix PRs into `release/x.y.z` (it was on
 #394 into `develop`): request `copilot-pull-request-reviewer` with `gh pr edit --add-reviewer`
-right after `gh pr create`, and again after each fix push. It answers in ~10 min.
+right after `gh pr create`, and again after each fix push. It answers in ~10 min. Re-request only AFTER `git ls-remote` shows the new head: on 2026-09-11 (#398) the re-request queued in the same command as the push reviewed the OLD commit and repeated both findings verbatim. Check the review's `commit_id` (`gh api repos/<o>/<r>/pulls/<n>/reviews --jq '.[] | .commit_id'`) before treating a repeat as "not fixed".
