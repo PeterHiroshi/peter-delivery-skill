@@ -957,3 +957,43 @@ RDS is reachable and the OTP is a row:
 Port 3000 was held by another worktree's `next-server`; `lsof -p <pid> |
 grep cwd` names the worktree, and per the standing rule the holder is killed
 rather than moving to another port.
+
+## Selecting a canvas node from the browser: real click, not synthetic (2026-09-10)
+
+Meegle 14638763, verifying the node toolbar on the ASSET canvas
+(`/create/<project>/assets` → an entity card's "资产画布"). The synthetic
+pointerdown/mousedown/pointerup/mouseup/click sequence from the 2026-09-09
+note selected the card (one `.cs-node-ring-selected`, the composer opened)
+but NO `.cs-float` bar ever rendered — while the identical sequence on the
+episode canvas did produce the bar. Two probes burned before switching
+evidence class. What worked: `take_snapshot` → `click` on the card image's
+uid (a trusted CDP click), which produced the bar on the first try.
+
+- Prefer the MCP `click` by uid for selection on any canvas; keep synthetic
+  events for deselect (click on empty board) and for wheel pans.
+- The bar's guard includes `!draggingAssetId`; a synthetic sequence can
+  leave that set on this surface. Do not debug it — use the real click.
+- The chrome-devtools MCP profile was NOT locked this time and carried
+  Peter's login; try `list_pages` before assuming the headless route.
+- The asset canvas wraps the board in an `overflow-y-auto` container, so
+  filtering media with `closest('.overflow-y-auto')` throws away the canvas
+  cards themselves. Card media is `img.absolute.inset-0.object-contain`.
+- `Meta+a` via `press_key` selects every card and raises the group bar.
+- The `click` tool scrolls the card into view, which pans the canvas so the
+  bar's left end can land at x<0. Wheel-pan first (deltaX moves ~2px per
+  unit here), then click, then screenshot.
+- Esc on this surface EXITS the entity canvas (`focusExitFitOnUnmount`);
+  deselect with a click on the empty board instead.
+- Evidence of which surface is which: only the asset canvas draws the pin
+  badge ("由 … 选定") and the "退出资产画布 · <entity>" pill; the episode
+  canvas shows the shot strip ("镜头列表") instead.
+- The bar's chrome flags: `markInBar` is `surfaceChrome.mark`, true ONLY in
+  `AssetCanvasShell.tsx`; Episode sets `mark: false`, standalone defaults
+  false. `!markInBar` therefore means "every page but the assets page".
+
+Environment on the same day: this worktree had `node_modules` = 0 entries
+again; the symptom this time was `Cannot find package '@anthropic-ai/sdk'`
+(8 tsc errors in `lib/llm/providers/anthropic.ts` + 16 vitest suites failing
+to load). Step 1 of the recipe above, `ls node_modules | wc -l`, before any
+other theory. Port 3000 was held by another worktree's dev server; killed
+per the standing :3000 instruction.
