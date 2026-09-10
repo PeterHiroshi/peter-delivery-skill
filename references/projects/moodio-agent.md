@@ -877,3 +877,46 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
 - Checking "which provider ran and what was sent" = one query on
   `video_generations.params` (`submission_meta.attempts` holds the failover
   chain). Do this before theorising — it settled all three questions today.
+
+## Browser verification with a REAL session on dev (2026-09-10, Meegle 14441990)
+
+The `app/auth/<x>` harness cannot exercise an authenticated canvas flow
+(spawning nodes, PATCHes, generate). The route that worked, start to end:
+
+1. Private headless Chrome + puppeteer-core (see the memory note), then log
+   in through the product's own OTP API: `page.evaluate(fetch("/api/auth/request-otp", {email}))`,
+   read the code from the dev DB (`select code from otps where user_id=… and is_used=false order by created_at desc limit 1`),
+   then `fetch("/api/auth/verify-otp", {email, code, agreedToTerms: true})`.
+   Peter's dev account is `peter8icestone@gmail.com` (admin), not the
+   icestonetech address. He receives the OTP email — say so in the report.
+2. Create a scratch desktop (`POST /api/desktop {name}`) and its nodes through
+   `POST /api/desktop/<id>/assets` — the metadata passes through unchanged,
+   so a node can be pinned in `status: "generating"` without a provider.
+3. DOM hooks: cards are `[data-asset-card]` with `style.left` = world posX
+   (no id attribute — identify by position); the node composer is
+   `.cs-composer-stroke`, its editor `.cs-composer-stroke .ProseMirror`,
+   buttons carry `aria-label` (Attach / Send / Model…). A cookie banner
+   (`button` text "All") covers the bottom of a fresh profile — click it.
+   World y beyond ~700 is below a 1000px viewport: clicks land on canvas.
+4. `desktop_assets` orders by `added_at` (no created_at); edges are
+   `desktop_asset_edges`. Query with the worktree's `pg`
+   (`NODE_PATH=<worktree>/node_modules` or `require("<worktree>/node_modules/pg")`),
+   a script in the scratchpad cannot resolve it.
+
+**Dev runs `nano-banana-2` for real** — clicking Send on an image node
+charges Peter's dev credits and completes in ~30 s. Failed rows with
+`KIE_API_KEY … not set` were other models. Do not press Send to "get a
+failure"; pin the state through the API instead.
+
+**The prompt editor calls `onInputChange` on mount with its seeded text**
+(a fresh draft node got `prompt: ""` committed without a keystroke). Any
+"first edit" trigger must compare against the current value.
+
+### Port 3000 is contested between sessions
+
+Twice in one hour: the holder of :3000 was another worktree's dev server
+(`meegle-14644635…`, another Claude session), so the browser loaded the OLD
+code and a fix read as "not working"; later my own server was killed from
+outside. **Before every browser run**:
+`lsof -p $(lsof -tiTCP:3000 -sTCP:LISTEN) | grep cwd` must print THIS
+worktree. Kill and restart otherwise (Peter's rule), and say so.

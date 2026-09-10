@@ -440,6 +440,12 @@ came back with 「中键拖动功能怎么又没了,拆东墙补西墙呀你是�
 - Recovery: the files were never committed, but the full text survived inside a
   `/tmp` review packet, which is where I restored them from. Uncommitted work that
   matters should be committed before any restructuring, not held in the worktree.
+- It happened again on 2026-09-10 (Meegle 14441990), by my own hand and with no
+  question involved: a revert probe ended with `git checkout -- <file>` to "restore
+  the probe", which restored the file to HEAD and discarded 60 lines of my own
+  uncommitted edits in it (plus Peter's). **Commit locally BEFORE the first revert
+  probe**, and restore a probe by reversing the exact edit (the same
+  assert-count-then-replace script that applied it), never by `git checkout`.
 
 ### 18. A value read back after a mechanical rewrite cannot tell "original" from "synthesized"
 
