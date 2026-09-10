@@ -1057,3 +1057,9 @@ and both were needed:
 - A source-level guard test that greps for the old classes matched the
   component's own comment describing them; scope such regexes to
   `className="…"`.
+- Outcome correction: the ticket line "底部的文件名不显示" read to me as a
+  symptom, so I built a caption row under the video. Peter read it as the
+  requirement ("需要去掉文件名，按照meegle中说的那样") and the fix became a
+  deletion of the caption, layout otherwise untouched. **When a ticket line
+  can be read as symptom OR requirement, say both readings in the first
+  report and ask, before building the layout that keeps the thing.**
