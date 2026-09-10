@@ -997,3 +997,24 @@ again; the symptom this time was `Cannot find package '@anthropic-ai/sdk'`
 to load). Step 1 of the recipe above, `ls node_modules | wc -l`, before any
 other theory. Port 3000 was held by another worktree's dev server; killed
 per the standing :3000 instruction.
+
+### Picker dialog + composer facts (2026-09-10)
+
+- The library picker is `[role="dialog"]`; tabs are buttons by text ("My
+  generations"), a tile is `img` → click its closest button; **Confirm's
+  innerText carries a count badge ("Confirm 1")** — match by prefix, not
+  equality. The composer has NO `input[type=file]` (upload opens a native
+  dialog), so drive reference paths through the picker.
+- The headless Chrome on :9333 died once mid-session (cause unknown); the
+  profile dir keeps the session — relaunch and `/api/auth/me` is 200 again.
+- Mod+Enter on the canvas: `page.keyboard.down("Meta")` + Enter works.
+
+### UX lesson from the same issue
+
+Peter accepted "the first edit forks onto a new node" on paper, then rejected
+it after one try: the cursor jumping to another box mid-typing is jarring.
+The version that stuck is the one with NO surprise — the composer stays where
+the user is and only Generate creates the node (same model the media-tile
+regen composer already had). When a design moves the user's focus on its
+own, prototype it before committing the mechanism; one browser run would
+have shown it.
