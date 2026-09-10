@@ -263,4 +263,11 @@ server always emits goes in the schema's `required` list, or codegen makes it
 
 Copilot on this repo is not automatic on hotfix PRs into `release/x.y.z` (it was on
 #394 into `develop`): request `copilot-pull-request-reviewer` with `gh pr edit --add-reviewer`
-right after `gh pr create`, and again after each fix push. It answers in ~10 min. Re-request only AFTER `git ls-remote` shows the new head: on 2026-09-11 (#398) the re-request queued in the same command as the push reviewed the OLD commit and repeated both findings verbatim. Check the review's `commit_id` (`gh api repos/<o>/<r>/pulls/<n>/reviews --jq '.[] | .commit_id'`) before treating a repeat as "not fixed".
+right after `gh pr create`, and again after each fix push. It answers in ~10 min. **Check `gh pr view <n> --json state,mergedAt,headRefOid` BEFORE acting on any bot
+review or pushing a review fix.** On 2026-09-10 Peter merged #397 and #398 himself
+sixteen minutes after they opened, before Copilot had answered. Every Copilot pass
+after that was on the merged head (its `commit_id` never moved); I misread the repeats
+as a request/push race and pushed three fix commits to already-merged branches — none
+reached `release/1.0.9`. A repeated finding whose `commit_id` does not move is first an
+"is this PR still open?" question. Fixes to a merged PR are a new branch off the target
+and a new PR; the old branch is dead.

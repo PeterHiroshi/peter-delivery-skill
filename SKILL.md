@@ -174,6 +174,13 @@ git remote get-url origin   # decide by the ORG in this, not the folder
 | `IcestoneTech/*` (e.g. `math_ai`) | **No Lark text.** The `gh pr comment` review, the PR link on Jira, and the chat notification to Linc |
 | anything else | Ask which hand-off applies, once, and record the answer in `references/projects/<repo>.md` |
 
+**Peter may merge before the bot answers.** On 2026-09-10 he merged two hotfix PRs
+sixteen minutes after they opened; the Copilot review, my fixes and three pushes all
+landed on merged branches and reached nothing. Before pushing any post-review fix,
+read `gh pr view <n> --json state,mergedAt`; if merged, the fix is a new PR off the
+target branch, and Jira moves the moment the merge is seen (🔒 rule), not when I
+finish polishing.
+
 **Then wait for the CI review bots and act on what they say** (standing
 instruction, Peter 2026-09-08). Any repo whose pipeline runs an automated
 reviewer — Copilot on GitHub, or the equivalent elsewhere — has not finished
