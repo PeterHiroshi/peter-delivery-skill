@@ -1240,3 +1240,9 @@ sizes the number without going through `ChatSidePanel`.
   handle is the first `cursor-ew-resize` descendant. Desktop pages take
   5–8s of remote-RDS calls before the composer mounts — poll for
   `.ProseMirror[contenteditable]` inside the panel.
+- **Check who holds :3000 before EVERY browser run, not once.** 2026-09-11: my
+  dev server was replaced mid-session by another session's (worktree
+  14653304) and two "verification" runs silently exercised that worktree's
+  code — the log of MY server ends in `^[[?25h` and has no hits for those
+  runs. Print `lsof -p <holder> | awk '$4=="cwd"'` and the hit count in the
+  server's own log in the same command as the check.
