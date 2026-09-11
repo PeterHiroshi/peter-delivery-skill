@@ -1168,3 +1168,44 @@ printed 4/4 PASS over unmutated code. The grep count printed in the same
 output (2 instead of 1) was the only tell. Scope the replacement to the
 function (`s.index("const handleX")` … next declaration), and read the
 evidence line before the PASS line.
+
+## Meegle 14653304 (2026-09-11): completion toast, worktree dev server, Meegle attachments
+
+- **Meegle screenshots**: the issue body and comments are mostly images. The
+  CLI shape that works is `meegle attachment +download "<file-url>"
+  --project-key ozn2tr --work-item-id <id> --output <abs path> --overwrite`
+  (the URL is POSITIONAL; `--file-url` is rejected). Read them with the Read
+  tool — Peter's "入口"/"跳到哪" comments are only legible from the pictures.
+- **Chat panel storage is per route**: a Create-tab canvas keeps its active
+  chat in `moodio_active_chat_id:ws:<workstationId>` (the route's projectId),
+  the global window and `/desktop/<id>` in the bare key. Any code that asks
+  "is chat X on screen" must read the slot for the CURRENT route —
+  `activeChatStorageKey(chatScopeKeyForPathname(pathname))`. `/chat/<id>` is
+  retired from the product nav (Admin internal tool only); never hardcode a
+  jump to it — go through `lib/chat/chat-destination.ts` + `open-chat.ts`.
+- **Bash tool kills a server started with `( nohup … & )`** when the call
+  returns (ERR_CONNECTION_REFUSED one call later). Start it with
+  `python3 -c "subprocess.Popen([...], start_new_session=True)"` and a log
+  file; it then survives across calls and turns.
+- **Port 3000 tug-of-war**: I killed another worktree's next-server per the
+  standing rule and another session restarted it within 60 s. Fighting it
+  wastes both sessions; I ran on :3001 for the verification and said so.
+  Cookies are NOT port-scoped (Peter's login carried over), localStorage IS
+  (fresh panel state on :3001 — good for a clean run, but don't read a
+  missing key as a bug).
+- **The chrome-devtools MCP page was logged in as Peter's dev account this
+  time** (`/api/auth/me` 200) — check that first, before the headless route.
+- **Drive the panel from page JS**: focus `.ProseMirror`,
+  `document.execCommand("insertText")`, click `button[aria-label="发送"]`;
+  collapse = `aria-label="收起对话面板"` (canvas) / `关闭对话` (global);
+  turn off follow mode first (button text /正在跟随/). A plain "只回复一个
+  字：好" reply lands in ~20 s on dev; the provider polls every 5 s so a toast
+  shows ~2–8 s after that.
+- **Dev canvas remounts are slow**: after View the canvas panel took >3 s to
+  mount and a 20 s cross-page landing — a 3 s check read as "panel did not
+  expand". Poll for the terminal artifact (composer + reply text), never a
+  fixed wait (same lesson as the upload toast, above).
+- **Fast Refresh during a probe**: editing the provider for the revert probe
+  remounted the page mid-script (`.ProseMirror` null). Wait for the remount,
+  then run the probe script fresh; keep the edit → run → restore in separate
+  calls.
