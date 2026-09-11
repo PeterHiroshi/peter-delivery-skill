@@ -1099,3 +1099,13 @@ and both were needed:
 - `cd "$S" && node …` moved the persistent shell's cwd again (rule 13);
   the very next tool call reported the worktree as "no longer a git
   worktree". `node "$S/drive.cjs"` with absolute paths, never `cd`.
+- Copilot round 1 on PR #605 (2026-09-11): a focusable overlay button
+  that starts a hover-style preview needs a focusout teardown, or a
+  keyboard activation loops forever (no mouseleave ever comes). Its
+  inline finding ("badge shows on a paused frame") was wrong in effect —
+  the element stays mounted while paused — check the claim in the harness
+  before rewriting. Keyboard drive: `el.focus()` + `keyboard.press("Enter")`,
+  then `Tab` lands on the transport's Pause (Chrome's focus starting point
+  survives the badge's unmount); Shift+Tab leaves the tile without crossing
+  the scrubber, whose own blur latch would end the preview first.
+  Never put `{/* */}` in a JSX attribute list as a probe — the page 500s.
