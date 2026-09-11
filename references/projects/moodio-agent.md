@@ -1109,3 +1109,29 @@ and both were needed:
   survives the badge's unmount); Shift+Tab leaves the tile without crossing
   the scrubber, whose own blur latch would end the preview first.
   Never put `{/* */}` in a JSX attribute list as a probe — the page 500s.
+
+## Wangsu gateway + admin replay acceptance without Peter (2026-09-11, Meegle 14661162)
+
+- The gateway (`api.edgecloudapp.com/v2/llm`, `sk-` token) is a relay to
+  Volcengine Ark with an OpenAI-style `/videos` API. Validation is loose
+  and NOT forwarded: an out-of-range `seconds` (-5, -1) is replaced by a
+  4-second default and BILLED, not rejected — a "probe that should 400"
+  can cost a clip. Probe with a bogus model or a missing prompt (both
+  reject before creating a task); never with a bad numeric value.
+- Completed task: `seconds` is a STRING, `size` a "480p" token,
+  `/content` is a Bearer-only mp4 (400 `invalid_video_id` while running).
+- Admin replay on dev end to end, no browser: OTP login as
+  `peter8icestone@gmail.com` through the API (his `admin_permissions` lack
+  `video-management` — grant `write` in the row for the run and restore the
+  exact JSON in a `finally`); the dev DB may hold no replayable row for the
+  target provider (every concrete-duration 2.5 row carried a video ref), so
+  create the original through `POST /api/generation/submit`
+  (`{taskType:"video", modelId, prompt, refs:[], params, origin:{surface:"api"}}`),
+  then `POST /api/admin/video-generations/<id>/replay {provider}` and poll
+  `POST …/<id>/check`. Verify with the dev-server `[<Provider> Submit] Request:`
+  line (the body the provider received) + the row's `submission_meta`.
+- Mutation script trap: after `eslint --fix`, arrays get re-wrapped one item
+  per line, so a sed pattern written from memory of the ORIGINAL text
+  matches nothing and the probe reports "0 failing" for a mutation that
+  never applied. Print `mutated(before→after)` counts and treat 0→0 as
+  unexecuted (it was, once, here).
