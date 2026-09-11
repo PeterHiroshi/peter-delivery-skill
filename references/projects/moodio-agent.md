@@ -1209,3 +1209,34 @@ evidence line before the PASS line.
   remounted the page mid-script (`.ProseMirror` null). Wait for the remount,
   then run the probe script fresh; keep the edit → run → restore in separate
   calls.
+
+## Chat panel width: two hosts, one stored number (2026-09-11, Meegle 14585981)
+
+`moodio_chat_panel_width` is read by the global host, `ChatSidePanel`, and
+`DesktopDetailPage`. The Desktop page renders `width: chatPanelWidth` on the
+docked column AND on the comments dock that stands over it; the comments
+dock's own drag handle (`beginRightDockResize`) is the only place that
+sizes the number without going through `ChatSidePanel`.
+
+- **A revert probe on the docked canvas chat will not move.** `ChatSidePanel`
+  clamps its stored width on mount and reports it back through
+  `onWidthChange`, so a stored 300 heals to 380 within a frame even on the
+  old code. The path that actually goes narrow is the comments dock's
+  handle on a Studio surface (`CommentCountBubble` → docked
+  `CommentsDockPanel`), which needs existing comment threads to open.
+  Pin it with the source guard (`__tests__/chat-panel-min-width.test.ts`)
+  and say so; do not spend an hour opening comments to see a slider.
+- `npx eslint --fix components/desktop/DesktopDetailPage.tsx` rewrote ~200
+  unrelated lines (import order, prettier) — the file is drifted on main.
+  Lint big drifted files with `--no-fix` and compare the message set
+  against `git show HEAD:<file>` swapped in at the SAME path (a scratchpad
+  copy gets a different eslint config scope and reported 1 problem vs 144).
+  Keep a `cp` of the file before any `--fix`.
+- Real-app check without Peter's browser: mint an access token with `jose`
+  (`{userId,email,roles}`, HS256, `JWT_ACCESS_SECRET` from `.env`), set it as
+  the `moodio_access_token` cookie on localhost, drive a private headless
+  Chrome on a port other than 9333 (another session already holds that one).
+  The docked chat is `[data-tutorial="ws-agent-launcher"]`; its resize
+  handle is the first `cursor-ew-resize` descendant. Desktop pages take
+  5–8s of remote-RDS calls before the composer mounts — poll for
+  `.ProseMirror[contenteditable]` inside the panel.
