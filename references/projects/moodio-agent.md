@@ -1135,3 +1135,36 @@ and both were needed:
   matches nothing and the probe reports "0 failing" for a mutation that
   never applied. Print `mutated(before→after)` counts and treat 0→0 as
   unexecuted (it was, once, here).
+
+## A login-free REAL session: mint the access JWT from `.env` (2026-09-11)
+
+Meegle 14663293 was verified end to end on Peter's own dev desktop with no
+OTP and no borrowed Chrome profile. `JWT_ACCESS_SECRET` in the worktree's
+`.env` signs `moodio_access_token` (HS256 via `jose`, payload `{userId,
+email, roles}` — see `lib/auth/jwt.ts`). Mint one for an existing dev user
+(`users` row; `roles` must be the real ones), set it as a cookie on
+`localhost`, and every API route and the `/desktop/<id>` page accept it.
+Script shape: `scratchpad/mint.js` (pg + jose from the worktree's
+`node_modules`), then puppeteer-core `page.setCookie(...)`. Add
+`NEXT_LOCALE=zh-CN` so the DOM strings match the notes above.
+
+- The realtime WS (`:8081`) is refused in this setup; the canvas still
+  works, the console just logs the failure.
+- Select a draft node by dispatching pointer events at the centre of the
+  `选中此节点即可打开创作框` hint; Cmd+D is a `KeyboardEvent` on `window`
+  with `metaKey`. Wrap `window.fetch` BEFORE the action and read the POST /
+  PATCH bodies back — the PATCH `{"generatorPatch":{"inputAssetIds":[]}}`
+  is what proved the composer's repair was the culprit.
+- Leave the desktop as found: DELETE the copy at the end of every run.
+- zsh: `UID` is read-only — `UID=… node x.js` fails with "bad math
+  expression"; name the env var something else.
+
+## A revert probe's `count == 1` assert can silently skip the mutation
+
+Same session: probe 3 asserted the target line occurred once in
+`DesktopDetailPage.tsx`; it occurred twice (another handler dispatches the
+same event shape), the assert threw, nothing was mutated, and the test run
+printed 4/4 PASS over unmutated code. The grep count printed in the same
+output (2 instead of 1) was the only tell. Scope the replacement to the
+function (`s.index("const handleX")` … next declaration), and read the
+evidence line before the PASS line.
