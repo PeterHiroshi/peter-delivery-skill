@@ -271,3 +271,34 @@ as a request/push race and pushed three fix commits to already-merged branches �
 reached `release/1.0.9`. A repeated finding whose `commit_id` does not move is first an
 "is this PR still open?" question. Fixes to a merged PR are a new branch off the target
 and a new PR; the old branch is dead.
+
+## Email campaign forensics on the AWS box (LFX-455, 2026-09-11)
+
+Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in order:
+
+1. `ssh limfx-server-aws`, `sudo docker ps` — prod containers are `backend`,
+   `email_campaign_send`, `email_campaign_ingest`, `redis`; `*_dev` siblings run
+   `develop`. Image tags are commit SHAs, so "is my fix deployed" is one glance.
+2. **Run Python inside the container with `docker exec -i`** (heredoc on stdin).
+   Without `-i` the script gets no stdin, prints nothing, and `2>/dev/null` hides
+   even that — two silent empty rounds before I noticed. Use `python -u` too.
+3. Mongo from the container: `AsyncIOMotorClient(os.environ["INTL_MONGODB_URL"])`,
+   db `INTL_MONGODB_DB_NAME`. Collections `admin_email_campaigns`,
+   `admin_email_campaign_recipients`, `admin_email_delivery_state`.
+4. arq queue from the `redis` container: `redis-cli ZCARD email_campaign_send:queue`,
+   `ZRANGE … 0 5` (member ids say what is queued: `cron:resume_due_campaigns:<ms>`
+   vs `email-resume:<cid>:<minute>`), `ZRANK` for where a job sits, `--scan
+   --pattern 'arq:in-progress:*'` for what is running. The worker log's
+   `recording health: … queued=N` line is the same number.
+5. Container log timestamps are UTC+8; the host `date -u` is UTC. Convert before
+   lining up log lines with Mongo timestamps.
+6. **Time the suspect call, do not reason about it.** `find_one` by `_id` on a
+   1.76 MB campaign document (`csvRows` embedded) = 17.7 s from Atlas; with a
+   projection 0.01 s. That single number explained the 1607 s cron. And SES: DATA
+   → 250 in 0.18 s, then QUIT unanswered until the read timeout (60 s default) —
+   `aiosmtplib.send()` swallows it. A probe with connect/login/NOOP/QUIT alone is
+   instant, so probe the *exact* sequence the code runs (DATA then QUIT).
+7. Safe end-to-end SMTP probe: `success@simulator.amazonses.com` (delivered to no
+   one). Three sends with the no-QUIT path: 0.2 s each.
+8. The 60 s per email also hits `send_plain_text_email` — registration, reset and
+   magic-link mail — so an SMTP finding is never only a campaign finding.
