@@ -1079,3 +1079,23 @@ and both were needed:
   lightbox opens on a double-click on the card's PICTURE (the card's own
   transport bar at its bottom swallows dblclick), and the play button of a
   landscape clip is ~30px above the video's bottom edge, not at the modal's.
+
+## Canvas video tiles: harness and the rest-state play badge (2026-09-11, Meegle 14652790)
+
+- The two canvas video tiles (`VideoAsset`, `PublicVideoAsset`) share the
+  rest-state play badge (`VideoPlayBadge` + pure `showVideoPlayBadge`).
+  Both need `VideoContext.Provider` (`components/video-provider.tsx`) — a
+  hand-made stub value with `generationStatuses: {}` and no-op functions
+  is enough for an `app/auth/<x>` harness; `EnrichedDesktopAsset` can be
+  cast from `{assetType, metadata:{status:"completed", videoId}, imageUrl,
+  videoUrl}`. `ffmpeg -f lavfi -i testsrc2=size=480x854:duration=4` into
+  `public/__harness/` gives a portrait clip + poster with no network.
+- Zoom in a harness: wrap the tile in `transform: scale(zoom)` and pass the
+  same `zoom` prop, then assert the badge's `getBoundingClientRect()` is
+  36×36 at every zoom — that is the counter-scale proof.
+- A puppeteer driver that throws before its final `console.log` prints NO
+  results, which made the first revert probe look like "nothing ran".
+  Print the accumulated results in the `.catch` too.
+- `cd "$S" && node …` moved the persistent shell's cwd again (rule 13);
+  the very next tool call reported the worktree as "no longer a git
+  worktree". `node "$S/drive.cjs"` with absolute paths, never `cd`.
