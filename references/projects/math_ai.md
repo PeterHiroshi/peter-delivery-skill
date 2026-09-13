@@ -302,3 +302,18 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
    one). Three sends with the no-QUIT path: 0.2 s each.
 8. The 60 s per email also hits `send_plain_text_email` — registration, reset and
    magic-link mail — so an SMTP finding is never only a campaign finding.
+
+## Unblocking the send worker (LFX-456, 2026-09-13)
+
+- Purging `cron:*` members from `email_campaign_send:queue` (plus `arq:job:cron:*`
+  keys) is enough: the queued `email-resume:*` job runs as soon as the crons ahead
+  of it are gone. One `ZREM`/`DEL` per member through `docker exec` is ~0.5 s each
+  — 2,800 members took 20 minutes. Batch them (`ZREM key m1 m2 …` in one call).
+- **Do not restart the worker at the end of the purge without checking
+  `arq:in-progress:*` first.** The resume job had already started sending
+  (6011 → 7303) while the purge was still draining; my scripted `docker restart`
+  killed that pass mid-flight, the lease (`LEASE_SECONDS=300`) stayed held by the
+  dead token, and the next pass had to wait for the cron after lease expiry.
+  Restart only if the in-progress key is a cron, never a `run_campaign`.
+- Extra `email-resume:*` jobs are harmless: each returns `running` in 0.15 s
+  against a held lease (the dedup is the lease, not the job id).
