@@ -1317,3 +1317,110 @@ Browser facts that cost time today:
   use a standalone desktop (`desktops` row whose name is not an episode).
 - The repo's own `generating-commit-messages` skill forbids Co-Authored-By;
   recent commits carry none. The system attribution reminder yields to it.
+
+## Verifying a canvas lightbox: the harness beats fighting selection (2026-09-14, Meegle 14333608)
+
+Adding a Download control to `MediaLightbox` needed the image, video and
+"nothing downloadable" branches seen rendered. Driving the real canvas cost
+five failed attempts; an `app/auth/<x>` harness closed all three in one run.
+
+- **A canvas video tile paints a poster `<img>` at rest**, not a `<video>`
+  (the element mounts on hover/play). Selecting "the card with a `<video>`"
+  finds zero. The rest-state play badge (`[aria-label*="播放"]`) marks them,
+  but on one desktop all six cards carried it and none of my clicks raised
+  the bar — do not keep tuning the click.
+- **`desktop_assets.pos_x/pos_y` are NOT `style.left/top`.** The canvas
+  normalises positions, so a DB row at (608,-24) appears as `0px,1726px`.
+  Targeting a card by the DB's coordinates silently finds nothing.
+- **The route that worked**: `app/auth/lb-harness/page.tsx` mounting the real
+  `MediaLightbox` with three hand-made `LightboxMedia` payloads (video, image,
+  no `download` field) plus `ffmpeg -f lavfi -i testsrc2` media under
+  `public/__harness/`. `proxy.ts:64` still has the blanket
+  `pathname.startsWith("/auth/")` rule, so it renders with no session.
+  Delete the page AND the media dir afterwards.
+- Assert the BOX, not presence: the control first shipped as a 13×30 sliver
+  beside three 40×40 buttons because `AssetDownloadMenu`'s root is `h-full`,
+  which collapses in a bare flex row. The drive said "下载 present" and was
+  useless; `getBoundingClientRect()` on every cluster child caught it.
+- The no-payload case is worth a browser check of its own: it proved
+  `cluster:null` (no control at all), which is the dead-button trap closed in
+  the DOM rather than only in a source guard.
+- `AnchoredLayer` portals to `document.body` at `z-[1200]`; a HeroUI modal
+  wrapper is `z-[70]` (computed 50). A menu inside a lightbox is therefore
+  safe — but assert `elementFromPoint` hits it, not just the z number.
+
+### Port 3000 is a three-way tug-of-war now
+Two different worktrees took :3000 from me inside an hour (14665233 twice).
+After the second, I ran on :3001 via `PORT=3001 npm run dev` (the
+`-- -p 3001` form works too) and said so in the report. Check
+`lsof -p <holder> | awk '$4=="cwd"'` before EVERY run, not once — two of my
+drives had already exercised another worktree's code before I noticed.
+
+### `git checkout --` cannot restore an UNTRACKED file (2026-09-14, Meegle 14333608)
+
+Three mutation probes in a row "restored" a brand-new module with
+`git checkout -- <path>` and every one failed with *pathspec did not match any
+file(s) known to git* — the file had never been committed, so git had nothing
+to restore from. All three mutants stayed in the file at once; the module was
+corrupt for several minutes and only the harness's own change-on-disk notice
+caught it.
+
+The `grep -c MUTANT-` line printed `restored, grep=1` after each probe, which
+is exactly the evidence line that exists to catch this, and I read past it
+three times because the test output above it looked right.
+
+- **Commit a new file BEFORE probing it.** The existing rule ("commit before
+  the first revert probe") applies doubly to files git has never seen.
+- Restore by writing the ORIGINAL BYTES back (keep `orig = read()` in the
+  probe and write it in a `finally`), never by a git command — that rule was
+  already in this note for reverse string-replace and covers this case too.
+- Treat a non-zero exit from the restore step as fatal to the probe: the
+  probes used `set -e`, but the failing `git checkout` was the last command,
+  so the script still reported success.
+- Read the mutation-evidence line before the PASS/FAIL line, every time.
+
+### The reviewer found a hollow guard four of my own mutants missed
+
+`expect(source).toContain("downloadAssetFile")` is satisfied by the IMPORT, so
+deleting the call left it green. My own mutant had swapped the call for
+`downloadImage`, which tripped the *other* half of the same assertion and made
+the guard look load-bearing. A source guard proves a name exists, never that
+it runs — when the behaviour matters, extract a pure function with the
+dependency injected and assert what it received.
+
+## `el.click()` cannot see outside-press dismissal (2026-09-14, Meegle 14333608)
+
+A download menu inside the canvas lightbox was dead in the product and worked
+in every scripted check I wrote — five reproductions across both hosts, the
+user's own Chrome build, his route, his server, all green. The bug was real and
+my probes were structurally blind to it.
+
+**Mechanism.** `AnchoredLayer` portals its menu to `document.body`, i.e.
+OUTSIDE a HeroUI `Modal`'s DOM subtree. `@heroui/modal` defaults
+`isDismissable = true`, which wires react-aria `useOverlay` →
+`useInteractOutside`, listening for **pointerdown on document in the CAPTURE
+phase**. Pressing a menu item is an "outside press": the modal closes on
+pointerdown and the item's `click` never runs. Fix: `isDismissable={false}` on
+that Modal (HeroUI does not forward `shouldCloseOnInteractOutside` — it is
+`Omit`-ed from `UseModalProps`), keeping the view's own backdrop/Close/Escape.
+
+- **`el.click()` dispatches ONLY a click event — no pointerdown, no mousedown.**
+  Any dismissal, drag, focus or capture logic keyed on pointer events is
+  invisible to it. When a control "works in my probe but not for the user",
+  drive it with `page.mouse.move/down/up` at coordinates before theorising.
+- The tell in the trace: the user reported "it exits fullscreen instead", and
+  my DOM recorder showed the menuitem receiving the click while no request
+  followed. Element-level click evidence does not prove the handler completed.
+- Any portaled popover over a modal has this shape. Check every
+  `AnchoredLayer`/`createPortal` menu whose host is a `Modal`.
+
+### Two probe failures worth remembering from the same session
+
+- `performance.getEntriesByType("resource")` returned `[]` on a long-lived SPA
+  page while CDP showed the requests — the buffer had been exhausted/cleared.
+  I nearly reported "no request was ever made" from it. Prefer a CDP listener
+  or a `window.fetch` wrapper; treat an empty Performance list as unknown.
+- A source guard `expect(src).not.toContain("isKeyboardDismissDisabled")`
+  failed on MY OWN comment explaining the prop. Scope such guards to the prop
+  (`/isKeyboardDismissDisabled\s*=/`), never the bare word — same trap as the
+  className guards already noted above.
