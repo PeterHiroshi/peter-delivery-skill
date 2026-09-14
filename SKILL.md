@@ -601,6 +601,38 @@ toggle. I had made one side of a double call idempotent and left the other.
   In this repo, long explanations go in a docblock ABOVE the identifier a
   pin anchors on; body comments count toward the window.
 
+### 21. A rebase or conflict resolution must have NO side effects — prove it, every time
+
+Standing instruction from Peter (2026-09-14, Meegle 14661162): whenever a
+branch is rebased onto or merged with its target, the result must carry
+BOTH sides' behaviour intact — nothing from the target lost, nothing from
+the branch lost — and this holds whether or not he says so. "Rebase onto
+main" always means "rebase and prove nothing changed but the base".
+
+The proof is mechanical, not a feeling that the conflict markers were
+resolved sensibly:
+
+1. Before: `git diff <old-base>..<old-head> > before.patch`.
+2. Rebase / merge. Resolve conflicts by reading BOTH sides' intent; never
+   resolve by taking "ours" or "theirs" wholesale.
+3. After: `git diff <new-base>..<new-head> > after.patch`, then
+   `diff <(grep -v '^index \|^@@' before.patch) <(grep -v '^index \|^@@' after.patch)`.
+   The delta must be empty, or every remaining line must be explained by a
+   deliberate accommodation of the target's change — list those lines in
+   the report.
+4. A clean textual merge is not a clean semantic merge. Run the full gates
+   (tsc, the whole suite, any project scripts) on the rebased tree, and
+   grep the target's incoming diff for the mechanism the branch generalised
+   (a new special case the branch's abstraction should now cover, a renamed
+   function the target still calls by the old name).
+5. Report: incoming commits, overlapping files, the delta result, the
+   gates — and say "rebased onto <sha>" with the sha, not "rebased".
+
+Never `--force` over a remote branch someone else may have pulled without
+saying so; never use `git checkout --ours/--theirs` on a file that both
+sides changed; never let `npm install`'s lockfile drift ride along with a
+rebase.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -631,6 +663,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 13 | **Reverted each fix alone and saw its defect return** — a result that does not move means the harness never exercised it | any browser/harness verification |
 | 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
 | 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
+| 21 | **Proved the rebase/merge had no side effects**: before/after patch delta empty or every line explained, full gates on the rebased tree, target's incoming diff grepped for the branch's mechanism — whether or not Peter asked | any rebase, merge, or conflict resolution |
 
 **A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
 On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking
