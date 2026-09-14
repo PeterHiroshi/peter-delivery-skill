@@ -1498,3 +1498,37 @@ a miss into a positive claim.
   Two runs in a row can return `invalid_model_output`; that is reviewer-side and
   is never "no findings".
 - `meegle comment add` (not `create`); `--project-key` is required.
+
+## Node composer notices and the false "prompt changed elsewhere" (2026-09-14, Meegle 14737690)
+
+- **`.cs-composer-stroke` is only on the WORLD node composer.** The image /
+  video node composer's card has no such class; select its host with
+  `div[role="presentation"][style*="will-change"]` (NodeComposerHost) and
+  the editor with `… .ProseMirror`. Three driver runs timed out on the
+  wrong selector while `.cs-node-ring-selected` = 1 said selection worked —
+  read the diag counts before blaming the click.
+- A CDP `page.mouse.click` on the node's `选中此节点即可打开创作框` hint
+  selects a draft node on `/desktop/<id>` first try; `page.keyboard.type`
+  reaches the editor once `pm.contains(document.activeElement)` is true
+  (click at x+20 of the ProseMirror rect, then `.focus()` as fallback).
+- **Why the conflict notice shows while typing alone**: `handleGeneratorCommit`
+  applies the patch via `applyRemoteEvent` BEFORE the PATCH; the draft's
+  base advances only in `acknowledgeNodePromptSave`; `decideNodePromptDraft`
+  compares draft vs the echoed node vs the old base → `conflict: true` for
+  the request's length (measured 2.7–3.5 s, once 15 s, on dev). Own save +
+  continued typing = false conflict. The fix on this ticket only moved the
+  notice (canvas top-center slot); the detector is unchanged.
+- The canvas's top-center slot (`topCenterSlotStyle`) is now ONE
+  `flex-col` container: connect hint | zone pill, then the conflict notice.
+  Add further top notices as children of that column, not as a second
+  positioned slot (a test pins exactly one `style={topCenterSlotStyle}`).
+- Port 3000 was retaken by another worktree's session within minutes of my
+  kill, and my server died during a run (`fetch failed` mid-probe → the
+  throwaway desktop was NOT deleted). Next `npm run dev` auto-bound :3001.
+  Keep a `cleanup.cjs` that lists `probe-<ticket>-*` desktops and deletes
+  them, and run it after every failed probe; do not assume the driver's
+  own `finally` reached the server.
+- A python patch that asserts an occurrence count and aborts leaves the
+  driver UNCHANGED, and the next run silently exercises the old script —
+  the only tell was the old selector still in the error text. Print the
+  replaced count and `node --check` in the same command as the run.
