@@ -1580,3 +1580,36 @@ a miss into a positive claim.
   `git show "$BASE:path"` lost its colon in the shell and the `cp` of a
   missing file was silent. Print the baseline's byte count and a grep that
   distinguishes the two files in the same output.
+
+## Other sessions kill every `next dev` — and the toast race (2026-09-14, Meegle 14653304 round 2)
+
+- **My dev server died twice mid-run** with a clean `[?25h` in its log while
+  another worktree's `next dev` survived: another Claude session was applying
+  the same "kill the :3000 holder" rule with `pkill -f "next dev"`, which
+  matches every worktree's server, on any port. With three worktrees active
+  at once the tug-of-war never ends. What held: start the server through a
+  symlink to `node_modules/next/dist/bin/next` whose name does not contain
+  "next dev" (`node $SCRATCH/moodio-<ticket>-server dev -p 3001`), and say in
+  the report that verification ran on :3001 because :3000 was contended.
+- **A soft navigation off a canvas takes 20–32 s here** (`/`, `/teams`,
+  `/create`, `/library` all measured), and a short agent reply lands in
+  16–25 s — so "send, then leave the page, then wait for the completion toast"
+  loses the race more often than not, and the toast is then CORRECTLY
+  suppressed (the chat was still on screen). Ask for five images with a
+  150-word paragraph each (reply ≈ 45–85 s) and leave immediately after the
+  POST is accepted. Log `[PROBE monitor]` with startCount / currentCount /
+  pathname / visibility from the provider's poll to tell "race lost" from
+  "bug"; the first run without it cost twenty minutes of theorising.
+- The in-place variants do not work as a harness: collapsing the panel right
+  after a send gets re-expanded by the agent's own card selection
+  (`moodio-asset-selected` is a TO_CHAT event), and New chat is blocked while
+  the stream runs. Say "not browser-verified" for those.
+- `net::ERR_NETWORK_CHANGED` mid-run (Peter's VPN / Wi-Fi) turns a soft
+  navigation into a hard one and wipes the provider's monitor state. Retry;
+  it is not the code.
+- Cross-page `open-chat-in-panel` dispatch is a side effect: the DEPARTING
+  page's panel host hears it (navigation resolves seconds later), switches
+  its conversation and persists it into its own slot. Dispatch only when the
+  current page shares the destination's scope key. Found by reading the
+  app-wide slot before/after in the harness — record every slot the flow can
+  touch, not just the one the feature writes.
