@@ -1315,8 +1315,11 @@ Browser facts that cost time today:
   Re-check `lsof -p <holder> | awk '$4=="cwd"'` before EVERY browser run.
 - `/desktop/<id>` for an episode canvas ("… — 第 1 集") shows 无法加载此项目;
   use a standalone desktop (`desktops` row whose name is not an episode).
-- The repo's own `generating-commit-messages` skill forbids Co-Authored-By;
-  recent commits carry none. The system attribution reminder yields to it.
+- The repo's own `generating-commit-messages` skill text forbids Co-Authored-By,
+  but practice disagrees: on 2026-09-14 ALL of the last 10 commits on `main`
+  carried the trailer (squash merges keep it). Match practice — keep the
+  trailer, do not rewrite pushed history over it. PR bodies end with the
+  `🤖 Generated with Claude Code` line (#626, #634).
 
 ## Verifying a canvas lightbox: the harness beats fighting selection (2026-09-14, Meegle 14333608)
 
@@ -1532,3 +1535,48 @@ a miss into a positive claim.
   driver UNCHANGED, and the next run silently exercises the old script —
   the only tell was the old selector still in the error text. Print the
   replaced count and `node --check` in the same command as the run.
+
+## Capture frames menu (2026-09-14, Meegle 14452515, PR #634)
+
+- **Gates on the MERGED tree without touching the branch**: `MT=$(git
+  merge-tree --write-tree origin/main HEAD)`, `MC=$(git commit-tree $MT -p HEAD
+  -p origin/main -m scratch)`, `git worktree add --detach .work/worktrees/zz-x
+  $MC`, then `npm install` THERE before tsc/vitest. Without the install the
+  scratch resolves `node_modules` upward to the main checkout, which lacked
+  `@anthropic-ai/sdk` → 8 tsc errors + 26 suites failing to load, identical on
+  `origin/main` alone. The control run (same env, base only) is what proved it
+  was environment; the install (651 pkgs, ~10 s) is what proved the merge green.
+  `git worktree remove --force` afterwards.
+- **`review_gate.sh --base origin/main` alone built a >200 KB packet** once
+  main had moved (it read as two-dot). Pass `--diff-file <(git diff
+  origin/main...HEAD)` together with `--base`; the three-dot packet was ~90 KB.
+- **`git add -A` swept `package-lock.json` (−23 lines of npm-install drift)
+  into the first commit** even though I had "restored" the worktree copy. Check
+  `git diff main...HEAD --stat` for a lockfile row before the push; fix with a
+  `git checkout main -- package-lock.json` commit, never by rewriting.
+- **Canvas selection from a script on a standalone desktop: six attempts, one
+  success.** Fresh headless profile starts in Hand tool (pan) with the cookie
+  banner up; click the tool toggle by its label (`Hand tool (pan)` /
+  `Select tool`), not `V`. The synthetic pointer sequence raised the bar once
+  (First frame verified end to end: node at `left+width+16`, one DB row); the
+  same sequence, `page.mouse`, and a relaxed selector all failed afterwards
+  with the hit element correctly the card's `<video>`. I never tried the
+  note's own MCP `click`-by-uid route (2026-09-10 entry above) — rule 15
+  broken again. Next time: two attempts, then MCP click or an `app/auth`
+  harness. `[data-asset-card]` has no `data-selected`; the bar's presence is
+  the signal.
+- **`NEXT_LOCALE` set by one run persists in the profile** and made a later
+  "en" run render zh-CN, so the English label probe found nothing. Reset the
+  cookie at the top of every run.
+- **A reused i18n key rendered a false claim.** `video.frameCaptureSuccess`
+  ("saved to My Frame Captures") was the dialog's toast too; on the canvas
+  nothing is filed there. Only the browser toast text showed it. New key
+  `desktop.captureFramesSaved`, both canvas call sites; Library keeps its own.
+- The `desktop` namespace's parity is NOT machine-enforced
+  (`i18n-mode-copy.test.ts` covers `video` only) — diff the five catalogs'
+  key sets yourself.
+- DesktopCanvas.tsx carries 45 pre-existing `react-hooks/refs` lint errors on
+  main; my first "baseline" compare measured the current file twice because
+  `git show "$BASE:path"` lost its colon in the shell and the `cp` of a
+  missing file was silent. Print the baseline's byte count and a grep that
+  distinguishes the two files in the same output.

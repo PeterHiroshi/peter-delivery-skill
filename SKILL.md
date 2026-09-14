@@ -451,6 +451,13 @@ The pattern: **when the system already records the answer, query it before
 reasoning about it.** A DB row, a stdout log, a `console.log` in the live path.
 Reading code tells you what SHOULD happen; those tell you what DID.
 
+A third instance, 2026-09-14 (moodio-agent, Meegle 14452515): selecting a
+canvas node from a puppeteer script failed **six** times in a row (synthetic
+pointer sequence, `page.mouse`, relaxed selectors, readiness gates, a locale
+reset) while the repo note's 2026-09-10 entry — "prefer the MCP `click` by
+uid for selection on any canvas" — sat unread at the moment of use. Four of
+the PR's acceptance criteria shipped as "not verified" because of it.
+
 Practical cap, per sub-task:
 
 - **Two failed attempts at the same sub-goal → stop and switch class of evidence.**
