@@ -1424,3 +1424,29 @@ that Modal (HeroUI does not forward `shouldCloseOnInteractOutside` — it is
   failed on MY OWN comment explaining the prop. Scope such guards to the prop
   (`/isKeyboardDismissDisabled\s*=/`), never the bare word — same trap as the
   className guards already noted above.
+
+### A stale rationale is not permission to remove the rule (2026-09-14, Meegle 14333608)
+
+`downloadable.ts` excluded Discover tiles (`public_image`/`public_video`) from
+canvas downloads, with a comment saying the shared engine could not speak their
+storage-key / public-CDN model. I checked: the rationale WAS stale — the engine
+addresses a public asset by its content UUID, proven by an existing test. I
+then widened the gate, shipped it, and Peter reverted it: 「discover 部分如果原
+来不支持下载，那就还和之前保持一致（不允许下载）」.
+
+The rationale being wrong did not make the exclusion wrong. Discover is
+third-party retrieval content: *can the engine fetch it* is a capability
+question, *may users save it* is a product decision. They had the same answer
+for different reasons, and only one of them was mine to change.
+
+- **The tell was in my own question.** I asked Q2 as "this comment is out of
+  date, fix it?" — which frames a product decision as a technical one, so the
+  answer I got ("一并修复") was about my framing, not about the product. This is
+  rule 17 without a deletion: my badly-framed question authorised a change to
+  behaviour that was intentional.
+- When a guard's stated reason is obsolete, the finding is "this comment is
+  wrong", not "this guard should go". Fix the comment; raise the behaviour as
+  its own question, in the product's terms, naming what the user would be able
+  to do that they cannot today.
+- Third-party / licensed / retrieved content is a standing example: assume an
+  exclusion around it is deliberate until a product owner says otherwise.
