@@ -1246,3 +1246,26 @@ sizes the number without going through `ChatSidePanel`.
   code — the log of MY server ends in `^[[?25h` and has no hits for those
   runs. Print `lsof -p <holder> | awk '$4=="cwd"'` and the hit count in the
   server's own log in the same command as the check.
+
+### Vendor sheets live in `scratch/third-doc/` (2026-09-14, Meegle 14661162)
+
+- A vendor's model-specific API sheet (docx) lands in the MAIN checkout's
+  gitignored `scratch/third-doc/`, invisible from a worktree. Extract with
+  python `zipfile` + tag-stripping regex (no `markitdown`/`python-docx`
+  needed); tables come out as `|`-separated cells.
+- The generic public doc page and the vendor's per-model sheet DISAGREE
+  (the sheet had video/audio references, callbacks, `expired`, 21:9, and a
+  480p/720p-only resolution list the page never mentioned). When Peter
+  points at a sheet, re-derive the whole mapping from it, and prove each
+  new field with one clip using the sheet's own sample assets
+  (`arkdocs.tos-cn-beijing.volces.com/...` are public and fetchable by the
+  gateway). Compare an extracted frame against the reference
+  (`ffmpeg -frames:v 1` + `hstack`) — a matching resolution alone does not
+  prove the reference was used.
+- A documented `callback_url` is not a callback until one arrives: a
+  webhook.site bin (`POST https://webhook.site/token` → uuid, then
+  `GET /token/<uuid>/requests`) is a five-line way to find out. Here it
+  received nothing, so the provider stayed poll-only with the route as a
+  fast path.
+- Port 3000 was held by ANOTHER session's worktree twice in one day; kill
+  and say so, per the standing rule.
