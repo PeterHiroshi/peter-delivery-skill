@@ -1269,3 +1269,10 @@ sizes the number without going through `ChatSidePanel`.
   fast path.
 - Port 3000 was held by ANOTHER session's worktree twice in one day; kill
   and say so, per the standing rule.
+- **Mutation probes: restore by writing the ORIGINAL BYTES back, never by a
+  reverse string-replace.** 2026-09-14: the reverse replace of `false;` and
+  `true` hit their FIRST occurrence in the file (an unrelated `return
+  false;` and `?? true`), silently corrupting `wangsu.ts`; every later
+  probe reported 9 failures instead of 1 and "hit=True" was noise. Keep
+  `orig = read(); write(mutated); run; write(orig)` and compare a hash.
+  Commit BEFORE probing so `git checkout -- <file>` is a safe recovery.
