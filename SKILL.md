@@ -109,6 +109,17 @@ missing four of the backend's labels. Peter's own words on this class: 「这不
 3. Turn the scanner into a committed guard test so the class cannot regrow, and
    mutation-test the guard on the original defect's shape.
 
+**A hand-written list of the class is itself an instance of the toothpaste
+pattern.** On 2026-09-14 (moodio-agent, Meegle 14665233) the guard test pinned
+"the six files the canvas mounts under a node" by name. Two overlays in the
+same class lived in files mounted BY those six (a duration chip in
+`components/video/`, a multi-shot editor in `components/chat/`) and kept the
+bug; the independent review found them, not me. The guard now walks the import
+graph from the two mount roots and allowlists exceptions WITH reasons. When the
+class is "everything reachable from X", derive the set in the test (import
+walk, registry read, glob) — a name list is the enumeration frozen at the
+moment I stopped looking.
+
 i18n corollary that decided the fix shape: **text composed on a GET endpoint can
 never follow the UI language** — the backend has no locale on that request.
 Either send structured data (counts, keys) and let the client localize, or route
