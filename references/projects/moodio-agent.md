@@ -1450,3 +1450,51 @@ for different reasons, and only one of them was mine to change.
   to do that they cannot today.
 - Third-party / licensed / retrieved content is a standing example: assume an
   exclusion around it is deliberate until a product owner says otherwise.
+
+## A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)
+
+The rename entrance itself was small — `enableRename` beside `enableManage` on
+`asset-picker-unified-tree.tsx`, one prop on `destination-picker-modal.tsx`.
+What cost the time was four rounds of the SAME hollow-guard shape in one test
+file, each found by a reviewer rather than by me:
+
+1. `key: "rename"` counts stayed identical when the branch that builds the menu
+   was flipped to `: false` — the row is still *written*, just unreachable.
+2. `expect(picker).toMatch(/enableRename\b/)` passes on `enableRename={false}`.
+3. Action-key counts cannot see WHICH branch selects them: flipping a level's
+   selector to `!enableManage` hands a destination row the full menu, Delete
+   included, with every count unchanged.
+4. The worst one. Told to fix a click-away bug, I replaced `TreeRenameRow`'s
+   400 ms blur window with `rowRef.current?.contains(event.relatedTarget)`,
+   wrote three mutants, killed all three — and the fix was broken. The ⋮
+   trigger is a **sibling** of `TreeRenameRow`, and `{!renaming && manage && …}`
+   unmounts it the moment renaming starts, so focus restoration can never land
+   inside the row: the absorption never fires and the first blur commits and
+   closes the editor. I had shipped the bug the window existed to prevent.
+
+The rule: **a source guard proves a name exists and which text selects it; it
+can never prove the DOM case it targets can occur.** Before writing a guard
+about focus, containment, or event bubbling, read the JSX that renders the two
+elements and establish their real relationship (`{cond && <X/>}` next to
+`{cond ? <Y/> : …}` means sibling, and means unmounted). My three mutants all
+edited the discrimination's text, so they tested my typing, not the mechanism.
+
+Also from this session, the ask-vs-assume trap in its purest form: I claimed in
+a commit message, a PR body, a design doc and a report to Peter that "no surface
+mounts the filesystem-history provider, so dialog renames are not undoable."
+The grep behind it searched `LibraryFilesystemProvider`, which does not exist —
+the real name is `LibraryFilesystemHistoryProvider`, mounted on four route
+layouts. Copilot caught it. A zero-hit grep is not proof of absence; grep the
+EXPORTED name from the module (`grep "^export function" <file>`) before turning
+a miss into a positive claim.
+
+- `review_gate.sh` shapes that cost time: the plan's `evidence` rows are
+  `{id, result}` objects only, `self_review` rows are
+  `{concern, conclusion, evidence_refs}` keyed on the ids from
+  `--print-required-concerns --stage <stage>` (build = correctness, safety,
+  failure_paths, tests_evidence, compatibility, claim_strength), and a widened
+  `--diff-file` packet must BEGIN byte-for-byte with `git diff base...HEAD` —
+  appending an uncommitted diff into the middle returns `invalid_input`.
+  Two runs in a row can return `invalid_model_output`; that is reviewer-side and
+  is never "no findings".
+- `meegle comment add` (not `create`); `--project-key` is required.
