@@ -1613,3 +1613,24 @@ a miss into a positive claim.
   current page shares the destination's scope key. Found by reading the
   app-wide slot before/after in the harness — record every slot the flow can
   touch, not just the one the feature writes.
+
+## Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)
+
+`uploadFilesToDesktop` (DesktopDetailPage) writes the ephemeral
+`__uploading_*` placeholder as `status: "processing"` for image and
+video (so the in-flight guards fire) and `status: "uploading"` for
+audio. The image tile captions it via `uploadInFlight`; the video tile
+captioned every pending state `videoGenerating` — hence "生成中" on a
+dropped file. Fix was `uploadInFlight(asset)` choosing the caption in
+`VideoAsset.tsx` and skipping `FakeProgressBar`. The audio tile shows NO
+caption while uploading (its "uploading" status is neither processing nor
+failed) — noted, not changed.
+
+- An `app/auth/<x>` harness whose fixtures call `new Date()` at module
+  scope trips a hydration-mismatch console error (Next's "1 Issue" badge in
+  the screenshot) on the OLD code too; read the captured console text
+  before attributing the badge to the change. Two 401s from `/api/auth/me`
+  are the same baseline noise.
+- A revert probe's "expect N" for the restored count must be derived from
+  `grep -c` on the fixed file BEFORE the probe, not from memory (I wrote
+  "expect 4", the file had 3; the 0→3 pair was still the evidence).
