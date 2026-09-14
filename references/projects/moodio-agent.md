@@ -1276,3 +1276,44 @@ sizes the number without going through `ChatSidePanel`.
   probe reported 9 failures instead of 1 and "hit=True" was noise. Keep
   `orig = read(); write(mutated); run; write(orig)` and compare a hash.
   Commit BEFORE probing so `git checkout -- <file>` is a safe recovery.
+
+## Overlays on the moving canvas layer (2026-09-14, Meegle 14665233)
+
+HeroUI Popover/Dropdown position once at open (react-aria `useOverlayPosition`
+re-runs only on window resize, trigger/overlay ResizeObserver, scroll). The
+canvas moves the composer anchor by inline `left/top` + world `transform`, so
+an open menu stays put while the node pans/zooms away. Fix in place:
+`components/ui/following-overlay.tsx` (`FollowingPopover` /
+`FollowingDropdown`, rAF rect-poll while open via `hooks/use-follow-trigger.ts`)
+and a source guard `__tests__/canvas-overlays-follow-trigger.test.ts` that
+pins the six composer/card files. Any new overlay in those files must use the
+pair or the suite says so.
+
+Browser facts that cost time today:
+
+- `.cs-composer-stroke` no longer exists; find the node composer through
+  `button[aria-label="模型"]` (zh-CN) and filter by `getBoundingClientRect().x`
+  when the docked chat composer is also mounted (its chip sits at x > 900).
+  Collapse the chat with `button[aria-label="收起对话面板"]` first.
+- Camera zoom persists server-side per desktop. At 800 % the cards are culled
+  and `[data-asset-card]` is EMPTY — not a load failure. Zoom out with
+  ctrl+wheel `deltaY:+100` ×40 at the canvas centre; then zoom in with
+  `deltaY:-3` steps (each ctrl+wheel unit is a large step here: -5×4 took 125→228).
+- Wheel pan at zoom ~85 moves the world ~2 px per delta unit; anchor the
+  synthetic wheel at (1200,650) — (100,700) lands on the minimap and pans nothing.
+- `window.dispatchEvent(new Event("resize"))` UNMOUNTS the composer and
+  deselects the node on this page; not a usable "force reposition" probe.
+- A left-button pointerdown on the card dismisses any open HeroUI popover
+  (outside press) — the reporter's "drag the text box" case cannot show the
+  misalignment; middle-button drag and wheel keep it open. Escape closes the
+  popover AND, a beat later, deselects the node.
+- Synthetic pointerover/mouseenter never opened a HeroUI Tooltip; the MCP
+  `hover` tool did on the first try. The tooltip closes by itself once the
+  chip moves out from under the pointer.
+- The other sessions' dev servers retook :3000 twice within the hour
+  (14661162, then 14333608), each time killing mine (log ends `^[[?25h`).
+  Re-check `lsof -p <holder> | awk '$4=="cwd"'` before EVERY browser run.
+- `/desktop/<id>` for an episode canvas ("… — 第 1 集") shows 无法加载此项目;
+  use a standalone desktop (`desktops` row whose name is not an episode).
+- The repo's own `generating-commit-messages` skill forbids Co-Authored-By;
+  recent commits carry none. The system attribution reminder yields to it.
