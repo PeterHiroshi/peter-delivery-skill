@@ -71,7 +71,22 @@ If the design file exists but does not contain this screen, say so explicitly:
 
 That sentence, said early, would have prevented several rounds.
 
-Then: build → screenshot → compare → fix differences → deliver.
+**"Read the design source" means RENDER it, not read its markup.** On
+2026-09-15 (moodio-agent, Meegle 14294602 sub-02) I read the prototype's
+dialog markup, its CSS rules and its CLAUDE.md "弹窗规范", built the dialog
+in the app's own panel chrome, screenshotted MINE, and reported it as
+verified. Peter: "你完成的和 moodio-ui 中的样式完全不一致呀". Serving the
+prototype (`python3 -m http.server 8765` in moodio-ui, headless Chrome,
+click `#import-text-button`, screenshot `#flow-dialog`, dump computed
+styles) took four minutes and showed a 620px flow dialog with a
+watercolor title bar and name-only cards — none of which the markup read
+had made me build. For a UI task the prototype's screenshot sits BESIDE
+mine in the report, with the measured numbers (width, radius, card size,
+font sizes) in a two-column table; a description of the prototype from
+its source is not a comparison.
+
+Then: render the prototype → build → screenshot both → compare numbers →
+fix differences → deliver.
 
 ## When Peter pushes back
 

@@ -1678,3 +1678,21 @@ failed) — noted, not changed.
 - `/api/parse-document` has three consumers (chat persistent context, the
   Script studio import, `CreateTableWizard`); a status-code change on that
   route reaches all three — grep `parse-document` before changing it.
+
+### Rendering the moodio-ui prototype for a side-by-side (2026-09-15)
+
+`/Users/mahao/Develop/projs/moodio/moodio-ui` is a static page; `file://`
+blocks its model calls but the UI renders. Serve it (`python3 -m
+http.server 8765`, cwd moodio-ui, detached), open
+`http://127.0.0.1:8765/Moodio-UI-Refined-Storyboard.html` in a second
+headless Chrome (`--remote-debugging-port=9334`, separate profile dir), wait
+`networkidle0` + ~1.5 s (loader.js concatenates `src/*.js`), then trigger
+the dialog from its id (`#import-text-button` → `#flow-dialog`,
+`data-kind` names the header art) and dump `getComputedStyle` of the
+dialog, header, cards and footer button. The prototype's dialog language
+(`.flow-dialog`): 620 wide, 12px radius, header 18/22 with an 18px bold
+title over `assets/dialog-bg-*.jpg`, body 20/22, two-column 284×56 cards
+(icon tile 32px radius 7 on `#f4f3f1`, 14px bold name, NO description),
+13px `#696764` note, footer 14/22 with a 36px outline 取消. In the app this
+is `StudioDialog chrome="flow" headerArt=…`; the header art is copied to
+`public/assets/`.
