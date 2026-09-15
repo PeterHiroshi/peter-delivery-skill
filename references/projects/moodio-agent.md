@@ -1696,3 +1696,23 @@ title over `assets/dialog-bg-*.jpg`, body 20/22, two-column 284×56 cards
 13px `#696764` note, footer 14/22 with a 36px outline 取消. In the app this
 is `StudioDialog chrome="flow" headerArt=…`; the header art is copied to
 `public/assets/`.
+
+## The minted token dies after 2 h, and :3000 is shared with Peter (2026-09-15, cloud-doc editor)
+
+- `mint.js` signs a 2 h access token. Every browser run after that hits
+  the login page and every wait (`剧本` tab, `导入文档`) times out looking
+  exactly like a slow server. Forty minutes went to that. **Before EVERY
+  browser run**: `curl -b moodio_access_token=$(cat token.txt) /api/auth/me`
+  must be 200, or re-mint. Bake the check into `drive.js`.
+- The :3000 server in this worktree is the one Peter reviews on; his
+  traffic (a different workstation, Grammarly hydration warnings in the
+  log) shares it, the dev RDS adds 1.3–4 s per request, and the studio's
+  script load can lose a race to the episode-scope reset and sit on its
+  spinner — a reload fixes it. `drive.js openStudio` now retries three
+  times. Don't kill his server to "own" the log; read the browser side.
+- Opening a document pane from the writings bar takes up to 90 s here.
+  Wait on `.studio-cdoc [contenteditable]`, not `.ProseMirror` (the class
+  IS "tiptap ProseMirror cdoc-body", the earlier waits simply expired).
+- Rule 22 corollary: when the replica compiles and mounts, hand it over.
+  Peter reviews faster on :3000 than a headless tour completes on this
+  server; my extra hour of verification delivered nothing he could see.
