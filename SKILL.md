@@ -164,6 +164,11 @@ it, wait. This is a standing requirement from earlier work
 abstractions, or anything touching a contract does. If unsure, write three
 bullets and ask if that is enough.
 
+**Exception — a task that references an existing prototype (rule 22):** the
+prototype IS the design. Do not write a design doc, do not propose
+alternatives, do not "improve" it. Replicate it 1:1 and hand the replica
+over for review; the doc, if one is wanted at all, comes after acceptance.
+
 ### 6. Push and PR need their own approval, every time
 
 Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
@@ -651,6 +656,61 @@ saying so; never use `git checkout --ours/--theirs` on a file that both
 sides changed; never let `npm install`'s lockfile drift ride along with a
 rebase.
 
+### 22. Prototype tasks: replicate 1:1 FIRST, Peter reviews, THEN tests, THEN backend hardening (standing instruction, Peter 2026-09-15)
+
+Meegle 14294602 sub-02: Peter pointed at `moodio-ui` for the interaction.
+I read the prototype's markup, wrote a design doc, got it confirmed, did
+TDD, three browser runs, an adversarial review round, five-locale copy —
+hours of work — and then he opened it: "你完成的和 moodio-ui 中的样式完全
+不一致呀". The dialog was the app's own panel chrome with descriptions the
+prototype never had. Everything downstream of the replica (tests, review,
+i18n guards) had verified the wrong thing, and the one deliverable he
+actually asked for — a 1:1 copy of the prototype — was the part not done.
+His words: "连我最初想要的 1:1 复刻原型这个任务都没有完成，更不要提后续的测试了".
+
+The order for any task that names a prototype, mockup, or reference UI:
+
+1. **Replicate fast.** Render the prototype (screenshot + computed styles),
+   build the same thing in the app with the same geometry, copy and
+   structure, screenshot mine beside it, hand BOTH over. Minutes to an
+   hour, not a day. No design doc, no options, no tests yet, no review
+   agents, no i18n sweep. tsc green is enough to hand over.
+2. **Peter reviews the replica.** Fix what he points at. Repeat until he
+   accepts. Nothing below this line starts before acceptance — every hour
+   spent below it before acceptance is wasted when the replica is wrong.
+3. **Then tests + polish**: the guard tests, the locale sweep, the failure
+   cases, the harness runs.
+4. **Then backend stability**: concurrency, caps, error codes, the review
+   round, the DB checks.
+
+This inverts my default (design → tests → build → verify → report). The
+default optimises for not shipping bugs; for a prototype task the bug
+that matters is "not what he asked for", and only his eyes find it. The
+same applies to any task where the acceptance criterion is visual and the
+reference exists: the reference is the spec, the replica is the first
+deliverable, everything else waits.
+
+### 23. `ccl-skills` are opt-in, not the default (Peter 2026-09-15)
+
+Same session. The `ccl-skills` pack (product-rd-workflow, web-react-dev,
+multi-agent-delegation, code-review, testing-strategy…) was loaded through
+its hooks four times; each load is thousands of tokens of process text,
+and its gates pushed the work toward design docs, delegation charters and
+coverage sweeps while the replica was still wrong. Peter: "ccl-skills 要
+慎用，这个 skills 会花费大量 token 和时间……特别是上述这种任务，简直就是浪费时间".
+
+- Do not invoke any `ccl-skills:*` skill on my own initiative. Not for
+  routing, not for review, not because a hook's text suggests it.
+- If a hook checkpoint BLOCKS an edit until a ccl skill is loaded, load the
+  one it names, once, and continue; do not follow that skill's routing
+  into further ccl loads or dispatches. Say in the report that the load
+  was forced.
+- Use them only when Peter asks by name, or for a genuine backend risk
+  gate (money, permissions, data loss, migrations) — and say so first.
+- The review that matters for UI work is Peter's; for backend work a single
+  focused adversarial pass (a subagent with the diff and a numbered
+  checklist) is enough and costs a fraction.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -745,7 +805,11 @@ Always in play, regardless of task:
 - `andrej-karpathy-skills:karpathy-guidelines` — while writing code (simplicity,
   surface assumptions)
 - `superpowers:systematic-debugging` — the moment there is a bug
-- `ccl-skills:code-review` — after changing code, before the landing hand-off
+
+NOT in play by default: anything under `ccl-skills:*` (rule 23). The old
+line "`ccl-skills:code-review` after changing code" is withdrawn; a focused
+adversarial subagent pass on the diff replaces it for backend work, and
+Peter's own review replaces it for UI work.
 
 **Invoke these by their plugin-qualified names**, exactly as listed. A bare
 `karpathy-guidelines` is not resolvable; the Skill tool needs the
@@ -755,11 +819,12 @@ Then by task shape:
 
 | Task | Route |
 | --- | --- |
+| **References a prototype / mockup / existing UI** | Rule 22: render it, replicate 1:1, hand both screenshots over, WAIT. Tests, i18n, reviews and backend hardening only after Peter accepts the replica. No design doc, no ccl-skills |
 | **UI / interaction / visual** | This contract + **look at it**. `ui-ux-pro-max` for design *choices* (palette, type, a11y), then [`references/ui-design-principles.md`](references/ui-design-principles.md) for the judgements Peter has already made (no action gated on a fetch, primary task in the first viewport, geometry as evidence). **Skip `code-review`** — it reads a diff and cannot see a render |
-| Bug, cause unknown | `systematic-debugging`, or `ccl-skills:defect-diagnosis` for the heavier evidence ladder |
-| Pure logic, backend, data flow | `ccl-skills:product-rd-workflow` → its dispatch. Worth the ceremony |
-| Money / permissions / data loss / migrations | `ccl-skills:feature-risk-router`, then `code-review` in **challenge** mode |
-| Needs test layer decided | `ccl-skills:testing-strategy` |
+| Bug, cause unknown | `systematic-debugging` |
+| Pure logic, backend, data flow | Small design note (three bullets) → build → tests → one adversarial subagent pass on the diff. `ccl-skills:product-rd-workflow` only if Peter asks (rule 23) |
+| Money / permissions / data loss / migrations | Say the risk out loud, design note first, adversarial pass in **challenge** mode; `ccl-skills:feature-risk-router` only if Peter asks |
+| Needs test layer decided | Decide it in the design note; `ccl-skills:testing-strategy` only if Peter asks |
 | Multi-step feature | `superpowers:writing-plans` → `executing-plans` |
 
 **Category check before invoking anything heavy:** does this tool observe the

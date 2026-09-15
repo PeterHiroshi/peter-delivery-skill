@@ -49,12 +49,31 @@ Renders → look at it. Logic → tests. Say which you did.
 
 ## Feature
 
+**If a prototype / mockup / reference UI is named, this section does not
+apply — go to "Prototype task" below (SKILL.md rule 22).**
+
 1. **Scope** — restate what he asked for; flag ambiguity now, not after coding
 2. **Design doc** — file, present, wait (`design-doc-before-coding`)
 3. **Route** — see the routing table in `SKILL.md`
 4. **Build** — derive over pass (`reuse-over-duplication.md`)
 5. **Verify** — gates + visual if it renders
 6. **Report** — verified / not verified, then ask before pushing
+
+## Prototype task (a reference UI exists)
+
+1. **Render the reference** — serve it, screenshot the exact screen, dump
+   computed styles (width, radius, paddings, font sizes, colors, card
+   sizes). Fifteen minutes.
+2. **Replicate 1:1** — same structure, geometry, copy and assets. Copy the
+   reference's images into the app. tsc green, nothing else.
+3. **Hand over both screenshots + a numbers table** and WAIT for Peter.
+4. After acceptance: tests, locale sweep, failure cases, harness runs.
+5. After that: backend stability (concurrency, caps, error codes, a
+   focused adversarial pass).
+
+Do not write a design doc, do not load ccl-skills, do not run review
+agents before step 3 is accepted. The cost of the wrong order on
+2026-09-15 was most of a working day.
 
 ## UI task specifically
 
