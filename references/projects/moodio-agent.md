@@ -1634,3 +1634,37 @@ failed) — noted, not changed.
 - A revert probe's "expect N" for the restored count must be derived from
   `grep -c` on the fixed file BEFORE the probe, not from memory (I wrote
   "expect 4", the file had 3; the 0→3 pair was still the evidence).
+
+## Script studio import + driving the chat composer (2026-09-15, Meegle 14294602 sub-02)
+
+- **A source-edit hook checkpoint blocks the first `Write`** in a session
+  until the owning implementation skill is loaded (`ccl-skills:web-react-dev`
+  for React work). It is not a permission denial: load the skill, retry the
+  same write. One of two parallel writes went through, the other bounced.
+- **TipTap composers ignore a synthetic `execCommand("insertText")` from
+  `page.evaluate` on this build** (the chat panel's composer, not the script
+  paper): `innerText` stayed empty, the send button sent nothing, and no
+  `llm_turns` row appeared — silent. `page.mouse.click(editor)` +
+  `page.keyboard.type(text)` (real CDP key events) works. Assert the editor's
+  text BEFORE clicking send, and confirm the turn in `llm_turns` after.
+- **After a fresh navigation the canvas chat panel opens on the history list**,
+  not a composer. Click `button[aria-label="新对话"]` first; then
+  `button[aria-label="发送"]` exists and the composer is the `.ProseMirror`
+  found by walking up from that button.
+- **Import a file through puppeteer**: arm `page.waitForFileChooser()` BEFORE
+  the click that calls `input.click()`, then `chooser.accept([abs path])`.
+  Toasts are `[role=alert|status]` nodes — install the MutationObserver spy
+  once per page load (a navigation drops it).
+- **The studio's import fixtures**: a minimal real DOCX is three zip entries
+  (`[Content_Types].xml`, `_rels/.rels`, `word/document.xml`) — mammoth reads
+  it; a PNG renamed `.docx` fails as PARSE_FAILED, an empty `.txt` as EMPTY.
+  Peter's dev workstation `d9c0370c…` / episode `c0273ead…` was empty (no
+  docs, no script) and is the clean target; delete the docs and PATCH the
+  script back to "" with its CURRENT `contentUpdatedAt` (null → 409).
+- **`npx eslint --fix` on `components/chat/chat-interface.tsx` reformats ~300
+  lines you did not touch** (32 drift hunks around 2 real ones). Reapply the
+  real edits on a `git checkout HEAD -- <file>` copy without `--fix` before
+  staging, and count hunks (`git diff --staged -U0 | grep -c '^@@'`).
+- `MAX_DOCUMENT_CHARS` (writings sections) is 200k, `MAX_SCRIPT_CHARS` 500k,
+  `MAX_TEXT_CHUNK_LENGTH` (chat persistent context) 20k — three caps, three
+  destinations; the design doc first said 500k for sections and was wrong.
