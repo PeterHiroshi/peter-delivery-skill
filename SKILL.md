@@ -731,6 +731,30 @@ coverage sweeps while the replica was still wrong. Peter: "ccl-skills 要
   focused adversarial pass (a subagent with the diff and a numbered
   checklist) is enough and costs a fraction.
 
+### 24. No headless-browser verification on Peter's dev server — hand him the test cases (Peter 2026-09-15)
+
+Same session, one step later. After the cloud-doc editor replica I spent
+two-plus hours driving it through headless Chrome on the shared `:3000`
+(1–4 s per request, 60–90 s to open one pane, minted token expiring
+unnoticed, waits on the wrong selector) and still did not reach the
+interaction that crashed for Peter within ten seconds of clicking. Peter:
+"目前先不要用无头浏览器去验证，相反可以将 test case 交给我，我去真实交互中去
+测试，从而提升研发时间".
+
+- For UI work in this repo: run tsc + scoped eslint + node tests, then STOP
+  and hand Peter a numbered test-case list. Do not open a browser.
+- The list is the deliverable of the round, not an afterthought. Per case:
+  the exact steps, the expected result stated as what he sees, and the
+  prototype screen it mirrors. Group by feature; put the risky/unverified
+  cases first and mark them so.
+- Say in one line what the automated checks did NOT cover so he knows where
+  to look hardest.
+- This does not lift rule 2. It moves the visual verification to Peter by
+  his choice — the report still says "browser: not verified by me".
+- The headless route (`references/projects/moodio-agent.md`) stays on
+  record for when he asks for it or when a defect needs a repro he cannot
+  give.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -762,6 +786,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
 | 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
 | 21 | **Proved the rebase/merge had no side effects**: before/after patch delta empty or every line explained, full gates on the rebased tree, target's incoming diff grepped for the branch's mechanism — whether or not Peter asked | any rebase, merge, or conflict resolution |
+| 22 | **Handed Peter a numbered test-case list instead of a headless run** (rule 24) | any UI round in moodio-agent |
 
 **A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
 On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking
