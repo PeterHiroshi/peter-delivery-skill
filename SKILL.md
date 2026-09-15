@@ -693,6 +693,16 @@ labels, icons, copy) comes from the reference; the codebase supplies only
 what the reference cannot (ids, routes). A deviation is a defect to fix,
 not a question to ask.
 
+**And 1:1 covers every screen the flow touches, not the first one.** Third
+round, same day: the dialog now matched, and Peter opened the RESULT —
+the imported page still had the app's own header (section label, small
+serif title), no meta row, the app's editor typography, opened in compare
+view; and the chooser refused `.doc`, which the prototype accepts. I had
+compared the one screen he first complained about and stopped. Before
+handing a replica over, walk the prototype's flow end to end (entry →
+dialog → result page → toast → the sidebar row it creates) and measure
+every screen; the format list and copy are part of the screen.
+
 This inverts my default (design → tests → build → verify → report). The
 default optimises for not shipping bugs; for a prototype task the bug
 that matters is "not what he asked for", and only his eyes find it. The
