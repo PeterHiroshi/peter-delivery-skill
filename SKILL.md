@@ -743,6 +743,13 @@ interaction that crashed for Peter within ten seconds of clicking. Peter:
 
 - For UI work in this repo: run tsc + scoped eslint + node tests, then STOP
   and hand Peter a numbered test-case list. Do not open a browser.
+- Peter's second message on this (same day): "只有我要求你使用 devtools 或是
+  无头浏览器测试时你再去做，你也可以向我申请这种操作，总之不要擅自去做这种重的
+  测试任务". So: ANY heavy browser-driven testing — headless Chrome +
+  puppeteer, the chrome-devtools MCP, gstack `/browse`/`/qa` — needs either
+  his explicit request or my explicit ask ("这个缺陷我需要开浏览器复现，
+  可以吗？") answered yes. Never on my own initiative, not even "just a
+  quick screenshot". Applies to all his repos, not only moodio-agent.
 - The list is the deliverable of the round, not an afterthought. Per case:
   the exact steps, the expected result stated as what he sees, and the
   prototype screen it mirrors. Group by feature; put the risky/unverified
@@ -786,7 +793,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 19 | **Asserted the provider's request body through the production path**, per provider, and asked what enforces the user's choice across any LLM hop | any feature that ends in an external call |
 | 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
 | 21 | **Proved the rebase/merge had no side effects**: before/after patch delta empty or every line explained, full gates on the rebased tree, target's incoming diff grepped for the branch's mechanism — whether or not Peter asked | any rebase, merge, or conflict resolution |
-| 22 | **Handed Peter a numbered test-case list instead of a headless run** (rule 24) | any UI round in moodio-agent |
+| 22 | **Handed Peter a numbered test-case list; no browser/devtools/headless run unless he asked or approved my ask** (rule 24) | any UI round |
 
 **A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
 On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking
