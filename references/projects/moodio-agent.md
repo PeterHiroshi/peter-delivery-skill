@@ -1668,3 +1668,13 @@ failed) — noted, not changed.
 - `MAX_DOCUMENT_CHARS` (writings sections) is 200k, `MAX_SCRIPT_CHARS` 500k,
   `MAX_TEXT_CHUNK_LENGTH` (chat persistent context) 20k — three caps, three
   destinations; the design doc first said 500k for sections and was wrong.
+- **`baseContentUpdatedAt: null` means "this row was NEVER written", not
+  "skip the check"** (`lib/workstation/script-concurrency.ts`
+  `contentUpdatedAtMatches`; `undefined` is the skip). Every created
+  document/script row carries a stamp from insert, so a PATCH with `null`
+  against an existing row is a guaranteed 409. The independent reviewer
+  caught this in my 409-DOCUMENT_TYPE_EXISTS branch; I had written `null`
+  as "no baseline". GET the row for its stamp, or omit the key.
+- `/api/parse-document` has three consumers (chat persistent context, the
+  Script studio import, `CreateTableWizard`); a status-code change on that
+  route reaches all three — grep `parse-document` before changing it.
