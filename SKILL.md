@@ -683,6 +683,16 @@ The order for any task that names a prototype, mockup, or reference UI:
 4. **Then backend stability**: concurrency, caps, error codes, the review
    round, the DB checks.
 
+**1:1 means the same options in the same order, too.** After the restyle
+Peter asked why the dialog had seven cards when the prototype has four. I
+had derived the list from the repo's document-type registry and then asked
+him whether to trim it — deriving from the codebase what the reference
+already states, and turning my deviation into a question for him. When a
+reference exists, every enumerable thing on the screen (options, order,
+labels, icons, copy) comes from the reference; the codebase supplies only
+what the reference cannot (ids, routes). A deviation is a defect to fix,
+not a question to ask.
+
 This inverts my default (design → tests → build → verify → report). The
 default optimises for not shipping bugs; for a prototype task the bug
 that matters is "not what he asked for", and only his eyes find it. The
