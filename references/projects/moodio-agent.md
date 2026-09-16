@@ -1716,3 +1716,25 @@ is `StudioDialog chrome="flow" headerArt=…`; the header art is copied to
 - Rule 22 corollary: when the replica compiles and mounts, hand it over.
   Peter reviews faster on :3000 than a headless tour completes on this
   server; my extra hour of verification delivered nothing he could see.
+
+### A bug handed to a new session while the delivery session keeps committing (2026-09-16)
+
+Meegle 14294602: the line-handle drag bug was moved to a fresh session
+while the original session went on landing subtasks on the SAME branch
+and worktree. Two new commits arrived between my first read of
+`CollabDocBody.tsx` and my second — the function I had just read had
+been refactored under me (`moveLine` → `applyLocalEdit`), and a `git
+status` that was clean at start says nothing about the next minute.
+
+- Before the first edit on a handed-off bug, `git log -3` again and
+  `git worktree list`; if the delivery session is still active on that
+  branch, `git worktree add -b fix/<ticket>-<bug> ../<dir> HEAD` and work
+  there. One commit on the side branch; the delivery session or Peter
+  merges it. Say in the report where the commit is.
+- `npm install` in the new worktree took under two minutes here (npm
+  cache warm) and drifted `package-lock.json` as usual — `git checkout
+  -- package-lock.json` before staging.
+- Never `cd $W && …` in the Bash tool for the persistent shell; use
+  `git -C $W`, `python3 - "$W/file"`, or a subshell — the tool resets
+  cwd afterwards but a mid-command `cd` still shifts every relative path
+  in that command.
