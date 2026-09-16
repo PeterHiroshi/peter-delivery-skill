@@ -136,6 +136,15 @@ Stop and ask — do not assume — when:
 3. Fixing the environment means changing his machine (installs, deletes, config)
 4. He relays third-party feedback whose original text I cannot see
 
+**A real-world format that Peter already has a sample of is asked for, not
+inferred.** On 2026-09-16 (Meegle 14294602-07, 中式/美式剧本版式) I started
+deriving the two screenplay layouts from the prototype's CSS and my own
+knowledge. Peter: "中文和英文版式我这里有具体的样例，你需要向我索要而不是自己去
+推测". Typography, document templates, production sheets, export layouts —
+anything that mirrors a document type people actually use — has a house
+sample on his side. Ask for it first, name what it must show (every element
+kind, margins, casing, punctuation), and build from the sample.
+
 **A claim about what a function does is verified at THAT function, not at its
 sibling.** On 2026-09-11 (LFX-453, PR #397) I told Peter and wrote in a code
 comment that "the backend canonicalises short/long locale codes", having read
