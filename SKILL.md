@@ -781,6 +781,11 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
 - Concretely for a studio surface: pure logic in `lib/workstation/<x>.ts`,
   state + handlers in a hook or the surface, markup in the component;
   the server never learns a class name or a layout decision.
+- And nothing the prototype or the requirement does not say (Peter, same
+  day, on the document scaffolds I had seeded: "上来不需要给定默认的模版，
+  原型和需求中都没有规定，你不要自己发散需求"). Where both are silent the
+  default is the empty / minimal behaviour; a gap worth filling is an open
+  question in the report, not a feature in the commit.
 
 ## Definition of done
 
