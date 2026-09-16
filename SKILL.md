@@ -795,6 +795,17 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
   原型和需求中都没有规定，你不要自己发散需求"). Where both are silent the
   default is the empty / minimal behaviour; a gap worth filling is an open
   question in the report, not a feature in the commit.
+- **Small "helpful" additions count as drift too.** Same story, 2026-09-16
+  (storyboard block): a 剧本 / 文档 kind tag on the chat's writing cards
+  that the story never asked for ("使用户能区分剧本生成结果" was already met
+  by the phase labels), and Peter: "你现在已经开始漂移了，没有的功能为什么要
+  随便加". Before committing any element, name the prototype screen or the
+  requirement sentence it comes from; if neither exists, it does not ship.
+  When he says something is not in the prototype, check `git log
+  --diff-filter=A` first: a thing that predates the branch is removed on
+  his word without argument, and a thing that IS in the prototype (the
+  分镜表's 「撤销删除」, `07-create-assets.js` `renderShotDeletionUndo`) is
+  defended with the file and line, not conceded.
 
 ## Definition of done
 
