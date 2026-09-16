@@ -762,6 +762,26 @@ interaction that crashed for Peter within ten seconds of clicking. Peter:
   record for when he asks for it or when a defect needs a repro he cannot
   give.
 
+### 25. Layer UI, interaction and backend so the prototype replica can be reshaped (Peter 2026-09-16)
+
+Meegle 14294602, subtask 05 review. Peter, confirming the bios-in-outline
+design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变化，另外一定要隔离
+后端逻辑，后端逻辑相对变化少，但是 UI/UX 部分可能还会发生较大的变化，你先按照
+原型去快速复刻，从而可以留下充足的时间进行后续的调整".
+
+- Three layers, three homes: **backend** (save cores, routes, agent
+  context — changes rarely, keep it free of any UI notion), **interaction
+  logic** (what a click does: ordering, search, which row is active,
+  version actions — pure modules under `lib/` and hooks, unit-tested),
+  **UI** (the markup + CSS that copies the prototype — expected to be
+  reshaped, so nothing else may depend on its structure).
+- Replicate the prototype fast and 1:1 first (rule 22); the time saved is
+  for the reshaping rounds that follow. A component that mixes fetches,
+  state and prototype markup is the thing that makes those rounds slow.
+- Concretely for a studio surface: pure logic in `lib/workstation/<x>.ts`,
+  state + handlers in a hook or the surface, markup in the component;
+  the server never learns a class name or a layout decision.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -794,6 +814,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 20 | **Wrote the test-case register with the sweep dimensions (width × locale × data shape × model family × write paths × second key) BEFORE the browser run**, and handed the register over with verdicts | any UI or rules change |
 | 21 | **Proved the rebase/merge had no side effects**: before/after patch delta empty or every line explained, full gates on the rebased tree, target's incoming diff grepped for the branch's mechanism — whether or not Peter asked | any rebase, merge, or conflict resolution |
 | 22 | **Handed Peter a numbered test-case list; no browser/devtools/headless run unless he asked or approved my ask** (rule 24) | any UI round |
+| 23 | **Kept backend, interaction logic and prototype markup in separate homes** (rule 25) — pure logic testable without the component, server free of UI notions | any prototype replica |
 
 **A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
 On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking
