@@ -865,6 +865,39 @@ shot routes in the same worktree. Consequences, all of which bit or nearly bit:
 - Re-run the gates right before reporting — a green run from ten minutes ago
   was over a different tree.
 
+### 29. tsc and the node suite resolve a module graph the ROUTE BUNDLER refuses (2026-09-18)
+
+Meegle 14294602. A shot's text edit answered `{"error":"Failed to update
+shot"}` on Peter's dev server minutes after I reported "tsc, eslint, 7737
+tests green". The change itself was right; the route no longer LOADED. Its
+response now enriched a row with the shared `enrichDesktopAsset`, which
+imports `@/lib/storage/s3` → `lib/image/compress` → `sharp`, a native module.
+Pulling that graph into a workstation route stops Next from loading the route
+at all — every request fails BEFORE the handler runs. tsc and vitest both
+resolve the same graph happily, so every check I had was green over a route
+that could not serve a single request.
+
+- **A changed API route is verified by calling it on the running app**, not by
+  typecheck plus unit tests. Both are blind to bundling, route runtime and
+  native modules.
+- **Run it BOTH ways when it fails**: import the handler in a node test and
+  call it (in-process), and fetch the same URL against the dev server. 200 in
+  process + 500 live means module loading, not logic — that comparison is what
+  located this in minutes after an hour of reading code.
+- **A request that should fail validation is the cheapest probe**: send a body
+  the handler rejects early. A 400 means the handler ran; an empty 500 means it
+  never did.
+- Two of my own probes produced false trails first: a plain `Request` instead
+  of `NextRequest` (undefined `.cookies`), and vitest's `test.env` placeholder
+  `DATABASE_URL` overriding the real one. Print what the probe actually used
+  (host, class) before believing its failure.
+- The guard for this class is an **import rule**, not a behaviour test: name
+  the modules a route may not import, and say why in the test. Nothing else
+  can see it.
+
+Before reporting a route change: `curl`/fetch it live, or say in the report
+that the route was never called.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
@@ -898,6 +931,7 @@ Report per line. **Any ❌ or ⚠️ means the answer is not "done."**
 | 21 | **Proved the rebase/merge had no side effects**: before/after patch delta empty or every line explained, full gates on the rebased tree, target's incoming diff grepped for the branch's mechanism — whether or not Peter asked | any rebase, merge, or conflict resolution |
 | 22 | **Handed Peter a numbered test-case list; no browser/devtools/headless run unless he asked or approved my ask** (rule 24) | any UI round |
 | 23 | **Kept backend, interaction logic and prototype markup in separate homes** (rule 25) — pure logic testable without the component, server free of UI notions | any prototype replica |
+| 24 | **Called the route on the running app** (rule 29) — tsc and the node suite cannot see a route that fails to load | any API route change |
 
 **A guard test's self-test must use the defect's VERBATIM shape, not a paraphrase.**
 On 2026-09-10 (LFX-453) the AST guard's own fixture inlined the leaking

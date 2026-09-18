@@ -1787,3 +1787,25 @@ On 2026-09-18 another session was editing shot routes in
 mid-session and a test of theirs went red mid-edit. Stage paths explicitly,
 and when a test fails, intersect its file reads with `git show --name-only
 HEAD` before believing it is yours.
+
+## A route's imports are load-bearing (2026-09-18)
+
+`@/lib/storage/s3` imports `lib/image/compress`, which imports `sharp`. A
+route that pulls that graph in fails to LOAD on the dev server — every request
+to it answers 500 before the handler runs, with an empty body. The desktop
+asset routes carry it and are fine, so the failure reads as "my new code
+broke", not "my new import did".
+
+- Handing a TEXT asset row to the client needs no URL resolution: use
+  `lib/desktop/enrich-text-asset.ts` (no runtime imports), not
+  `enrichDesktopAsset`.
+- To tell a loading failure from a logic failure, call the handler in a vitest
+  file (`const { PATCH } = await import("@/app/api/.../route")`, build a
+  **`NextRequest`** — a plain `Request` has no `.cookies`) and fetch the same
+  URL on :3000 in the same run. Mint a cookie with `jose`:
+  `new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" })…sign(new
+  TextEncoder().encode(JWT_ACCESS_SECRET))`, sent as `moodio_access_token`.
+- vitest sets `DATABASE_URL` to a localhost placeholder (`vitest.config.ts`
+  `test.env`), so a probe that wants the real database must OVERWRITE it, not
+  default it — otherwise every query fails with "The server does not support
+  SSL connections" and it looks like the code.
