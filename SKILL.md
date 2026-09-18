@@ -859,6 +859,16 @@ tell", never as silence.
 shot routes in the same worktree. Consequences, all of which bit or nearly bit:
 
 - **Stage paths explicitly.** Never `git add -A`, never `git add .`.
+- **Explicit staging is not enough — `git commit` commits the whole INDEX.**
+  2026-09-18, same worktree: I staged my three files by name and committed,
+  and the commit carried four files another session had left staged
+  (`ghostUnitId` work it was mid-way through). Read `git diff --cached
+  --name-only` right before committing and confirm it is exactly your list,
+  or commit by pathspec (`git commit -F msg -- <paths>`). Recovering it means
+  `git reset --soft HEAD^`, `git restore --staged <theirs>`, commit, then
+  `git add <theirs>` to put their index state back — and note that in zsh an
+  unquoted `$VAR` holding several paths does NOT word-split, so a pathspec
+  built that way fails as one long filename.
 - **A test that fails after your change is not necessarily yours.** Prove it:
   intersect the failing test's file reads with `git show --name-only HEAD`. An
   empty intersection plus "their file is dirty against HEAD" is the proof.
