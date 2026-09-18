@@ -807,6 +807,64 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
   分镜表's 「撤销删除」, `07-create-assets.js` `renderShotDeletionUndo`) is
   defended with the file and line, not conceded.
 
+### 26. "It is slow" is a measurement, not a reading — and dev costs mimic defects (2026-09-18)
+
+Meegle 14294602, the studio's document GET: 7-8 s, fired twice. Reading the
+route suggested two indexed queries; the real breakdown only appeared when I
+measured it, and three of the four components were invisible from the code I
+was looking at.
+
+| Component | Measured | Where it lived |
+| --- | --- | --- |
+| Turbopack compiling the route on first hit | 5.5 s | dev only — NOT a product defect |
+| the admission gate in `proxy.ts` | 1.27 s / 4 queries | a file the route never mentions |
+| the route's own two queries | 0.66 s | the code I was reading |
+| a fresh pool connection | 3.3 s | `lib/db/index.ts`, no settings at all |
+
+Before proposing any performance fix, produce that table:
+
+1. **Separate the one-off from the per-request.** A dev server's first compile
+   looks exactly like a slow endpoint. Hit it six times; #1 is the compiler.
+2. **Count round-trips, don't time the code.** Patch the driver
+   (`pg.Client.prototype.query`) in a scratch test with the real
+   `DATABASE_URL` and print the statements. The count is the fix's target;
+   the milliseconds are just the network. *Patching `Pool.prototype.query`
+   AND `Client.prototype.query` double-counts — the pool delegates.*
+3. **Look above the handler.** Middleware/proxy work is charged to every route
+   and appears in none of them. Here it was two thirds of the bill.
+4. **Say which numbers are the environment.** Peter must not optimise a
+   Pacific crossing that production does not pay.
+
+And the class of the duplicate itself, worth its own line: **a value read only
+when the response lands does not belong in a fetch effect's dependency array.**
+`selfId = mySessionId ?? "local"` flipped when the realtime room state arrived
+and re-issued the GET. Scan the whole tree for the shape, not the one hook —
+it was in two.
+
+### 27. A surviving mutation is an answer, not a gap to paper over (2026-09-18)
+
+Same session: three mutations of the GET de-duplicator, two caught, one
+survived (removing `.clone()` for the first caller). The tempting move is to
+invent an assertion that fails. The honest one is to work out whether the line
+is observable at all — it was not, because every joiner attaches before the
+entry is dropped — and write that reasoning where the line is, so the next
+reader does not delete it as dead.
+
+Report it as "one assertion survived its mutation and here is why no test can
+tell", never as silence.
+
+### 28. A worktree can have another session in it (2026-09-18)
+
+`git status` changed under me twice mid-session: another Claude was editing
+shot routes in the same worktree. Consequences, all of which bit or nearly bit:
+
+- **Stage paths explicitly.** Never `git add -A`, never `git add .`.
+- **A test that fails after your change is not necessarily yours.** Prove it:
+  intersect the failing test's file reads with `git show --name-only HEAD`. An
+  empty intersection plus "their file is dirty against HEAD" is the proof.
+- Re-run the gates right before reporting — a green run from ten minutes ago
+  was over a different tree.
+
 ## Definition of done
 
 Report per line. **Any ❌ or ⚠️ means the answer is not "done."**

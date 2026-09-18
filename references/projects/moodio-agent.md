@@ -1738,3 +1738,52 @@ status` that was clean at start says nothing about the next minute.
   `git -C $W`, `python3 - "$W/file"`, or a subshell — the tool resets
   cwd afterwards but a mid-command `cd` still shifts every relative path
   in that command.
+
+## Performance constants for the dev environment (2026-09-18, Meegle 14294602)
+
+The dev database is `…us-east-2.rds.amazonaws.com`. From Peter's machine:
+
+| | |
+| --- | --- |
+| one SQL round-trip (`select 1`) | **~330 ms** |
+| a fresh pool connection (TCP + TLS + auth) | **~3 340 ms** |
+| ten fresh connections in parallel | ~2 630 ms |
+| Turbopack compiling an API route on its first hit | ~5.5 s |
+
+So in this repo **query COUNT is the only thing that matters** for API
+latency, and any "this endpoint is slow" report is answered by counting
+statements, not by reading code. The recipe that worked, in full:
+
+1. Mint a token (the `mint.js` recipe above) and `curl` the endpoint six
+   times — hit #1 is the compiler, the rest are the real number.
+2. Write a throwaway `__tests__/zz-perf-probe.test.ts`, set
+   `process.env.DATABASE_URL` from `.env` at the top (vitest.config injects a
+   placeholder), patch `pg.Client.prototype.query` to count, then `await
+   import()` the real modules and call the route's chain. Delete it after.
+   Patching `Pool.prototype.query` too **double-counts** — the pool delegates
+   to the client.
+3. Remember `proxy.ts`. `enforceAdmission` runs on EVERY authenticated
+   request and cost 4 queries before this fix; it appears in no route's code.
+
+`lib/db/index.ts` had no pool settings at all until 2026-09-18 (`max`,
+`idleTimeoutMillis`, `keepAlive`, `connectionTimeoutMillis` are now written
+down). The old 10 s idle default threw connections away between bursts, so
+every page load paid the 3.3 s connect.
+
+### The studio's fetch hooks re-requested on a late-settling identity
+
+`useWorkstationDocument` / `useWorkstationScript` listed `selfId`
+(`mySessionId ?? "local"`) in the dependency array of the effect that issues
+their GET, though the id is only read once the response lands. `mySessionId`
+is null until the realtime room state arrives (`:8081` IS running in dev), so
+every script and document was fetched twice. Fixed; `__tests__/fetch-effect-
+deps.test.ts` derives every fetch effect from the source and fails if one
+names a session identity again. Check that guard before adding a fetch hook.
+
+### This worktree is shared with other Claude sessions
+
+On 2026-09-18 another session was editing shot routes in
+`meegle-14294602-…` while I worked in it. `git status` changed three times
+mid-session and a test of theirs went red mid-edit. Stage paths explicitly,
+and when a test fails, intersect its file reads with `git show --name-only
+HEAD` before believing it is yours.
