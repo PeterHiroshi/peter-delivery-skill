@@ -1865,3 +1865,44 @@ Also from that session:
   lint findings" — rule 9's failed-query trap, in a shell instead of an API.
   Pass the paths literally, and never send a comparison run's stderr to
   `/dev/null`.
+
+## Only the script PAGE fetches the script — every other surface reads a null (2026-09-19)
+
+`useWorkstationScript()` is mounted by exactly one component,
+`ScriptPaperPane`. Nothing else in the studio fetches the episode's script.
+So `storeApi.getState().scriptContent` is `null` on any studio layout whose
+pages do not include 剧本 — and the studio remembers its pages per episode
+(`ws-studio-layout:<ws>:<episode>`), so that is an ordinary state, not an
+edge case.
+
+Every consumer that reads it synchronously is a bug waiting for that layout.
+Two were live:
+
+- **定位剧本 on a 分镜表 row** did nothing until the page was reloaded. The
+  handler opened the script page and then read the store in the same tick;
+  no ids matched, so it toasted "the passage is gone". The reload restored a
+  layout that already had the script page, so the text was there first.
+  Peter reported it as 「定位剧本会不生效，但是刷新页面后就可以了」.
+- **The import modal's overwrite guard** waived its confirmation checkbox
+  (and enabled Apply) for an "empty" script. An in-flight import job reopens
+  that modal on studio mount, on whatever pages were remembered — so with
+  the script page closed, an import replaced a full script with no prompt.
+
+The tell in both: an empty store and an empty script are the same value, and
+the code that had it right was 1200 lines away in the same file — the
+canvas's 定位剧本, which waits via `whenScriptLoaded` and says so in a
+comment. **When two call sites reach one function and only one is reported
+broken, diff the call sites before reading the function.**
+
+The fix shape that holds: put the wait inside the function every surface
+calls, not at the call sites, and make "we have not read it yet" a value the
+type system carries (`{ status: "wait" }`, `loaded: false`) rather than an
+absence that reads as an answer. Both are pure modules under `lib/workstation/`
+with node tests, which is the only layer this repo's suite can see.
+
+Grep for the class before assuming it is closed:
+`grep -rn "getState()\.scriptContent\|state?\.scriptContent" components hooks lib`.
+The remaining hits are inside ScriptPaperPane's own subtree (the 版式 switch,
+the paper's save) plus the versions panel's `current()`, which still reports
+an unloaded script as `""` in its top row — cosmetic, unfixed, worth a look
+if the compare view ever shows a blank "current".

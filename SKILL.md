@@ -728,6 +728,14 @@ and its gates pushed the work toward design docs, delegation charters and
 coverage sweeps while the replica was still wrong. Peter: "ccl-skills 要
 慎用，这个 skills 会花费大量 token 和时间……特别是上述这种任务，简直就是浪费时间".
 
+He said it again on 2026-09-19 — "ccl-skills 太慢了，以后慎用" — mid-task,
+watching a forced `defect-diagnosis` load land in the middle of a one-file
+bug fix. Twice now, unprompted, which makes this a standing preference and
+not a mood. The hook checkpoint fires on the first source EDIT, so the cheap
+move is to finish the reading and the diagnosis before touching a file: by
+then the load buys nothing and can be answered in one pass. Say in the
+report that the load was forced, so a slow turn is not read as my choice.
+
 - Do not invoke any `ccl-skills:*` skill on my own initiative. Not for
   routing, not for review, not because a hook's text suggests it.
 - If a hook checkpoint BLOCKS an edit until a ccl skill is loaded, load the
