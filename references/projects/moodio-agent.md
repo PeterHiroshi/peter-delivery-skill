@@ -1809,3 +1809,59 @@ broke", not "my new import did".
   `test.env`), so a probe that wants the real database must OVERWRITE it, not
   default it — otherwise every query fails with "The server does not support
   SSL connections" and it looks like the code.
+
+## Long-lived feature branches here take main by MERGE, not rebase (2026-09-19)
+
+`feat/meegle-14294602-moodio-script-module-optimization` is an integration
+branch: 232 non-merge commits plus **43 merge commits**, because its sub-PRs
+(#705–#715) are merged INTO it rather than into main, and it already carries
+its own `Merge origin/main` commit from a previous integration.
+
+"Rebase onto main" on a branch shaped like this is not the cheap operation it
+sounds like. Measured, not guessed:
+
+| Route | Result |
+| --- | --- |
+| `git merge-tree --write-tree HEAD origin/main` | clean, zero conflicts |
+| `git rebase --onto origin/main <base>` | conflicts at commit **1 of 232**, and drops all 43 merge resolutions |
+| `git rebase --rebase-merges --onto origin/main <base>` | conflicts replaying the branch's own earlier `Merge origin/main` |
+
+Both rebase routes also need a force-push of ~275 rewritten commits on a
+branch that is already on origin. The merge needs none. Probe with
+`merge-tree` and a throwaway `git worktree add --detach` before choosing —
+the probe costs two minutes and settles it with evidence instead of a feeling
+about history shape.
+
+The rule-21 proof is especially clean for a merge: `diff(before.patch,
+after.patch)` where `after = git diff origin/main..<merge commit>` should be
+**exactly 0 lines**, because main's changes now sit in both the base and the
+head and cancel out. A non-zero delta on a merge means something was lost.
+
+Also from that session:
+
+- **Migration collisions are resolved once, at the integration that creates
+  them.** This branch's 0092–0096 were renumbered past main in the FIRST
+  integration, so the second needed no renumbering at all. Check with
+  `comm -23`/`comm -13` over both sides' file lists plus `cut -c1-4 | uniq -d`
+  for duplicate numbers — and check whether a duplicate already lives on main
+  (0042 and 0078 both do) before treating it as yours to fix.
+- **A dropped migration leaves stale prose behind.** `lib/db/schema.ts` still
+  said `character_bios` was "retired by migration 0086" — that migration had
+  been dropped during the previous integration precisely because main had
+  claimed 0086, so the comment pointed at unrelated pricing SQL. Grep every
+  migration number the branch ever used after a renumbering, not just the
+  files.
+- **The canvas overlay guard's ROOTS are `node-composer.tsx` and
+  `CanvasAssetCard.tsx` only.** Overlays mounted directly by
+  `DesktopCanvas.tsx` — the floating action bar above a selected asset, whose
+  position is computed from `camera.zoom` — are outside its walk. Main's
+  `ImageVariantPicker` landed there with a bare HeroUI `<Popover>` and the
+  guard stayed green on both branches. Rule 21 step 4 ("grep the target's
+  incoming diff for the mechanism the branch generalised") is what surfaced
+  it; nothing automated would have.
+- **zsh does not word-split an unquoted `$VAR` of paths.** `npx eslint --format
+  json $FILES > out.json 2>/dev/null` wrote a 0-byte file because eslint got
+  one argument that was the whole string. The empty output then read as "no
+  lint findings" — rule 9's failed-query trap, in a shell instead of an API.
+  Pass the paths literally, and never send a comparison run's stderr to
+  `/dev/null`.
