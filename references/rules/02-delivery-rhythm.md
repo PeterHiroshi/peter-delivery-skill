@@ -249,3 +249,18 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
   his word without argument, and a thing that IS in the prototype (the
   分镜表's 「撤销删除」, `07-create-assets.js` `renderShotDeletionUndo`) is
   defended with the file and line, not conceded.
+- **The same drift at the deliverable level: a skill task touches only the
+  skill.** 2026-09-20, the session that produced rules 30–32. Peter asked me to
+  design a working method and put it in this skill, presented me with options, and
+  ticked "落成约定" for the stage-A seam. I read that as authorization to write
+  `docs/ui-first-seam.md` and a new `CLAUDE.md` section in `moodio-agent`. He
+  stopped it mid-task: 「停，我不是让你改这个 repo 中的任何东西，我只是让你优化
+  peter-delivery，你在当前 repo 的任何改动作废」. A convention he approves is
+  approved as a **rule here**, not as a commit in whatever product repo is the
+  cwd — that repo has its own review path and inherits the change into every
+  future session, so it is a separate decision of his. When the task is
+  "improve the skill / the process", every file I touch is under the skill; if
+  instantiating a rule in a product repo looks useful, offer it in one line and
+  let him ask. Generally: an answer to a design question authorizes the design,
+  and each step's blast radius is checked against what he asked for, not against
+  what the design implies.
