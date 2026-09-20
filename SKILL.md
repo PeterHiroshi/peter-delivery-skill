@@ -45,7 +45,7 @@ Report them per line. The rules column says which file to load for the detail.
 | 9 | **Listed explicitly what I did NOT verify** — and turned each "reasoned from code, not seen" line into the guard test before the PR | always | r20 · 03 |
 | 10 | **Asked instead of assuming** where the answer lives with Peter; re-read the original requirement after any clarification; checked a deletion against the written requirement | always | r4, r16, r17, r11 · 05 |
 | 11 | **Took the repo note's known-good route first**; two failed attempts at one sub-goal → switch class of evidence, don't try a third variation | any sub-task the notes cover | r15, r26 · 05, 04 |
-| 12 | **Git: commit by pathspec, push/PR approved separately, hand-off text in the SAME reply as the PR link, CI review bot answered, rebase proven side-effect-free** | any commit, push or PR | r6, r21, r28 · 06 |
+| 12 | **Git: commit by pathspec, push/PR approved separately, hand-off text in the SAME reply as the PR link, PR link filed on the tracker item (Meegle / Jira), CI review bot answered, rebase proven side-effect-free** | any commit, push or PR | r6, r21, r28 · 06 |
 
 ## The delivery rhythm: A → B → C (rule 31)
 

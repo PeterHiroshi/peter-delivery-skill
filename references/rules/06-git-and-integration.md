@@ -22,9 +22,26 @@ git remote get-url origin   # decide by the ORG in this, not the folder
 
 | Remote org | Hand-off, written unprompted with the PR link |
 | --- | --- |
-| `JerryYang666/*` (moodio-agent, moodio-landing) | A Lark message: English, 1–3 sentences, pasteable |
+| `JerryYang666/*` (moodio-agent, moodio-landing) | A Lark message: English, 1–3 sentences, pasteable — **and the PR link filed on the tracker item** (below) |
 | `IcestoneTech/*` (e.g. `math_ai`) | **No Lark text.** The `gh pr comment` review, the PR link on Jira, and the chat notification to Linc |
 | anything else | Ask which hand-off applies, once, and record the answer in `references/projects/<repo>.md` |
+
+**The tracker item is the source record; file the PR link on it, unprompted.**
+Every org above already says so in its own words — Jira for `IcestoneTech/*`,
+and for a Meegle-tracked task (moodio-agent):
+
+```bash
+meegle comment add --project-key ozn2tr --work-item-id <id> --content '<markdown>'
+meegle comment list --project-key ozn2tr --work-item-id <id>   # read it back
+```
+
+In Chinese, since it is read in Meegle: the PR link as `[#<n> <title>](<url>)`,
+branch and commit count, the CI verdict, the root cause in two sentences, what
+the fix does, where the design doc lives, and the numbered browser cases with
+未验证 stated plainly. Peter, 2026-09-20: 「comment PR链接进入 meegle 源记录中，
+以后也要自动进行这一步」 — a PR that lives only in a chat reply and on GitHub
+leaves the issue with no trace of how it was resolved. The CLI token lasts ~2 h,
+so `meegle auth status` belongs at the START of the PR round, not after it.
 
 **Peter may merge before the bot answers.** On 2026-09-10 he merged two hotfix PRs
 sixteen minutes after they opened; the Copilot review, my fixes and three pushes all
