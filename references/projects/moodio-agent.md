@@ -96,6 +96,14 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 There are ~14 active worktrees under `.work/worktrees/`. A hook blocks direct
 edits to the main checkout.
 
+**A new worktree goes under its branch type** (Peter, 2026-09-20):
+`.work/worktrees/fix/meegle-<id>-<slug>`, `.work/worktrees/feat/...` — no longer
+flat in the root. The older flat directories stay where they are; nothing is
+moved. `/peter-delivery:append-worktree` is pinned to this (`NAMING=full` in
+`.git/peter-delivery-worktree.conf`, which is local to the clone). If that file
+is lost the script falls back to voting on the directories that exist, and the
+flat majority would win — re-pin with `--naming full` once.
+
 **`scratch/` is gitignored**, so anything there — including the design prototype
 `scratch/demos/Moodio 3.0 Standalone (1).html` — **does not exist inside a
 worktree**. I once concluded a design file was missing when it was simply not

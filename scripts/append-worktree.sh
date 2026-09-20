@@ -20,6 +20,9 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
   --id <n>       tracker (Meegle) work item id, or a URL containing it.
   --from <ref>   base commit-ish for the new branch (default: repo default branch).
   --base <dir>   worktrees directory, overriding detection (absolute or repo-relative).
+  --naming <n>   full (<base>/fix/<rest>, nested per type) | strip (<base>/<rest>)
+                 | flat (<base>/fix-<rest>). Overrides detection and is pinned in
+                 the repo's conf, so it only has to be said once.
   --repo <dir>   any path inside the target repo (default: $PWD).
   --task <text>  what the new session should work on, in Peter's own words.
                  Used for the first prompt; defaults to the slug and the link.
@@ -39,7 +42,7 @@ USAGE
 
 TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD" TASK=""
 DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0 DO_AUTO_START=1
-MODEL="" EFFORT="" PERM_MODE=""
+MODEL="" EFFORT="" PERM_MODE="" NAMING_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -48,6 +51,7 @@ while [ $# -gt 0 ]; do
     --id) ID="${2:-}"; shift 2 ;;
     --from) FROM="${2:-}"; shift 2 ;;
     --base) BASE_OVERRIDE="${2:-}"; shift 2 ;;
+    --naming) NAMING_OVERRIDE="${2:-}"; shift 2 ;;
     --repo) REPO="${2:-}"; shift 2 ;;
     --task) TASK="${2:-}"; shift 2 ;;
     --no-install) DO_INSTALL=0; shift ;;
@@ -98,6 +102,11 @@ if printf '%s' "$SLUG_RAW" | LC_ALL=C grep -q '[^ -~]'; then
 fi
 TYPE="$(printf '%s' "$TYPE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+//g')"
 
+case "${NAMING_OVERRIDE:-none}" in
+  none|full|strip|flat) ;;
+  *) die "--naming must be one of full, strip, flat" ;;
+esac
+
 case "${EFFORT:-none}" in
   none|low|medium|high|xhigh|max) ;;
   *) die "--effort must be one of low, medium, high, xhigh, max" ;;
@@ -146,6 +155,7 @@ existing_worktrees() {
 if [ -n "$BASE_OVERRIDE" ]; then
   case "$BASE_OVERRIDE" in /*) BASE_DIR="$BASE_OVERRIDE" ;; *) BASE_DIR="$MAIN/$BASE_OVERRIDE" ;; esac
 fi
+[ -n "$NAMING_OVERRIDE" ] && NAMING="$NAMING_OVERRIDE"
 
 # One pass over the existing worktrees answers both questions at once, because
 # they are not independent: under a nested layout the directory that holds a
@@ -276,7 +286,7 @@ fi
 # Persist what we learned, so the next run in this repo decides nothing. The
 # naming answers are only worth caching when real worktrees taught them —
 # otherwise they are this script's defaults and must stay open to re-detection.
-if [ "$SAMPLES" -gt 0 ]; then
+if [ "$SAMPLES" -gt 0 ] || [ -n "$NAMING_OVERRIDE" ]; then
   printf 'BASE_DIR=%q\nNAMING=%q\nID_IN_BRANCH=%q\n' "$BASE_DIR" "$NAMING" "$ID_IN_BRANCH" > "$CONF"
 else
   printf 'BASE_DIR=%q\n' "$BASE_DIR" > "$CONF"
