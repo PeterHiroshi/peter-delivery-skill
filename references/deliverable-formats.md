@@ -64,11 +64,13 @@ Linc. Decide by the git remote's organisation, not the directory name. See
 Written for a teammate scrolling a channel deciding whether it concerns them —
 not for a reviewer reading the diff.
 
+**Keep it plain and short. This is a colleague's chat message, not a release
+note.** Two or three sentences. If it needs a semicolon, split it.
+
 ```
-PR #557 — the video settings panel in the Agent and canvas composers now shows
-each setting's name above its control instead of a row of bare values whose
-names lived only in hover tooltips. Frontend only — no migration, no feature
-flag, and no change to the generation mode engine or the shared validator.
+PR #557 — the video settings panel now shows each setting's name above its
+control. Before, it was a row of bare values whose names only appeared on
+hover. Frontend only, no migration.
 
 https://github.com/JerryYang666/moodio-agent/pull/557
 ```
@@ -76,6 +78,20 @@ https://github.com/JerryYang666/moodio-agent/pull/557
 Include: what changed, why anyone should care, the link, anything the team must
 act on (migration, blocking decision). Exclude: implementation detail already in
 the PR body.
+
+**Strip the AI tells.** These are what make a message read as generated:
+
+| Don't | Do |
+| --- | --- |
+| "Two related fixes ride along" / "Additionally, this also…" | Start a new sentence, or leave the minor fix out |
+| Em-dash-stitched clauses running past two lines | One idea per sentence |
+| "comprehensive", "robust", "streamline", "enhance", "leverage" | Say the concrete thing |
+| Listing all three fixes at equal weight | Lead with the one people noticed; the rest is "plus two smaller fixes in the same area" |
+| Quoting error strings and model names | Only if a teammate needs to recognise it |
+| "no migration, no feature flag, no change to provider selection or pricing" | "No migration." — the rest is PR-body detail |
+
+The test: read it aloud. If it sounds like a person telling a colleague what
+they did, it passes. If it sounds like a summary of a summary, cut it again.
 
 ## Language
 

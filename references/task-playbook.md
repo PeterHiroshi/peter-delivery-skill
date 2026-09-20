@@ -49,12 +49,31 @@ Renders → look at it. Logic → tests. Say which you did.
 
 ## Feature
 
+**If a prototype / mockup / reference UI is named, this section does not
+apply — go to "Prototype task" below (SKILL.md rule 22).**
+
 1. **Scope** — restate what he asked for; flag ambiguity now, not after coding
 2. **Design doc** — file, present, wait (`design-doc-before-coding`)
 3. **Route** — see the routing table in `SKILL.md`
 4. **Build** — derive over pass (`reuse-over-duplication.md`)
 5. **Verify** — gates + visual if it renders
 6. **Report** — verified / not verified, then ask before pushing
+
+## Prototype task (a reference UI exists)
+
+1. **Render the reference** — serve it, screenshot the exact screen, dump
+   computed styles (width, radius, paddings, font sizes, colors, card
+   sizes). Fifteen minutes.
+2. **Replicate 1:1** — same structure, geometry, copy and assets. Copy the
+   reference's images into the app. tsc green, nothing else.
+3. **Hand over both screenshots + a numbers table** and WAIT for Peter.
+4. After acceptance: tests, locale sweep, failure cases, harness runs.
+5. After that: backend stability (concurrency, caps, error codes, a
+   focused adversarial pass).
+
+Do not write a design doc, do not load ccl-skills, do not run review
+agents before step 3 is accepted. The cost of the wrong order on
+2026-09-15 was most of a working day.
 
 ## UI task specifically
 
@@ -71,7 +90,22 @@ If the design file exists but does not contain this screen, say so explicitly:
 
 That sentence, said early, would have prevented several rounds.
 
-Then: build → screenshot → compare → fix differences → deliver.
+**"Read the design source" means RENDER it, not read its markup.** On
+2026-09-15 (moodio-agent, Meegle 14294602 sub-02) I read the prototype's
+dialog markup, its CSS rules and its CLAUDE.md "弹窗规范", built the dialog
+in the app's own panel chrome, screenshotted MINE, and reported it as
+verified. Peter: "你完成的和 moodio-ui 中的样式完全不一致呀". Serving the
+prototype (`python3 -m http.server 8765` in moodio-ui, headless Chrome,
+click `#import-text-button`, screenshot `#flow-dialog`, dump computed
+styles) took four minutes and showed a 620px flow dialog with a
+watercolor title bar and name-only cards — none of which the markup read
+had made me build. For a UI task the prototype's screenshot sits BESIDE
+mine in the report, with the measured numbers (width, radius, card size,
+font sizes) in a two-column table; a description of the prototype from
+its source is not a comparison.
+
+Then: render the prototype → build → screenshot both → compare numbers →
+fix differences → deliver.
 
 ## When Peter pushes back
 
