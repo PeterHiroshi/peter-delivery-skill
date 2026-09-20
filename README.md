@@ -9,9 +9,23 @@ breaking it cost time — the evidence for each is in `references/failure-modes.
 
 ```bash
 git clone <this repo> ~/.claude/skills/peter-delivery
+
+# the sub-commands (one symlink each) — a command file must live under
+# ~/.claude/commands/, so the repo keeps the original and links it in
+mkdir -p ~/.claude/commands/peter-delivery
+ln -s ~/.claude/skills/peter-delivery/commands/append-worktree.md \
+      ~/.claude/commands/peter-delivery/append-worktree.md
 ```
 
-Claude Code picks up `~/.claude/skills/*/SKILL.md` automatically.
+Claude Code picks up `~/.claude/skills/*/SKILL.md` automatically, and the
+subdirectory under `~/.claude/commands/` is what names the command
+`/peter-delivery:append-worktree`.
+
+## Sub-commands
+
+| Command | What it does |
+| --- | --- |
+| `/peter-delivery:append-worktree <meegle url> <a few words>` | Creates the task worktree the way the current repo already does it: layout and branch/directory naming detected from the worktrees that exist, ignored `.env` files copied, `npm install` started in the background, editor opened. `scripts/append-worktree.sh --help` for the flags. |
 
 ## What it is
 

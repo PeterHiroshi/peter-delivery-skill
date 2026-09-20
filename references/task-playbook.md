@@ -3,6 +3,14 @@
 Concrete opening moves. The goal is that Peter states the task once and does not
 have to steer.
 
+## Before anything: the worktree
+
+Task work does not happen in the main checkout. `/peter-delivery:append-worktree
+<meegle url> <a few words>` creates the branch and worktree in this repo's own
+layout, copies the ignored `.env`, starts the install and opens the editor. It
+refuses rather than guess when a repo has no worktrees to learn from — then ask
+Peter for the directory and pass `--base`.
+
 ## Bug fix
 
 ### 1. Reproduce and read the actual evidence
