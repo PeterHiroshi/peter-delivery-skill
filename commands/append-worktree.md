@@ -6,9 +6,30 @@ allowed-tools: Bash(bash ~/.claude/skills/peter-delivery/scripts/append-worktree
 
 Create the task worktree for: $ARGUMENTS
 
-This is mechanical setup, not a task. **Run one command and stop.** Do not explore
-the repo, do not read files, do not load the peter-delivery skill, do not start
-the work in the new worktree.
+**Where the tasks come from.** Read the arguments first, then fall back to the
+conversation — never invent one:
+
+1. Links, ids or descriptions in the arguments → those are the tasks. Placeholder
+   text (`<链接1>`, `<描述1>`, `...`) is not a task: say so in one line and stop.
+2. Arguments empty, or they point at something already on screen ("刚才那些",
+   "全部 issue", "these") → the tasks are the work items **already in this
+   conversation**, e.g. the ones a `meegle` CLI call just listed. Take every one
+   of them, in the order listed: the item's URL or id, its title as `--task`
+   (verbatim), and its type for `--type` (缺陷/bug → `fix`, 需求/story → `feat`).
+   Do not shorten the list, do not pick "the important ones" — an item you skip is
+   an item Peter thinks is being set up.
+3. Neither → name in one line what is missing (the links, or the Meegle step that
+   produces them) and stop. Do not run a Meegle query from inside this command;
+   that is its own step, before this one.
+
+Already-created tasks cost nothing to include: the script reports an existing
+worktree and creates nothing. Drop exact duplicates from the list, and if it is
+more than 5 items, print the branch names you are about to create and get one
+go-ahead first — each worktree opens a window and starts a session.
+
+This is mechanical setup, not a task. **Run the script — one call per task — and
+stop.** Do not explore the repo, do not read files, do not load the
+peter-delivery skill, do not start the work in the new worktree.
 
 ```bash
 bash ~/.claude/skills/peter-delivery/scripts/append-worktree.sh --type <fix|feat> --slug <kebab-case> [--id <meegle url or id>] [--repo <path>]
