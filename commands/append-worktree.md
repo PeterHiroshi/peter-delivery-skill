@@ -53,6 +53,15 @@ prompt, which reads the requirement and stops at the scope ledger — it does no
 write code. Add `--no-auto-start` when Peter only wants the worktree, and say in
 the report that the window will just sit there.
 
+**The session's own settings.** Model and effort are inherited, not set: the
+terminal session and the VSCode one both read `~/.claude/settings.json`, so
+passing nothing is what keeps them identical (thinking is part of effort — there
+is no separate switch). The permission mode is taken from the extension's
+`claudeCode.initialPermissionMode`, because a terminal session would not have it.
+When Peter names any of them in his message ("用 sonnet 跑"、"effort 开到 max"、
+"这次别 bypass"), pass `--model <m>`, `--effort <low|medium|high|xhigh|max>` or
+`--permission-mode <m>` — per task, so different links can run differently.
+
 Add `--repo <path>` when the working directory is not the target repo. Pass
 nothing else: the worktrees directory, the directory-vs-branch naming, the base
 branch, the `.env` copy, the background `npm install` and opening the editor all

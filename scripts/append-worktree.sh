@@ -26,6 +26,12 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
   --no-install   skip the background dependency install.
   --no-open      do not open the worktree in the editor.
   --no-auto-start  do not arm the first Claude session in the new window.
+  --model <m>    model for that session (alias like opus/sonnet, or a full name).
+                 Default: ~/.claude/settings.json, i.e. the model the VSCode
+                 session already runs on.
+  --effort <l>   low | medium | high | xhigh | max. Default: that same file's
+                 effortLevel. Thinking is part of effort; there is no separate flag.
+  --permission-mode <m>  default: the extension's claudeCode.initialPermissionMode.
   --fetch        git fetch the base ref from origin before branching.
   --dry-run      print the plan, touch nothing.
 USAGE
@@ -33,6 +39,7 @@ USAGE
 
 TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD" TASK=""
 DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0 DO_AUTO_START=1
+MODEL="" EFFORT="" PERM_MODE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -45,6 +52,9 @@ while [ $# -gt 0 ]; do
     --task) TASK="${2:-}"; shift 2 ;;
     --no-install) DO_INSTALL=0; shift ;;
     --no-auto-start) DO_AUTO_START=0; shift ;;
+    --model) MODEL="${2:-}"; shift 2 ;;
+    --effort) EFFORT="${2:-}"; shift 2 ;;
+    --permission-mode) PERM_MODE="${2:-}"; shift 2 ;;
     --no-open) DO_OPEN=0; shift ;;
     --fetch) DO_FETCH=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -87,6 +97,28 @@ if printf '%s' "$SLUG_RAW" | LC_ALL=C grep -q '[^ -~]'; then
   echo "warning   --slug had non-ASCII characters; they were dropped, leaving '$SLUG'. Re-run with English words if that reads wrong." >&2
 fi
 TYPE="$(printf '%s' "$TYPE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+//g')"
+
+case "${EFFORT:-none}" in
+  none|low|medium|high|xhigh|max) ;;
+  *) die "--effort must be one of low, medium, high, xhigh, max" ;;
+esac
+
+# The session in the new window should be the session Peter already works in.
+# Model and effort need no flag for that: the terminal CLI and the VSCode
+# extension both read ~/.claude/settings.json (today: opus[1m], xhigh), so
+# passing nothing IS matching, and passing the extension's own stale
+# claudeCode.selectedModel would diverge from it. The permission mode does need
+# a flag — the extension starts sessions in claudeCode.initialPermissionMode,
+# a plain terminal claude starts in the default one.
+VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
+if [ -z "$PERM_MODE" ] && [ -f "$VSCODE_SETTINGS" ]; then
+  PERM_MODE="$(sed -n 's/.*"claudeCode\.initialPermissionMode"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$VSCODE_SETTINGS" | tail -1 || true)"
+fi
+
+CLAUDE_ARGS=""
+[ -n "$MODEL" ] && CLAUDE_ARGS="$CLAUDE_ARGS --model $MODEL"
+[ -n "$EFFORT" ] && CLAUDE_ARGS="$CLAUDE_ARGS --effort $EFFORT"
+[ -n "$PERM_MODE" ] && CLAUDE_ARGS="$CLAUDE_ARGS --permission-mode $PERM_MODE"
 
 git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || die "$REPO is not a git repository"
 
@@ -313,14 +345,14 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     echo "STOP for Peter. Do not write code, do not commit, do not start the dev server."
   } > "$WORKTREE/.vscode/claude-task-prompt.txt"
 
-  cat > "$WORKTREE/.vscode/tasks.json" <<'TASKS'
+  cat > "$WORKTREE/.vscode/tasks.json" <<TASKS
 {
   "version": "2.0.0",
   "tasks": [
     {
       "label": "peter-delivery: start this task",
       "type": "shell",
-      "command": "P=\"$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec claude \"$P\"",
+      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec claude${CLAUDE_ARGS} \"\$P\"",
       "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
       "runOptions": { "runOn": "folderOpen" },
       "problemMatcher": []
@@ -344,7 +376,7 @@ TASKS
     } >> "$EXCLUDE"
   fi
 
-  echo "auto-start armed: the window's first terminal runs /peter-delivery with this task"
+  echo "auto-start armed: the window's first terminal runs: claude${CLAUDE_ARGS} \"<task prompt>\""
   echo "          (one-shot: both files are git-excluded and delete themselves on run;"
   echo "           needs task.allowAutomaticTasks=\"on\", else one 'Allow Automatic Tasks in Folder')"
 elif [ "$DO_AUTO_START" = "1" ]; then
