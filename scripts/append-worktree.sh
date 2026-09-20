@@ -339,6 +339,13 @@ fi
 # The prompt lives in its own file so nothing has to be escaped into JSON, and
 # the task consumes both files before starting Claude: this arms the FIRST open
 # of a new worktree and leaves nothing behind in git status afterwards.
+#
+# The env scrub is what makes the session a session. A VSCode terminal inherits
+# the extension host's CLAUDE_CODE_CHILD_SESSION, and an interactive claude that
+# sees that marker runs with transcript saving OFF — it never appears in any
+# history, which is exactly what Peter hit. The rest of the inherited variables
+# belong to the parent session (its id, its messaging socket, its effort) and a
+# fresh top-level session should have none of them.
 if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
   mkdir -p "$WORKTREE/.vscode"
   {
@@ -362,7 +369,7 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     {
       "label": "peter-delivery: start this task",
       "type": "shell",
-      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec claude${CLAUDE_ARGS} \"\$P\"",
+      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_EXECPATH -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_EFFORT CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${CLAUDE_ARGS} \"\$P\"",
       "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
       "runOptions": { "runOn": "folderOpen" },
       "problemMatcher": []
