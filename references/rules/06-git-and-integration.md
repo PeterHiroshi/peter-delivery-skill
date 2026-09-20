@@ -10,6 +10,14 @@ Committing, pushing, handing off, rebasing, and sharing a worktree with another 
 Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
 publishing it. Approval for one push does not carry to the next.
 
+**One standing exception** (Peter, 2026-09-20): **this skill's own repo**
+(`~/.claude/skills/peter-delivery`) — commit and push it without asking. It is
+his own tooling, nobody reviews it, and asking each time was pure friction. It
+does not extend to any product repo, and it does not make PRs automatic
+anywhere. Note the repo has other sessions in it (rule 28): push what you
+committed, and read `git log origin/main..HEAD` first — someone else's commit
+riding along is worth a line in the report.
+
 **The moment `gh pr create` prints a URL, the PR is not delivered yet — the
 hand-off text is part of it, and it is written in the SAME reply, unprompted.**
 Waiting to be asked has cost Peter a round trip more than once (2026-09-08, PR
