@@ -170,3 +170,15 @@ came back with 「中键拖动功能怎么又没了,拆东墙补西墙呀你是�
   next amend. Reverting my own work means `git checkout <base>...` (the branch base),
   and a final `git diff <base>...HEAD --stat` must list only the files the change
   needs.
+
+**The same trap wearing a review's clothes (2026-09-20, moodio-agent PR #744).** A
+PR gave every asset card one fixed cover box, to line a row up. `git log -S` on the
+construct it replaced showed the board had HAD a fixed box until PR #718 took it
+out, on this reason in its commit message: *"a marked picture was cropped to the
+category's shape"*. The PR was reinstating, against a new shape, the very complaint
+a previous round had been asked to fix — and neither its description nor the code
+said so. **Before judging a changed value, `git log -S '<the exact construct>'` the
+line it replaces.** For a UI value the written requirement often exists nowhere but
+in the commit message that put it there. Peter then chose a third way (the fixed box
+AND the whole picture, `object-fit: contain`) that neither round had offered — which
+is what the history made askable.
