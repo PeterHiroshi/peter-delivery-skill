@@ -18,7 +18,7 @@ Three stages, one hand-off each, every one a runnable increment.
 
 **A — interactive replica. Target: half a day. tsc green is the whole gate.**
 Real components, real routes, real interaction state. Data arrives through a
-**seam**: one module `lib/<feature>/<x>-source.ts` that exports the exact
+**seam**: one module `lib/<feature>/<thing>-seam.ts` that exports the exact
 signature the backend will implement and returns typed fixtures for now. Not msw,
 not storybook — one file.
 Not in stage A: persistence, migrations, permission edges, the locale sweep,

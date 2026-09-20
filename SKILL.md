@@ -52,7 +52,7 @@ Report them per line. The rules column says which file to load for the detail.
 Peter is the only one who can accept a UI, so his review comes **first**, not last.
 
 - **A — interactive replica.** Real components, real routes, real interaction
-  state; data through a **seam** (`lib/<feature>/<x>-source.ts`, the signature the
+  state; data through a **seam** (`lib/<feature>/<thing>-seam.ts`, the signature the
   backend will implement, typed fixtures for now). tsc green is the whole gate.
   Target: half a day. **No** persistence, migrations, permission edges, locale
   sweep, tests, review agents, design doc. Hand over: prototype-vs-mine
