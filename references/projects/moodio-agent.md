@@ -18,6 +18,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - Other sessions kill every `next dev` — and the toast race (2026-09-14, Meegle 14653304 round 2)
 - `The minted token dies after 2 h, and :3000 is shared with Peter (2026-09-15, cloud-doc editor)`
 - `Performance constants for the dev environment (2026-09-18, Meegle 14294602)`
+- `Next 16 refuses a second dev server in the same directory (2026-09-20)`
 
 **Getting a real browser / session on this app**
 
@@ -36,6 +37,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)`
 - `Measure the bug screenshot instead of squinting at it (2026-09-20)`
 
+- `Reusing a pipeline inherits its vocabulary (2026-09-20, Meegle 14732749)`
 **The composer, canvas and overlays**
 
 - `The composer: two surfaces, one component`
@@ -2058,3 +2060,50 @@ scratchpad and then `cp -r $S/components $S/hooks .` overwrote every edited file
 with its HEAD version and destroyed an hour of uncommitted work — `git status`
 simply went back to clean, with nothing to recover. Inspect a baseline where it
 sits (`git show HEAD:<file> | diff - <file>`); never copy a directory into the repo.
+
+## Next 16 refuses a second dev server in the same directory (2026-09-20)
+
+`next dev -p 3100` in a worktree that already has one running exits with
+"Another next dev server is already running" and names the PID — it keys on
+the DIRECTORY, not the port. So there is no way to stand up a throwaway
+server beside Peter's while he is testing the same worktree. Plan for it:
+do the live route checks BEFORE handing the branch over, or accept that the
+remaining evidence has to come from a different class (running the Lambda's
+`main.py` directly, reading the spawn contract).
+
+Two things that do work:
+
+- **Pass dev-only env vars inline rather than editing `.env`.** Next does
+  not override a value already in `process.env`, so
+  `AUDIO_PROCESS_LOCAL_RUNNER=… npx next dev` configures the runner without
+  touching a file Peter's running server would reload from.
+- **`:3000` may belong to another worktree.** The "always :3000, kill the
+  holder" note is about MY own stray servers. Check
+  `lsof -p <pid> -a -d cwd` first: evicting another task's session, or
+  Peter's, is not mine to do.
+
+## Reusing a pipeline inherits its vocabulary (2026-09-20, Meegle 14732749)
+
+The silent-video node was built as a `video-edit` with `operation: "mute"`
+so it would inherit the pending node, the manifest settle, the board poll,
+the reap and the undo entry. All of that worked first time. What came with
+it and should not have:
+
+- the tile's caption said **"正在修剪…"** on a node nobody trimmed
+- all six failure keys were `desktop.trimClip*` — "修剪失败" for a mute
+- `startAsyncLambdaJob`'s label was the literal `"VideoEdit:trim"`, so
+  CloudWatch named the wrong derivation
+- `videoEditProvenanceOf` gated on `operation === "trim"`, which made the
+  new node **invisible to the board's poll** until the guard was widened —
+  the one of the four that is a functional bug, not a wording one
+
+The habit worth keeping: after routing a second thing through an existing
+pipeline, grep that pipeline for its own noun (`trim`, `upload`, `denoise`)
+and check every hit for whether it is the mechanism or just the old name.
+Only the guard broke a test; the three wording leaks were invisible to tsc
+and to every existing test.
+
+Also from that session: **"success: true" from a render is not evidence.**
+What proved the mute path copied the picture instead of re-encoding it was
+`ffmpeg -i <f> -map 0:v -f md5 -` on the source and the output coming back
+identical, with `ffprobe -select_streams a` showing zero audio streams.
