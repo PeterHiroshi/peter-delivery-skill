@@ -328,9 +328,25 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
   ]
 }
 TASKS
+
+  # Keep the trigger out of git status. A local exclude, not the repo's
+  # .gitignore: this is one tool's scratch file, it lives for one window open,
+  # and no repo should carry a line about it. info/exclude sits in the common
+  # dir, so it covers the main checkout and every worktree at once.
+  EXCLUDE="$COMMON_DIR/info/exclude"
+  if ! grep -qxF '.vscode/claude-task-prompt.txt' "$EXCLUDE" 2>/dev/null; then
+    mkdir -p "$(dirname "$EXCLUDE")"
+    {
+      echo ""
+      echo "# one-shot session trigger written by peter-delivery append-worktree"
+      echo ".vscode/claude-task-prompt.txt"
+      echo ".vscode/tasks.json"
+    } >> "$EXCLUDE"
+  fi
+
   echo "auto-start armed: the window's first terminal runs /peter-delivery with this task"
-  echo "          (VSCode asks once per folder — 'Allow Automatic Tasks in Folder' — unless"
-  echo "           task.allowAutomaticTasks is \"on\"; the two files delete themselves on run)"
+  echo "          (one-shot: both files are git-excluded and delete themselves on run;"
+  echo "           needs task.allowAutomaticTasks=\"on\", else one 'Allow Automatic Tasks in Folder')"
 elif [ "$DO_AUTO_START" = "1" ]; then
   echo "auto-start not armed: .vscode/tasks.json already exists, left untouched"
 else
