@@ -34,6 +34,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Verifying a canvas lightbox: the harness beats fighting selection (2026-09-14, Meegle 14333608)`
 - `el.click()` cannot see outside-press dismissal (2026-09-14, Meegle 14333608)
 - `A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)`
+- `Measure the bug screenshot instead of squinting at it (2026-09-20)`
 
 **The composer, canvas and overlays**
 
@@ -49,6 +50,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Node composer notices and the false "prompt changed elsewhere" (2026-09-14, Meegle 14737690)`
 - `Capture frames menu (2026-09-14, Meegle 14452515, PR #634)`
 - `Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)`
+- `Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)`
 
 **Generation, models and providers**
 
@@ -1990,3 +1992,61 @@ The remaining hits are inside ScriptPaperPane's own subtree (the 版式 switch,
 the paper's save) plus the versions panel's `current()`, which still reports
 an unloaded script as `""` in its top row — cosmetic, unfixed, worth a look
 if the compare view ever shows a blank "current".
+
+---
+## Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)
+
+Every drag-to-reorder strip here hung `dragover`/`drop` on each TILE and split
+the tile at its own midpoint. Interior gaps are covered twice (one half-tile per
+neighbour); the gap at the END is covered once, by the last tile's far half, and
+the space past the strip belongs to the container. A release there reached no
+reorder target, bubbled to `data-composer-box` (`onDragOver preventDefault` +
+`handleDrop`), which found no asset MIME and no files and returned silently.
+
+- **Any "drag to X only fails at the edge" report here is a drop-TARGET coverage
+  question, not an index question.** The order arithmetic was correct in all
+  seven strips; it was simply unreachable.
+- The fix pattern: the CONTAINER owns dragover/drop, items stamp
+  `data-reorder-index`, and a pure resolver
+  (`lib/dnd/reorder-geometry.ts#resolveInsertIndex`) turns the pointer into a gap.
+  One resolver drives the indicator AND the drop, so they cannot disagree — the
+  old canvas path had no `onDragLeave` and kept promising an end insert the
+  release could not deliver.
+- `chat-input.tsx` held two hand-written copies of `useReorderDrag`, which is why
+  one bug hit 画布节点 and agent at once. They are gone; one mechanism remains.
+- Guard the container handlers on `dragIndex !== null`, or a file / library-asset
+  drag over the strip stops reaching the surrounding drop zones.
+
+**A surviving mutant can mean "delete the code".** Mutation-testing the resolver
+found a `if (main >= last.mainEnd) return last.index + 1;` guard that no test
+could kill — because the loop below already fell through to the same answer. It
+was dead code, not a test gap. A second survivor (sorting a line by index rather
+than by position) WAS a gap, and the test that killed it pins a real contract:
+geometry follows layout order, not index numbering.
+
+---
+## Measure the bug screenshot instead of squinting at it (2026-09-20)
+
+A Meegle report that is a screenshot of a transient state (a drag, a hover) can
+be read numerically. Per-box mean RGB via PIL settled #14744969 in one call:
+
+- tile 1's mean was ~65 % of tile 0's → it carried `opacity-50`, so it was the
+  DRAGGED tile;
+- the floating box had the same mean → Chrome's translucent drag image, not a
+  fourth tile;
+- the space between them was flat background → the strip had three items.
+
+Then tile pitch (80px tile + 8px `gap-2`, divided by the screenshot's DPR and the
+page zoom, both recoverable by matching the composer's known 560px width) put the
+cursor ~378 CSS px from the strip's left edge against a 256px strip inside a
+~482px container: released inside the container, past every tile. Root cause
+proven with no browser, which is what rule 24 requires here.
+
+Brighten with `ImageEnhance.Brightness` to tell "empty" from "dark", and compare
+box MEANS rather than judging absolute darkness.
+
+**Do not `cp` a HEAD baseline tree into the worktree.** Writing HEAD copies to the
+scratchpad and then `cp -r $S/components $S/hooks .` overwrote every edited file
+with its HEAD version and destroyed an hour of uncommitted work — `git status`
+simply went back to clean, with nothing to recover. Inspect a baseline where it
+sits (`git show HEAD:<file> | diff - <file>`); never copy a directory into the repo.
