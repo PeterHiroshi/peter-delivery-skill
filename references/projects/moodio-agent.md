@@ -3,6 +3,90 @@
 Complements `CLAUDE.md` (read that first). This holds what cost time to learn
 and is not written down there.
 
+## Index — grep the heading, read that section only
+
+This file is append-only and long. **Do not read it whole** (rule 32). Find the
+symptom below, then `grep -n "^## <heading>"` and read from there to the next
+`^## `. A new section here gets a row here in the same commit.
+
+**Environment & dev server**
+
+- `Environment traps`
+- `Testing reality`
+- `Files that defeat grep (2026-09-07)`
+- `The remote DB is slow enough to fake a bug (2026-09-07)`
+- Other sessions kill every `next dev` — and the toast race (2026-09-14, Meegle 14653304 round 2)
+- `The minted token dies after 2 h, and :3000 is shared with Peter (2026-09-15, cloud-doc editor)`
+- `Performance constants for the dev environment (2026-09-18, Meegle 14294602)`
+
+**Getting a real browser / session on this app**
+
+- `Verifying rendered UI without a login (2026-09-08)`
+- `Driving the Desktop canvas through chrome-devtools MCP (2026-09-09)`
+- `Browser verification with a REAL session on dev (2026-09-10, Meegle 14441990)`
+- `A real OTP login in headless Chrome, no Peter needed (2026-09-10)`
+- `Selecting a canvas node from the browser: real click, not synthetic (2026-09-10)`
+- `Verifying a Safari-only bug for real (2026-09-10, Meegle 14354221)`
+- `Canvas video tiles: harness and the rest-state play badge (2026-09-11, Meegle 14652790)`
+- `Wangsu gateway + admin replay acceptance without Peter (2026-09-11, Meegle 14661162)`
+- A login-free REAL session: mint the access JWT from `.env` (2026-09-11)
+- A revert probe's `count == 1` assert can silently skip the mutation
+- `Verifying a canvas lightbox: the harness beats fighting selection (2026-09-14, Meegle 14333608)`
+- `el.click()` cannot see outside-press dismissal (2026-09-14, Meegle 14333608)
+- `A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)`
+
+**The composer, canvas and overlays**
+
+- `The composer: two surfaces, one component`
+- `The mode engine boundary`
+- `Two views of the script, one chip mark (2026-09-08)`
+- `The prototype's Composer is not in the prototype (2026-09-08)`
+- `A wrapper around a percentage-padding box collapses it (2026-09-08)`
+- `Three corrections on one dialog: the unit of selection came from the wrong source (2026-09-09)`
+- `Wheel events have no capture: a native stopper freezes a trackpad pan (2026-09-10)`
+- `Chat panel width: two hosts, one stored number (2026-09-11, Meegle 14585981)`
+- `Overlays on the moving canvas layer (2026-09-14, Meegle 14665233)`
+- `Node composer notices and the false "prompt changed elsewhere" (2026-09-14, Meegle 14737690)`
+- `Capture frames menu (2026-09-14, Meegle 14452515, PR #634)`
+- `Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)`
+
+**Generation, models and providers**
+
+- `Video model registry`
+- `The generation mode engine: measure, never reason about caps`
+- `Measure a proposed fix against the whole catalog BEFORE coding (2026-09-08)`
+- `The fastest route to "why did this generation fail" (2026-09-08)`
+- `Where a Kling element is delivered, and what proves it (2026-09-09)`
+- `The first real Kling element run: parsing was right, the clip was wrong (2026-09-09)`
+- `"Only X may be selected" hides "X and Y are delivered differently" (2026-09-09)`
+- `Video extension / prompt templates (2026-09-10, Meegle 14620855)`
+
+**i18n, copy and specs**
+
+- `i18n`
+- `An annotated screenshot's arrow is the spec, not its caption (2026-09-09)`
+- `Wording: the mockup's, unless the issue overrides it — and ask which (2026-09-09)`
+- `A missing i18n value renders the KEY, and only a screenshot shows it (2026-09-09)`
+
+**Data, routes and caches**
+
+- `tsc cannot see a server module in the client bundle (2026-09-08)`
+- `A module-level client cache keyed by one id is stale for every other key (2026-09-09)`
+- `A route's imports are load-bearing (2026-09-18)`
+- `Only the script PAGE fetches the script — every other surface reads a null (2026-09-19)`
+
+**Process on this repo**
+
+- `Meegle`
+- `PR mechanics on this repo (2026-09-09, PR #591)`
+- `Onboarding guide admin: "not verified" is not a disclosure, it is a gap (2026-09-08)`
+- `"Not my change" is a verdict, not the end of the search (2026-09-08)`
+- `A question framed on my model of the problem gets an answer to my model (2026-09-08)`
+- `Meegle 14653304 (2026-09-11): completion toast, worktree dev server, Meegle attachments`
+- `Script studio import + driving the chat composer (2026-09-15, Meegle 14294602 sub-02)`
+- `Long-lived feature branches here take main by MERGE, not rebase (2026-09-19)`
+
+---
 ## Environment traps
 
 ### Worktrees: the design prototype is invisible
