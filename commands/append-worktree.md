@@ -28,7 +28,14 @@ nothing else: the worktrees directory, the directory-vs-branch naming, the base
 branch, the `.env` copy, the background `npm install` and opening the editor all
 come from how that repo already does it.
 
-Then print the script's own output lines, and nothing else.
+**Several links in one go**: one call per link, all in the same message so they
+run together, each with its own `--slug` (and `--type`, which can differ). The
+script refuses an `--id` holding two links rather than quietly building one
+worktree — never merge them, never drop one. Each worktree opens its own editor
+window; add `--no-open` to every call if Peter said not to open them.
+
+Then print the script's own output lines — all of them, one block per worktree —
+and nothing else.
 
 If it exits 2, report its one line and what is missing — usually a slug, or
 `--base <dir>` because the repo has no worktrees yet to learn the layout from.

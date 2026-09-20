@@ -55,9 +55,17 @@ die() { echo "append-worktree: $*" >&2; exit 2; }
 [ -n "$TYPE" ] || die "missing --type (fix | feat | ...)"
 [ -n "$SLUG" ] || die "missing --slug: 3-5 English words in kebab-case, taken from what the task is about"
 
-# A URL is accepted for --id; keep the longest digit run in it.
+# A URL is accepted for --id. Two of them are not: one run makes one worktree,
+# and quietly using the first link would ship half of what was asked.
 if [ -n "$ID" ]; then
-  ID="$(printf '%s' "$ID" | grep -oE '[0-9]{4,}' | awk '{ if (length($0) > length(best)) best = $0 } END { print best }' || true)"
+  ID_TOKENS="$(printf '%s' "$ID" | tr -s '[:space:]' '\n' | grep -cE '[0-9]{4,}' || true)"
+  [ "${ID_TOKENS:-0}" -le 1 ] || die "--id got $ID_TOKENS tasks. One worktree per run: call this script once per link, each with its own --slug"
+
+  # The id is a path segment, never the query — .../detail/14959916?ts=1758300000
+  # would otherwise brand the branch with the timestamp.
+  ID_PATH="${ID%%\#*}"; ID_PATH="${ID_PATH%%\?*}"
+  ID="$(printf '%s' "$ID_PATH" | tr '/' '\n' | grep -xE '[0-9]{4,}' | tail -1 || true)"
+  [ -n "$ID" ] || ID="$(printf '%s' "$ID_PATH" | grep -oE '[0-9]{4,}' | tail -1 || true)"
   [ -n "$ID" ] || die "--id had no work item number in it"
 fi
 
