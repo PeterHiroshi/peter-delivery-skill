@@ -34,7 +34,7 @@ Report them per line. The rules column says which file to load for the detail.
 
 | # | Gate | Applies when | Detail |
 | --- | --- | --- | --- |
-| 1 | **Scope ledger: every item has a verdict; each `not-built` is listed out loud with its reason** | any task with a reference, or more than one requirement | r30 · 01 |
+| 1 | **Design doc committed in the repo (English, `docs/…`) and the scope ledger — written, presented and answered BEFORE code.** A scratchpad file or a chat message is not the artifact | any task with a reference, more than one requirement, or a class sweep across surfaces — bug fixes included | r5, r30 · 02, 01 |
 | 2 | **Never say 完成 / done** — say what is verified and what is not | always | r1 · 03 |
 | 3 | **tsc + the relevant tests + scoped eslint green, re-run immediately before reporting** | always | r2, r28 · 03, 06 |
 | 4 | **Looked at the rendered result — or handed Peter the numbered test cases.** No browser/devtools/headless run unless he asked or approved my ask | anything that renders | r24, r19 · 02, 01 |

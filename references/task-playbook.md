@@ -33,6 +33,18 @@ A throwaway script printing a matrix is the fastest form. Delete it after.
 This one step collapsed three fixes into one and found an unreported bug in the
 session that produced this skill.
 
+### 2b. Write the design doc — in the repo, before any code
+
+The class matrix from step 2 IS most of the document. Put it in
+`docs/design-<meegle-id>-<slug>.md` (English) with the root cause, each
+decision and its why, what the tests can and cannot cover, and the open
+questions. Present it, wait, then code. It ships in the branch.
+
+A bug fix is not exempt because it is a bug. Only a genuinely one-line fix is
+(rule 5). On Meegle 14959916 I wrote exactly this document into the scratchpad
+instead of the repo and went straight to code — Peter had to ask for it after
+the PR was already open.
+
 ### 3. Trace to the first point where it became wrong
 
 Fix it there. Guarding at the point of observation is defence in depth, never

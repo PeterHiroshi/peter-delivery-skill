@@ -52,15 +52,34 @@ Stage A's work lands as its own local commit on the feature branch, so he can
 review and revert it alone; B and C stack on top and the branch opens one PR
 (Peter 2026-09-20).
 
-### 5. Design doc before code — including before tests
+### 5. Design doc before code — in the REPO, including before tests
 
 Conversation consensus does not substitute. Write the design to a file, present
 it, wait. This is a standing requirement from earlier work
 (`design-doc-before-coding`), and it applies to TDD tests too.
 
+**The file goes in the repo, in English, and ships in the branch.** A
+scratchpad file is not the deliverable and neither is a long chat message —
+both are invisible to the PR reviewer and to whoever opens the code later. In
+moodio-agent the convention is `docs/design-<meegle-id>-<slug>.md`
+(`design-14663293-duplicate-node-references.md` is the model): root cause
+traced in code → the class sharing the mechanism as a table with a verdict per
+row → each decision and its why → what the tests drive and what they cannot →
+verification. Reference it from the module it explains.
+
+Meegle 14959916 (2026-09-20) is the cost of getting this half right: I wrote
+the whole design — root cause, class matrix, semantics, two open questions —
+to the session scratchpad and into a chat message, got Peter's answers, and
+shipped code, commit and PR with no document in the repo. 「缺必要设计文档
+（英文），补上」. Writing it took ten minutes; it should have been the first
+artifact, not a patch after the PR.
+
 **Proportionality:** a one-line fix does not need a document. Multi-file, new
-abstractions, or anything touching a contract does. If unsure, write three
-bullets and ask if that is enough.
+abstractions, or anything touching a contract does — **and so does a bug fix
+whose class sweep touches more than one surface**, which is most of them here.
+"It's a bug, not a feature" is not an exemption; the playbook's bug-fix path
+has its own design-doc step for that reason. If unsure, write three bullets and
+ask if that is enough.
 
 **Exception — a task that references an existing prototype (rule 22):** the
 prototype IS the design. Do not write a design doc, do not propose
