@@ -20,7 +20,11 @@ Three stages, one hand-off each, every one a runnable increment.
 Real components, real routes, real interaction state. Data arrives through a
 **seam**: one module `lib/<feature>/<thing>-seam.ts` that exports the exact
 signature the backend will implement and returns typed fixtures for now. Not msw,
-not storybook — one file.
+not storybook — one file. `-seam.ts`, not `-source.ts`: in moodio-agent
+`*-source.ts` already means "where a media asset comes from"
+(`lib/workstation/capture-source.ts`, `lib/image/editor-source.ts`,
+`lib/library/picker-sources.ts`), so that suffix would read as one more
+media-source helper on the repo this rule was written for.
 Not in stage A: persistence, migrations, permission edges, the locale sweep,
 tests, review agents, a design doc.
 Hand off three things: screenshots of the prototype beside mine for **every
