@@ -1,6 +1,6 @@
 ---
 description: Create this repo's task worktree for a bug/requirement — branch, .env, install, editor, in one step
-argument-hint: <meegle url or id> <what it is, in a few words> [fix|feat]
+argument-hint: <meegle url or id> <what the task is> [fix|feat] — repeat for several tasks
 allowed-tools: Bash(bash ~/.claude/skills/peter-delivery/scripts/append-worktree.sh:*), Bash(bash /Users/mahao/.claude/skills/peter-delivery/scripts/append-worktree.sh:*)
 ---
 
@@ -22,6 +22,15 @@ Fill in only these three:
   the input is Chinese. No id, no type word, no repo name.
 - `--id` — the Meegle URL exactly as given (the script pulls the number out of it)
   or the bare id. Leave it off when there is none.
+- `--task` — what Peter said the task is, **in his own words, verbatim** (Chinese
+  stays Chinese). It becomes the first prompt of the session that starts in the
+  new window. Leave it off only when he gave no description at all.
+
+The new window starts working on its own: the script arms a one-shot VSCode task
+that opens a terminal in the worktree and runs `/peter-delivery` with that first
+prompt, which reads the requirement and stops at the scope ledger — it does not
+write code. Add `--no-auto-start` when Peter only wants the worktree, and say in
+the report that the window will just sit there.
 
 Add `--repo <path>` when the working directory is not the target repo. Pass
 nothing else: the worktrees directory, the directory-vs-branch naming, the base

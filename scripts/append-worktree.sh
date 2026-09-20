@@ -21,15 +21,18 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
   --from <ref>   base commit-ish for the new branch (default: repo default branch).
   --base <dir>   worktrees directory, overriding detection (absolute or repo-relative).
   --repo <dir>   any path inside the target repo (default: $PWD).
+  --task <text>  what the new session should work on, in Peter's own words.
+                 Used for the first prompt; defaults to the slug and the link.
   --no-install   skip the background dependency install.
   --no-open      do not open the worktree in the editor.
+  --no-auto-start  do not arm the first Claude session in the new window.
   --fetch        git fetch the base ref from origin before branching.
   --dry-run      print the plan, touch nothing.
 USAGE
 }
 
-TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD"
-DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0
+TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD" TASK=""
+DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0 DO_AUTO_START=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -39,7 +42,9 @@ while [ $# -gt 0 ]; do
     --from) FROM="${2:-}"; shift 2 ;;
     --base) BASE_OVERRIDE="${2:-}"; shift 2 ;;
     --repo) REPO="${2:-}"; shift 2 ;;
+    --task) TASK="${2:-}"; shift 2 ;;
     --no-install) DO_INSTALL=0; shift ;;
+    --no-auto-start) DO_AUTO_START=0; shift ;;
     --no-open) DO_OPEN=0; shift ;;
     --fetch) DO_FETCH=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -57,6 +62,7 @@ die() { echo "append-worktree: $*" >&2; exit 2; }
 
 # A URL is accepted for --id. Two of them are not: one run makes one worktree,
 # and quietly using the first link would ship half of what was asked.
+ID_RAW="$ID"
 if [ -n "$ID" ]; then
   ID_TOKENS="$(printf '%s' "$ID" | tr -s '[:space:]' '\n' | grep -cE '[0-9]{4,}' || true)"
   [ "${ID_TOKENS:-0}" -le 1 ] || die "--id got $ID_TOKENS tasks. One worktree per run: call this script once per link, each with its own --slug"
@@ -278,6 +284,57 @@ elif [ -f "$WORKTREE/package.json" ]; then
   echo "install   skipped (--no-install); run 'npm install' before the dev server"
 else
   echo "install   no package.json; install nothing"
+fi
+
+# --- the first session in the new window -------------------------------------
+#
+# VSCode has no way to be told "open this folder and run this prompt": the CLI
+# has no --command, and the Claude extension registers no URI handler. The one
+# hook that exists is a task with runOn: folderOpen, which VSCode runs in the
+# integrated terminal the first time the folder is opened — after the user has
+# allowed automatic tasks for it (or set task.allowAutomaticTasks to "on").
+#
+# The prompt lives in its own file so nothing has to be escaped into JSON, and
+# the task consumes both files before starting Claude: this arms the FIRST open
+# of a new worktree and leaves nothing behind in git status afterwards.
+if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
+  mkdir -p "$WORKTREE/.vscode"
+  {
+    echo "/peter-delivery"
+    echo
+    echo "Task: ${TASK:-$(printf '%s' "$SLUG" | tr '-' ' ')}"
+    [ -n "$ID_RAW" ] && echo "Meegle: $ID_RAW"
+    echo "Branch: $BRANCH"
+    echo "Worktree: $WORKTREE"
+    [ -n "$INSTALL_LOG" ] && echo "Note: npm install is still running in the background ($INSTALL_LOG)."
+    echo
+    echo "First round only: read the requirement (pull the Meegle item if there is a link),"
+    echo "find the code it touches, then write the scope ledger and three design bullets and"
+    echo "STOP for Peter. Do not write code, do not commit, do not start the dev server."
+  } > "$WORKTREE/.vscode/claude-task-prompt.txt"
+
+  cat > "$WORKTREE/.vscode/tasks.json" <<'TASKS'
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "peter-delivery: start this task",
+      "type": "shell",
+      "command": "P=\"$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec claude \"$P\"",
+      "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
+      "runOptions": { "runOn": "folderOpen" },
+      "problemMatcher": []
+    }
+  ]
+}
+TASKS
+  echo "auto-start armed: the window's first terminal runs /peter-delivery with this task"
+  echo "          (VSCode asks once per folder — 'Allow Automatic Tasks in Folder' — unless"
+  echo "           task.allowAutomaticTasks is \"on\"; the two files delete themselves on run)"
+elif [ "$DO_AUTO_START" = "1" ]; then
+  echo "auto-start not armed: .vscode/tasks.json already exists, left untouched"
+else
+  echo "auto-start off"
 fi
 
 # --- editor ------------------------------------------------------------------

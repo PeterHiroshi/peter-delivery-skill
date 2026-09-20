@@ -136,7 +136,9 @@ recently), [`testing-that-earns-its-keep.md`](references/testing-that-earns-its-
 **A new task starts with its own worktree**: `/peter-delivery:append-worktree
 <meegle url> <a few words>` creates it the way THAT repo already does it — layout
 and branch/directory naming learned from the worktrees that exist, ignored `.env`
-copied, install started, editor opened. One command, no deciding.
+copied, install started, editor opened, and the new window's first Claude session
+armed with the task (it reads the requirement and stops at the scope ledger).
+One command, no deciding.
 
 Peter works across ~90 repos in many stacks. **Assumptions carried from the last
 project are a reliable source of wasted time.** Notes live in
