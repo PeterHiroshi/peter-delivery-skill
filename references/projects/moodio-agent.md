@@ -54,6 +54,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Capture frames menu (2026-09-14, Meegle 14452515, PR #634)`
 - `Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)`
 - `Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)`
+- `A dblclick under a container capture never arrives (2026-09-21, Meegle 14989382)`
 
 **Generation, models and providers**
 
@@ -2123,3 +2124,28 @@ does not export. Two tell-tales that the probe hit ANOTHER worktree's server
 just added is missing from a read. Check the holder's cwd before believing
 either.
 
+
+## A dblclick under a container capture never arrives (2026-09-21, Meegle 14989382)
+
+"Double-click a zone sometimes does not enter it, a refresh fixes it" was
+the TOOL, not a race. Every canvas opens on Hand (`useState<CanvasMode>("move")`
+in `DesktopDetailPage`, never persisted). With Select, the zone body yields
+its press to the marquee, and the marquee does `setPointerCapture` on the
+CONTAINER. Capture retargets the click/dblclick that follow onto the
+capturing element, so the body's `onDoubleClick` never ran. With Hand, the
+zones layer captures on the body itself, so it worked. The refresh "fixed"
+it only by putting Hand back in the user's hand.
+
+- A "sometimes, refresh fixes it" canvas report: first list the
+  non-persisted UI state a refresh resets (tool, focus stack, selection),
+  then ask Peter for the one-line repro across it. "Press V, double-click;
+  press H, double-click" confirmed the cause in 30 s.
+- Any double-click inside the canvas must be read from PRESSES
+  (`components/desktop/assets/use-double-press.ts`, which now returns true on
+  the completing press). pointerdown always goes to the pressed element; only
+  the events after it are redirected. Asset cards had already hit this.
+- The guard that pinned the literal `onDoubleClick={() => onZoneEnter?.(zone.id)}`
+  stayed green for two months while Select was dead. A synthetic
+  `dispatchEvent(new MouseEvent("dblclick"))` in a harness would also pass,
+  because it bypasses capture. Only real presses in a real browser, per
+  tool, observe this.
