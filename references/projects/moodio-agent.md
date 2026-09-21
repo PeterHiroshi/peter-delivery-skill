@@ -19,6 +19,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `The minted token dies after 2 h, and :3000 is shared with Peter (2026-09-15, cloud-doc editor)`
 - `Performance constants for the dev environment (2026-09-18, Meegle 14294602)`
 - `Next 16 refuses a second dev server in the same directory (2026-09-20)`
+- `An unauthenticated probe never reaches a route (2026-09-21, Meegle 14956503)`
 
 **Getting a real browser / session on this app**
 
@@ -2107,3 +2108,18 @@ Also from that session: **"success: true" from a render is not evidence.**
 What proved the mute path copied the picture instead of re-encoding it was
 `ffmpeg -i <f> -map 0:v -f md5 -` on the source and the output coming back
 identical, with `ffprobe -select_streams a` showing zero audio streams.
+
+## An unauthenticated probe never reaches a route (2026-09-21, Meegle 14956503)
+
+`proxy.ts` answers `{"error":"Unauthorized"}` 401 to EVERY unauthenticated
+`/api/*` request — an existing route, a missing one and a wrong method alike —
+so a curl without a session proves nothing for rule 29. Probe with a minted
+token (`A login-free REAL session`) and look for an answer only the handler
+can give: a 404 `resource_unavailable` from `authorizeWorkstation` on a nil
+workstation id, a 400 from body validation, a 405 for a method the route file
+does not export. Two tell-tales that the probe hit ANOTHER worktree's server
+(the port holder changed mid-session, again): a route you just added answers
+405 (the dynamic sibling `[id]/route.ts` matched it instead), and a field you
+just added is missing from a read. Check the holder's cwd before believing
+either.
+
