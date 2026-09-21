@@ -54,6 +54,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Capture frames menu (2026-09-14, Meegle 14452515, PR #634)`
 - `Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)`
 - `Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)`
+- `A signed media URL changes on every response (2026-09-21, Meegle 14980874)`
 - `A dblclick under a container capture never arrives (2026-09-21, Meegle 14989382)`
 
 **Generation, models and providers**
@@ -2149,3 +2150,26 @@ it only by putting Hand back in the user's hand.
   `dispatchEvent(new MouseEvent("dblclick"))` in a harness would also pass,
   because it bypasses capture. Only real presses in a real browser, per
   tool, observe this.
+
+## A signed media URL changes on every response (2026-09-21, Meegle 14980874)
+
+- `getSignedVideoUrl` signs with a `Date.now()` expiry (30 min), so EVERY
+  enriched response carries a different string for the same file:
+  `fetchDetail` (replaces all assets; fired by any generation settling, WS
+  reconnect, the 10 s poll fallback, uploads) and `mergeAsset` on PATCH /
+  batch-move echoes. Anything keyed on the raw URL (a `<video src>`, a
+  `useVideoPlaybackIntent` key, a cache) sees a "new" value on every refresh.
+  `ReleasableVideo`'s ref depends on `src`, so a mounted element releases +
+  reloads, and `autoPlay` restarts it: "paused video plays again by itself".
+- Identify the file by the URL PATH, not `metadata.videoId` (chat-placed tiles
+  have none; enrichment takes it from the generation) and not the host (CN
+  viewers read the CN domain, broadcasts may carry the origin). The fix pins
+  the source per mounted element (`lib/desktop/video-tile-playback.ts`) and
+  re-pins on `error` when a fresher signature exists.
+- A version restore swaps `videoId` in place under a mounted element, and
+  `ReleasableVideo`'s release calls `pause()` first: an `autoPlay` gated on an
+  onPause-derived flag leaves the restored clip frozen on frame 0. Tried,
+  dropped.
+- Video nodes are 180 px tall with a fixed box (no resize): a 9:16 node is
+  ~101 px wide and drops under the transport's 96 px gate below ~95% zoom.
+
