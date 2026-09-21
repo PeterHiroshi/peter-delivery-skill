@@ -38,13 +38,13 @@ Two rules came out of it:
   memory, not per-entity memory, and the two look identical until the key changes.
 - **Prefer guarding on the VALUE over guarding on the EVENT.** "Don't overwrite a
   value that is already set" needs no memory at all, so no lifecycle can defeat it.
+  The final fix was one line — `if (params.aspect_ratio != null) return;` — after
+  three attempts at remembering *when* to skip.
 - **Guard on the value the CONSUMER uses, not a field that usually mirrors it.**
   Meegle 14980874 (2026-09-21): "same video?" first compared `metadata.videoId`;
   chat-placed tiles have none, and the element loads a URL whose host varies —
   the independent review found both. The element consumes the URL, so the
   identity is the URL's path.
-  The final fix was one line — `if (params.aspect_ratio != null) return;` — after
-  three attempts at remembering *when* to skip.
 
 The other half: an independent review (`/codex`) found both the remount and a
 second bug I had shipped — a heal-on-read that discarded a value the user could
