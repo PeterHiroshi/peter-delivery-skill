@@ -82,7 +82,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `tsc cannot see a server module in the client bundle (2026-09-08)`
 - `A module-level client cache keyed by one id is stale for every other key (2026-09-09)`
 - `A route's imports are load-bearing (2026-09-18)`
-- `Only the script PAGE fetches the script — every other surface reads a null (2026-09-19)`
+- `Only the script PAGE fetches the script — every other surface reads a null (2026-09-19; the STUDIO fetches it since 2026-09-22)` — incl. a gate whose key is fetched by what the gate hides
 
 **Process on this repo**
 
@@ -1993,7 +1993,7 @@ Also from that session:
   Pass the paths literally, and never send a comparison run's stderr to
   `/dev/null`.
 
-## Only the script PAGE fetches the script — every other surface reads a null (2026-09-19)
+## Only the script PAGE fetches the script — every other surface reads a null (2026-09-19; the STUDIO fetches it since 2026-09-22)
 
 `useWorkstationScript()` is mounted by exactly one component,
 `ScriptPaperPane`. Nothing else in the studio fetches the episode's script.
@@ -2033,6 +2033,27 @@ The remaining hits are inside ScriptPaperPane's own subtree (the 版式 switch,
 the paper's save) plus the versions panel's `current()`, which still reports
 an unloaded script as `""` in its top row — cosmetic, unfixed, worth a look
 if the compare view ever shows a blank "current".
+
+**Update 2026-09-22 (Meegle 15030248, branch
+`fix/meegle-15030248-script-entry-disappears-in-project`, 2 local commits).**
+The third instance was the worst: the stage's "fresh episode" gate read
+`scriptContent`, and a fresh stage renders the guide INSTEAD of the page that
+fetches it — a lock whose key sits behind the lock. Every entry into an
+episode with only a script showed the guide and an empty sidebar; only a chat
+card's 「打开剧本」 (which sets `started.script`) got in. `useWorkstationScript`
+now lives in `ScriptStudioSurface`, not `ScriptPaperPane`. Two lessons:
+
+- **When a gate decides whether X mounts, the gate's inputs must not be
+  fetched by X.** Look for it wherever an empty state replaces content.
+- **One "all reads loaded" gate is the wrong shape** (my first draft; the
+  adversarial pass caught it): one slow/failed read then hides content that
+  already arrived, and a jump into the script can fire before the page draws.
+  `studioStage`: evidence of content → pages at once; looks empty → wait for
+  all three reads → guide. Only the negative answer waits.
+- `dedupedGet` used the global `fetch`, so the admin project preview's script
+  and document reads went out unmarked (404 for non-member admins). Fixed in
+  the same branch; the existing source guard only scans `lib/workstation` and
+  `lib/desktop`, so a transport bypass in `lib/net` or `hooks/` is invisible to it.
 
 ---
 ## Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)
