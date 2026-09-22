@@ -20,6 +20,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Performance constants for the dev environment (2026-09-18, Meegle 14294602)`
 - `Next 16 refuses a second dev server in the same directory (2026-09-20)`
 - `An unauthenticated probe never reaches a route (2026-09-21, Meegle 14956503)`
+- `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
 
 **Getting a real browser / session on this app**
 
@@ -2172,4 +2173,29 @@ it only by putting Hand back in the user's hand.
   dropped.
 - Video nodes are 180 px tall with a fixed box (no resize): a 9:16 node is
   ~101 px wide and drops under the transport's 96 px gate below ~95% zoom.
+
+## Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)
+
+The pure-frontend fork (`moodio-agent-flash`, `docs/design-frontend-extraction.md`
+there) replays recorded `/api/*` traffic through MSW. Recording it cost four
+detours; take these routes first:
+
+- **Peter's `:3000` server can be stale.** It answered 500 (Next's HTML error
+  page: `Module not found: '@anthropic-ai/sdk'`) on every route importing the
+  LLM client because his `node_modules` predated the dependency. Do not fix
+  his checkout; record from a fresh detached worktree of upstream
+  (`git worktree add --detach .work/worktrees/tmp/<name> main`, `npm install`,
+  copy `.env`, `npx next dev -p 3002`). Tell him his server is stale.
+- **The retrieval service (`NEXT_PUBLIC_FLASK_URL`) only allows the `:3000`
+  origin (CORS).** From any other port the browser never sees a response, so
+  nothing records. `RECORD_NO_CORS=1` in flash's `scripts/mock/record.ts`
+  launches Chrome with `--disable-web-security` for recording only.
+- **MSW under React StrictMode:** `worker.start()` runs twice on the dev
+  double-mount and throws "cannot configure an already enabled network".
+  Memoize the start promise at module level.
+- **zsh does not word-split `$T` holding `npx tsx script.ts`**; a chain of
+  `$T …` silently fails with "no such file". Use a shell function.
+
+The mint-a-JWT route (section above) works unchanged; the dev user with the
+richest data is `peter8icestone@gmail.com` (37 projects, admin).
 
