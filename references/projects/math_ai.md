@@ -337,3 +337,26 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 - Stream seam: `useDashboard.handleSendMessage` → `resolveStreamSource()` in
   `lib/onboarding/stream-seam.ts`; `done` with `session.id = ''` skips navigation,
   history and the follow-up GET (`useDashboard.ts` done handler).
+
+### driver.js tour on React (LFX-458, 2026-09-22 — three rounds before DevTools found it)
+
+- **Never key interaction or highlight state on a class you add to a React-managed
+  element.** driver.js grants pointer-events via `driver-active-element`; the "+"
+  button and `.graph-section` derive `className` from state, so one re-render (here:
+  toggling `emphasizePaperUpload` for the highlight) rewrote the attribute and wiped
+  driver's class and my beacon. Symptom: computed `pointer-events: none`,
+  `elementFromPoint` → `body`. Fix: publish state as `data-*` on `<body>`, style by selector.
+- `onHighlighted` fires from a 400ms rAF transition that is dropped when another
+  highlight starts (a flush-triggered re-render right before the step does this).
+  Use `onHighlightStarted` for must-run side effects; arm step-specific listeners
+  right after `moveTo`, not in hooks.
+- Two rounds of code-reading fixes went red on Peter's screen before I asked for the
+  browser. The rule 11 threshold is two: after the second failed attempt on one
+  sub-goal, switch evidence class (DevTools / a probe), do not try a third variation.
+- **DevTools recipe for this repo**: MCP Chrome profile may be held by a stale process —
+  kill only `--user-data-dir=~/.cache/chrome-devtools-mcp/chrome-profile` PIDs. Log in
+  by minting a JWT with the backend's own code (`load_dotenv(".env")` explicitly —
+  stdin scripts crash `find_dotenv`; `PYTHONPATH=.`; `create_user` + `create_access_token`)
+  and setting `localStorage.auth_token` / `auth_user`. `Page.captureScreenshot` times out
+  on the dashboard; read the DOM with `evaluate_script` instead. A dev-only
+  `window.__lfxTour()` probe reports tour + anchor facts.
