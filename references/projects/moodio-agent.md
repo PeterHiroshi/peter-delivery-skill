@@ -12,7 +12,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 **Environment & dev server**
 
 - `Environment traps`
-- `Testing reality`
+- `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them)
 - `Files that defeat grep (2026-09-07)`
 - `The remote DB is slow enough to fake a bug (2026-09-07)`
 - Other sessions kill every `next dev` — and the toast race (2026-09-14, Meegle 14653304 round 2)
@@ -186,6 +186,32 @@ the recipe above, which I had not run. `npm install` made both pass.
   `node-composer.tsx`). Verify against the untouched baseline before calling
   anything pre-existing — Peter will ask for evidence.
 - `next build` can surface what tsc misses. Worth running before a PR.
+
+### Local green ≠ CI green: the `*-postgres.test.ts` suites skip without a DB (2026-09-22, PR #778)
+
+CI runs `npx vitest run` with `CANVAS_GENERATION_TEST_DATABASE_URL` set (a
+postgres service), so every `__tests__/*-postgres.test.ts` suite RUNS there and
+SKIPS locally (`describe.skipIf(!connectionString)`). PR #778 reported "all
+tests pass" locally while CI failed 6 of them: the suite builds its own schema
+by hand and lacked a column the PR added. Run them locally the CI way:
+
+```
+docker run -d --rm --name pg-test -e POSTGRES_USER=canvas_test \
+  -e POSTGRES_PASSWORD=canvas_test -e POSTGRES_DB=canvas_test \
+  -p 55432:5432 postgres:16-alpine
+CANVAS_GENERATION_TEST_DATABASE_URL=postgresql://canvas_test:canvas_test@127.0.0.1:55432/canvas_test \
+  npx vitest run --exclude '**/llm-integration*'
+```
+
+- A schema change must also land in every postgres suite's hand-built DDL —
+  apply the migration file itself (`readFileSync("migrations/NNNN_…sql")`),
+  as the deletion suite does, rather than retyping columns.
+- To test a module whose inserts/`execute` go through `@/lib/db`, mock it with
+  a Proxy onto a real drizzle instance (`__tests__/entity-group-zones-postgres.test.ts`)
+  — the older `adapter.select/update/transaction` mock lacks insert/delete/execute.
+- Real SQL is the only instrument for a read-time data conversion or a
+  relative (`pos + dx`) update race: `Promise.all([heal(), heal(), heal()])`
+  against the container proved the advisory lock (mutant: no lock → double move).
 
 ## The composer: two surfaces, one component
 
