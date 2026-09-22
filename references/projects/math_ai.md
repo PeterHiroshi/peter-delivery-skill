@@ -317,3 +317,23 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
   Restart only if the in-progress key is a cron, never a `run_campaign`.
 - Extra `email-resume:*` jobs are harmless: each returns `running` in 0.15 s
   against a held lease (the dedup is the lease, not the job id).
+
+## Onboarding tour worktree (LFX-458, 2026-09-22)
+
+- `append-worktree.sh` only parses Meegle numeric ids; a Jira key (`LFX-458`) exits 2.
+  Create by hand in this repo's layout: `git worktree add -b feat/lfx-<n>-<slug>
+  .worktrees/lfx-<n>-<slug> origin/develop`, copy `backend/.env` and
+  `frontend/.env.local`, `pnpm install` in `frontend/`.
+- **Local backend refuses to start on the copied `.env`**: `REDIS_DATABASE=0` is on the
+  production list (`config/production_bindings.yaml`) and `load_dotenv(override=True)`
+  means a shell env var cannot beat the file. Edit the worktree's own `.env` copy
+  (`REDIS_DATABASE=4`, Redis is local on `:6399`) — never the main checkout's. Backend
+  = `../../../backend/.venv/bin/python -m uvicorn app.main:app --port 8002` from the
+  worktree `backend/` (frontend `API_BASE` defaults to `localhost:8002`); Vite is on
+  `:5172` (strictPort).
+- `DashboardPage.*.test.tsx` mock `react-i18next` as `useTranslation: () => ({ t })` —
+  a hook mounted in DashboardPage must read the locale from `i18next.language`, not
+  from `useTranslation().i18n` (13 tests went red for exactly this).
+- Stream seam: `useDashboard.handleSendMessage` → `resolveStreamSource()` in
+  `lib/onboarding/stream-seam.ts`; `done` with `session.id = ''` skips navigation,
+  history and the follow-up GET (`useDashboard.ts` done handler).
