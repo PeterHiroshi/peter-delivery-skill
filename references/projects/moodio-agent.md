@@ -55,6 +55,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Capture frames menu (2026-09-14, Meegle 14452515, PR #634)`
 - `Upload placeholders on the canvas: one status word, three tiles (2026-09-14, Meegle 14742436)`
 - `Reorder strips: the end gap has no drop target (2026-09-20, Meegle 14744969)`
+- `Unit frames on the grid: who places member cells (2026-09-22, Meegle 14993494)`
 - `A signed media URL changes on every response (2026-09-21, Meegle 14980874)`
 - `A dblclick under a container capture never arrives (2026-09-21, Meegle 14989382)`
 
@@ -2198,4 +2199,27 @@ detours; take these routes first:
 
 The mint-a-JWT route (section above) works unchanged; the dev user with the
 richest data is `peter8icestone@gmail.com` (37 projects, admin).
+
+## Unit frames on the grid: who places member cells (2026-09-22, Meegle 14993494)
+
+A generation unit's frame is a scene zone. `planShotGrid` owns its top-left,
+and its member cells are fixed offsets from that corner. Before you reason
+about "members off their cells", know what actually reads those cells:
+
+- **Planned-cell seeding** (`seedUnitTextNodesTx`, `resolveMemberCellTx`) runs
+  only when a unit is created, when a member first gets text (the entry's heal
+  pass), or when one member's node is made on demand. Joining an existing unit
+  on the canvas is a drag (`joinShotGroup` via `resolveUnitDrop`), and the node
+  stays where it was dropped.
+- **`workspaceShift`** measures the frame's work against the PLANNED block, not
+  the member nodes. After any change that moves contents relative to the frame,
+  the top edge needs the "work below block + gap" ceiling, or the grid pushes
+  the work back outside history.
+- **`arrangeZones` applies `contentShift` to every direct asset of the frame,
+  member text nodes included.** `ShotGridZoneUpdate.contentShift` documents the
+  opposite. This is pre-existing and was reported, not fixed.
+- The resize model that holds: the size is the user's, and the place is the
+  grid's. A left/top drag commits anchored (`anchorZoneResize`: write the size
+  only, and move the contents by the drag-start delta). The limits equal what
+  the grid would restore (`unitFrameResizeLimits`).
 

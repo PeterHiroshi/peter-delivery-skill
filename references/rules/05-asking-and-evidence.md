@@ -182,3 +182,17 @@ line it replaces.** For a UI value the written requirement often exists nowhere 
 in the commit message that put it there. Peter then chose a third way (the fixed box
 AND the whole picture, `object-fit: contain`) that neither round had offered — which
 is what the history made askable.
+
+**And wearing an adversarial review's clothes (2026-09-22, moodio-agent Meegle
+14993494).** Peter had asked twice for a unit frame to resize from all four corners
+"like a zone". A review pass reported that moving the left/top edges would make a
+later-seeded member overlap the moved ones by 60–160 px. I cut the frame to one
+corner and asked him to confirm. His reply: 「为什么没有和已有的"区域"节点一样的自由缩放
+方式（4个角支持拖拽）」. Tracing the finding's trigger took five minutes and shrank it.
+Planned-cell seeding runs only when a member first gets text, or when one node is made
+on demand; joining a unit on the canvas keeps the dropped position. It was the same
+class as a user moving nodes by hand. **A finding is a hypothesis about severity.
+Before it removes something the requirement names, grep who calls the code path and
+from which user flow, then fix inside the requirement.** A finding that proves the
+requirement truly impossible goes to Peter with that evidence. A plausible one does
+not justify a cut.
