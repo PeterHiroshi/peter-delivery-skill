@@ -58,6 +58,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Unit frames on the grid: who places member cells (2026-09-22, Meegle 14993494)`
 - `A signed media URL changes on every response (2026-09-21, Meegle 14980874)`
 - `A dblclick under a container capture never arrives (2026-09-21, Meegle 14989382)`
+- `A body portal is outside the hidden surface frame (2026-09-23, Meegle 15031744)`
 
 **Generation, models and providers**
 
@@ -2270,3 +2271,32 @@ about "members off their cells", know what actually reads those cells:
   only, and move the contents by the drag-start delta). The limits equal what
   the grid would restore (`unitFrameResizeLimits`).
 
+## A body portal is outside the hidden surface frame (2026-09-23, Meegle 15031744)
+
+The Create tab keeps both canvases mounted and hides the one you left with
+`visibility: hidden` + `inert` + `pointer-events: none` — **layout preserved**.
+Anything a component under that frame renders with
+`createPortal(..., document.body)` is NOT inside the frame, so none of that
+reaches it.
+
+The script paper's line handle drew a line number and a grip over an asset
+card because both halves were true: it portals to the body, AND its `lineAt`
+fell back to measuring the hidden paper's line boxes whenever
+`elementFromPoint` landed outside the paper — on the Assets page, always. So
+it was not stale state; it re-decided to show on every pointer move.
+
+- Fix at both points: read `useSurfaceHidden()` (the contract is in
+  `docs/create-tab-surfaces.md` — it existed, nothing enforced it), clear the
+  hover when standing down, and make the hit test require the paper to be the
+  element AT the pointer (which also stops the handle being drawn over a
+  dialog or the floating chat on the script page itself).
+- Guard that is not hollow by construction:
+  `__tests__/surface-body-portals.test.ts` walks `components/workstation`,
+  derives every body portal, and demands each read `useSurfaceHidden` or hold
+  an allowlist entry with a written reason. It still cannot see a render — say
+  so and hand over browser cases.
+- **A bounds assertion can pass for the wrong reason.** `expect(hover({y:
+  paper.top - 1})).toBeNull()` survived deleting the vertical-bounds check,
+  because no line spanned that height anyway. It only killed the mutation once
+  a case put a line flush with the paper's top edge, inside the hit test's 2px
+  slack. Mutation-test every new assertion, not just the interesting ones.
