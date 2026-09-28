@@ -25,7 +25,7 @@ subdirectory under `~/.claude/commands/` is what names the command
 
 | Command | What it does |
 | --- | --- |
-| `/peter-delivery:append-worktree <meegle url> <a few words>` | Creates the task worktree the way the current repo already does it: layout and branch/directory naming detected from the worktrees that exist, ignored `.env` files copied, `npm install` started in the background, editor opened. `scripts/append-worktree.sh --help` for the flags. |
+| `/peter-delivery:append-worktree <meegle url> [<meegle url> ...]` | One worktree per link (bare links get their title and type from one `meegle workitem +batch-get`; words beside a link win). Creates the task worktree the way the current repo already does it: layout and branch/directory naming detected from the worktrees that exist, ignored `.env` files copied, `npm install` started in the background, editor opened. `scripts/append-worktree.sh --help` for the flags. |
 
 ## What it is
 
