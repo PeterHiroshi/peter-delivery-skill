@@ -21,6 +21,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Next 16 refuses a second dev server in the same directory (2026-09-20)`
 - `An unauthenticated probe never reaches a route (2026-09-21, Meegle 14956503)`
 - `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
+- `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
 
 **Getting a real browser / session on this app**
 
@@ -210,6 +211,16 @@ CANVAS_GENERATION_TEST_DATABASE_URL=postgresql://canvas_test:canvas_test@127.0.0
 - To test a module whose inserts/`execute` go through `@/lib/db`, mock it with
   a Proxy onto a real drizzle instance (`__tests__/entity-group-zones-postgres.test.ts`)
   — the older `adapter.select/update/transaction` mock lacks insert/delete/execute.
+- **Docker Desktop down → PGlite, not a third retry** (2026-09-29, Meegle
+  15031609). `@electric-sql/pglite` is a devDependency since #844's era;
+  `__tests__/sales-postgres.test.ts` is the pattern: CI Postgres when
+  `CANVAS_GENERATION_TEST_DATABASE_URL` is set, else `new PGlite({extensions:
+  {ltree}})` (`@electric-sql/pglite/contrib/ltree` — `folders.path` needs it)
+  behind a Proxy-mocked `@/lib/db`. `createEntity`/`updateEntity` run on it
+  unchanged. A standalone suite beats porting the big concurrent one.
+- A mutation loop must not run `__tests__/agent-2` whole: its
+  `llm-integration.test.ts` hits real APIs (~4 min per mutant). Target the
+  suites that own the assertions, and `python3 -u` or output stays buffered.
 - Real SQL is the only instrument for a read-time data conversion or a
   relative (`pos + dx`) update race: `Promise.all([heal(), heal(), heal()])`
   against the container proved the advisory lock (mutant: no lock → double move).
@@ -2300,3 +2311,18 @@ it was not stale state; it re-decided to show on every pointer move.
   because no line spanned that height anyway. It only killed the mutation once
   a case put a line flush with the paper's top edge, inside the hit test's 2px
   slack. Mutation-test every new assertion, not just the interesting ones.
+
+## Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)
+
+Symptom: Peter sent a screenshot of "Something went wrong" and 「快修复」 while
+I was mid-refactor. His `:3100` dev server runs the MAIN worktree with
+Turbopack HMR, so a two-step edit (a sed that needed a second fix) was on
+his screen as `ReferenceError: units is not defined` for the minutes in
+between. The check worktree on `:3101` protects only my own verification.
+
+Route: one atomic pass per batch (a single python/Edit script), `tsc` green
+before the next tool call; for multi-file changes edit in the check
+worktree first and copy back once green; never switch to browser work
+while the main tree is red. Verified fix: reload/「Try again」 once the tree
+is green — nothing else needed.
+
