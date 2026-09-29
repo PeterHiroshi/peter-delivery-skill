@@ -22,6 +22,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `An unauthenticated probe never reaches a route (2026-09-21, Meegle 14956503)`
 - `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
 - `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
+- `Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)` — merge not rebase, migration renumber, `git add` with a deleted path aborts silently, the JWT file collision, eslint --fix drift on schema.ts, Codex quota
 
 **Getting a real browser / session on this app**
 
@@ -2325,4 +2326,16 @@ before the next tool call; for multi-file changes edit in the check
 worktree first and copy back once green; never switch to browser work
 while the main tree is red. Verified fix: reload/「Try again」 once the tree
 is green — nothing else needed.
+
+## Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)
+
+Two sessions, 70 commits, 120 changed files, a peer session in the SAME worktree.
+
+- **Merge `origin/main`, do not rebase**, when the branch's commits are interleaved with a peer's: a rebase rewrites the peer's commits under it. Prove rule 21 the same way either route: `git diff origin/main...HEAD > before.patch` before, the same after, and `diff` the two — the delta must be confined to the conflict regions.
+- **Migration numbers collide with main** as a rule, not an exception: `git mv migrations/0112_x.sql 0113_x.sql` and grep the old number in comments/docs (schema.ts, the seam header, the design doc) in the same commit.
+- **`git add a b <deleted-path>` aborts the WHOLE add silently** (exit 128 on the missing path, nothing staged). Check `git status --short` after every pathspec add; a commit that looks right in the message can be missing five files.
+- **Do not reuse `/tmp/moodio-jwt.txt`** for anything else: the Meegle device-code script wrote its token there and every route probe answered 401 until the app JWT was re-minted. One file per secret, named for its consumer.
+- **`eslint --fix` over "every changed file" reformats `lib/db/schema.ts`** (398 lines of sales-table drift) even when the change there is one comment. Exclude schema.ts, DesktopCanvas.tsx, DesktopDetailPage.tsx from the fix list; if it happened, `git checkout -- <file>` and re-apply the edit by hand.
+- **Codex as the review gate is not reliable on this diff size/network**: `codex review --base origin/main` streams the diff to stderr and exceeded 330 s on 120 files; scoped `codex exec` runs then hit the ChatGPT usage limit. Fall back to three adversarial subagent passes (server / agent / client, each given its own `git diff -- <paths>` patch file) and report the Codex gate as ⚠️ not obtained rather than as done.
+- **A test that mocks `db.select().mockResolvedValueOnce(...)` in call order** breaks when a handler gains a pre-lookup query: put the new query INSIDE the branch after the existing one, not before it, and the mocks stay in order.
 
