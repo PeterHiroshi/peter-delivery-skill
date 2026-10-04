@@ -360,3 +360,11 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
   and setting `localStorage.auth_token` / `auth_user`. `Page.captureScreenshot` times out
   on the dashboard; read the DOM with `evaluate_script` instead. A dev-only
   `window.__lfxTour()` probe reports tour + anchor facts.
+
+- **driver.js 1.3.1 renders popover `title` / `description` / button text with `innerHTML`.**
+  Any admin-editable or user-derived string passed to a step's `popover` is stored XSS;
+  escape it (math_ai: `frontend/src/lib/onboarding/copy.ts escapeHtml`). Found by the one
+  adversarial review pass, not by tests or the browser runs — the review earned its cost here.
+- An async `start()` in a React hook needs a synchronous latch plus a generation counter that
+  teardown bumps; a check of "is it running" before the awaits lets a second caller (menu
+  replay during auto-start) or an unmount produce an orphan overlay or a re-activated seam.
