@@ -953,6 +953,15 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
   DesktopCanvas's wrapper div, not by `NodeComposerHost`, so the composer
   harness cannot see it; DesktopCanvas takes 145 props and is not worth a
   harness — source test + Peter's eyes on :3000.
+- The other direction (2026-10-08, frame editor Assets breadcrumb): a
+  sideways-only strip with its scrollbar hidden cannot be moved by a MOUSE
+  at all — a notch is pure `deltaY`, never turned into horizontal scroll.
+  Fix is `lib/horizontal-wheel-scroll.ts` (`ref={attachHorizontalWheelScroll}`,
+  native non-passive, passes zoom/sideways/at-the-end). Find the class with
+  a scan for `overflow-x-auto` + hidden scrollbar within ±4 lines; as of this
+  date still unfixed: generation-config-bar param strip, UnifiedCommentsList
+  tabs, ScriptLineEditor kind tabs, AssetBoard picked thumbs (ProjectsStrip /
+  menu-configuration have arrows, the AssetBoard row has grab-pan).
 - A fix that lets a gesture travel further changes what the surface can
   OVERLAP. After unfreezing a pan, sweep what the moving thing can now be
   carried under/over (panels, strips, pills) before hand-off.
