@@ -959,7 +959,7 @@ immune. The pan in the GIF was a WHEEL stream (`DesktopCanvas.tsx` native
   Fix is `lib/horizontal-wheel-scroll.ts` (`ref={attachHorizontalWheelScroll}`,
   native non-passive, passes zoom/sideways/at-the-end). Find the class with
   a scan for `overflow-x-auto` + hidden scrollbar within ±4 lines; as of this
-  date still unfixed: generation-config-bar param strip, UnifiedCommentsList
+  date still unfixed (Peter: not now): generation-config-bar param strip, UnifiedCommentsList
   tabs, ScriptLineEditor kind tabs, AssetBoard picked thumbs (ProjectsStrip /
   menu-configuration have arrows, the AssetBoard row has grab-pan).
 - A fix that lets a gesture travel further changes what the surface can
