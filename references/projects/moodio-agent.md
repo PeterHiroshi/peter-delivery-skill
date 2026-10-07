@@ -40,6 +40,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `el.click()` cannot see outside-press dismissal (2026-09-14, Meegle 14333608)
 - `A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)`
 - `Measure the bug screenshot instead of squinting at it (2026-09-20)`
+- `Driving the production Agent2 in-process against the dev DB (2026-10-08, Meegle 15209061)`
 
 - `Reusing a pipeline inherits its vocabulary (2026-09-20, Meegle 14732749)`
 **The composer, canvas and overlays**
@@ -2348,3 +2349,33 @@ Two sessions, 70 commits, 120 changed files, a peer session in the SAME worktree
 - **Codex as the review gate is not reliable on this diff size/network**: `codex review --base origin/main` streams the diff to stderr and exceeded 330 s on 120 files; scoped `codex exec` runs then hit the ChatGPT usage limit. Fall back to three adversarial subagent passes (server / agent / client, each given its own `git diff -- <paths>` patch file) and report the Codex gate as ⚠️ not obtained rather than as done.
 - **A test that mocks `db.select().mockResolvedValueOnce(...)` in call order** breaks when a handler gains a pre-lookup query: put the new query INSIDE the branch after the existing one, not before it, and the mocks stay in order.
 
+
+## Driving the production Agent2 in-process against the dev DB (2026-10-08, Meegle 15209061)
+
+Peter asked for a live test of the agent's TIMELINE tool. The unit tests mock
+`runTimelineTool` and run one turn; the only way to see the cross-turn
+approval flow was the real pipeline with the real model. What worked:
+
+- `new Agent2().processRequestParallel(history, msg, userId, true, 1, …)` with
+  `desktopId` (arg index 24) resolves the real workstation/episode scope and
+  offers the episode-only tools; drain `stream`, await `completions[0]`, push
+  both messages into the next turn's history. ~20 turns of gpt-6.1-sol cost
+  nothing worth mentioning.
+- It must run under vitest (`import "server-only"` is aliased there; tsx dies
+  on it). Name the file `__tests__/agent-2/llm-integration-*.test.ts` so the
+  default/CI run excludes it; drive steps with env vars (STEP, MSG).
+- `vitest.config` pins a placeholder `DATABASE_URL` and ES imports are hoisted:
+  `dotenv.config({override:true})` in the test body runs AFTER `@/lib/db`
+  built its pool. Put it in a side-effect module imported first.
+- The remote dev DB's first query in a fresh process failed once ("Failed
+  query"); Agent2 resolves the scope in one attempt and silently drops the
+  tool set on failure. Warm the pool with a retried `select 1` before a turn.
+- Human steps over HTTP with the minted JWT: `POST …/episodes` (creates the
+  desktop too), `PUT …/editor` (baseRevision 0 seeds; `assetClip` with a
+  workstation image id passes the media validator), `POST …/editor/plans`
+  `{planId,digest,baseRevision,decision}`, `GET …/editor?head=1`, `DELETE
+  …/episodes/<id>` cascades drafts/plans/receipts. Authoritative evidence of
+  what the model sent: `editor_plans.payload->'commands'` and
+  `editor_plan_operations.result`, not the stream.
+- TIMELINE has no `createPart`, so nothing of its calls is persisted; wrap
+  `TimelineHandler.prototype.execute` to log argv/envelope per turn.
