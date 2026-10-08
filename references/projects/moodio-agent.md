@@ -2395,6 +2395,14 @@ and `FrameEditorProvider.tsx` held their hunks next to mine.
   the file aside and copy it back.
 - A failing suite that lives in a file `git status` shows modified but you
   did not edit is their in-flight work, not your regression — say which.
+- When their unstaged lines sit INSIDE your hunk's context (same function),
+  `git apply --cached` of a filtered patch fails. Rebuild the index version
+  instead: `git show HEAD:file > tmp`, re-apply your edits to that copy,
+  `git hash-object -w tmp` + `git update-index --cacheinfo 100644,<sha>,file`.
+  The working tree keeps both; the commit carries only yours. Then prove the
+  COMMIT typechecks on its own: `git worktree add --detach /tmp/v HEAD`,
+  symlink node_modules, run tsc there, remove the worktree. And never let
+  your code lean on a variable only their unstaged hunk declares.
 - Measured on this dev server: any authorized route costs 2–3 s per request
   (`GET …/editor?head=1` alone: 2.2–3.1 s), so a client gesture that awaits one
   request feels like a second. Take the request off the gesture, do not
