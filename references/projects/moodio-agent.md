@@ -12,7 +12,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 **Environment & dev server**
 
 - `Environment traps`
-- `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them)
+- `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them) — CORRECTION 2026-10-08: `frame-editor-persistence-postgres.test.ts` runs locally (50 cases) and caught an approve-applies regression; run it before claiming an editor server change is green
 - `Files that defeat grep (2026-09-07)`
 - `The remote DB is slow enough to fake a bug (2026-09-07)`
 - Other sessions kill every `next dev` — and the toast race (2026-09-14, Meegle 14653304 round 2)
