@@ -99,6 +99,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Meegle 14653304 (2026-09-11): completion toast, worktree dev server, Meegle attachments`
 - `Script studio import + driving the chat composer (2026-09-15, Meegle 14294602 sub-02)`
 - `Long-lived feature branches here take main by MERGE, not rebase (2026-09-19)`
+- `A private reference never enters the repo; an overlay editor must be the painted element (2026-10-08, Meegle 15209061)`
 
 ---
 ## Environment traps
@@ -2407,3 +2408,25 @@ and `FrameEditorProvider.tsx` held their hunks next to mine.
   (`GET …/editor?head=1` alone: 2.2–3.1 s), so a client gesture that awaits one
   request feels like a second. Take the request off the gesture, do not
   tune the route.
+
+## A private reference never enters the repo; an overlay editor must be the painted element (2026-10-08, Meegle 15209061)
+
+**Peter's rule (standing):** nothing about the private reference codebase
+under `~/Develop/projs/nemovideo/` — its name, source paths, or findings
+credited to it — goes into moodio-agent docs or commit messages. Read it,
+report what it does in the chat reply, write the design on its own terms.
+Six `docs/design-15209061-*` files had it; scrubbed in `b194b4bfd`. Pushed
+history before that still carries the text — Peter chooses squash-merge or a
+filter-repo rewrite. `grep -rin nemo docs/` before every commit on the branch.
+
+**The mechanism lesson:** editing text "in place" over a rendered preview by
+laying a textarea/contentEditable on top with copied styles and `fontSize ×
+scale` is a second layout, and it always drifts (clipped word, off-by-px
+caret, a history of ±4px tuning commits in the reference itself). The fix
+that holds is to make the painted element the editor
+(`contenteditable="plaintext-only"` inside the Player's scaled composition,
+driven by a React context the render path never provides), key the selection
+frame by clip id so an unmeasured clip draws nothing rather than a fallback,
+and pin the invariant with a source test. Design:
+`docs/design-15209061-in-preview-text-editing.md`.
+
