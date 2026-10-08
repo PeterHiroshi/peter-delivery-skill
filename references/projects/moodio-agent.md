@@ -23,7 +23,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
 - `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
 - `Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)` — merge not rebase, migration renumber, `git add` with a deleted path aborts silently, the JWT file collision, eslint --fix drift on schema.ts, Codex quota
-- `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)`
+- `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)` — incl. the temp-index commit recipe, and the write-before-read truncation that struck AGAIN on 2026-10-09 (five locale files, the other session's hunks lost): the only mechanism is a script file that reads into a variable, validates, then opens for writing
 
 **Getting a real browser / session on this app**
 
@@ -2405,7 +2405,18 @@ for my paths only (`update-index --cacheinfo 100644,$(git rev-parse HEAD:f),f`)
 so status stays sane. Nothing the other session staged can ride along.
 
 **`open(p, "w").write(fn(open(p).read()))` truncates the file before the read**
-(2026-10-08): Python evaluates the write-mode open first, so the read sees an
+(2026-10-08) — and it struck again on 2026-10-09 (Meegle 15209061, fourth
+lesson), in a scratchpad script whose `apply()` raised on a missing anchor
+AFTER the write-mode open had already emptied all five `messages/*.json`.
+The other session's unstaged delivery/subtitle keys lived only on disk and
+had to be rebuilt from a diff printed minutes earlier (three values
+inferred); macOS had no local snapshot. Knowing the rule did not prevent it,
+so the mechanism now: every scripted edit of a shared file is a script FILE
+in the scratchpad, `src = fh.read()` as its own statement, transform,
+`json.loads` the result, only then `with open(p, "w")`; run it on a `/tmp`
+copy first. And anchor on the namespace's own line: a key like
+`"subtitle"` repeats at the same indent in several namespaces, and a bare
+regex replaced the wrong one: Python evaluates the write-mode open first, so the read sees an
 empty file and a foreign unstaged hunk in `messages/en.json` was lost (rebuilt
 from HEAD + the one hunk the other locales showed). Read into a variable, then
 open for writing — and validate JSON before writing, never after. Also: when inserting
