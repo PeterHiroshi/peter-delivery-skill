@@ -23,6 +23,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
 - `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
 - `Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)` — merge not rebase, migration renumber, `git add` with a deleted path aborts silently, the JWT file collision, eslint --fix drift on schema.ts, Codex quota
+- `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)`
 
 **Getting a real browser / session on this app**
 
@@ -2379,3 +2380,22 @@ approval flow was the real pipeline with the real model. What worked:
   `editor_plan_operations.result`, not the stream.
 - TIMELINE has no `createPart`, so nothing of its calls is persisted; wrap
   `TimelineHandler.prototype.execute` to log argv/envelope per turn.
+
+## Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)
+
+Peter runs a second Claude session in the SAME worktree. `git diff --stat`
+suddenly listed seven files I had never touched (agent-editing protection),
+and `FrameEditorProvider.tsx` held their hunks next to mine.
+
+- Commit by pathspec is not enough when a FILE is shared: filter the diff by
+  hunk (`git diff -- file > full.patch`, keep the hunks whose `+` lines are
+  yours, `git apply --cached kept.patch`) and leave the rest unstaged.
+- Never `git checkout -- file` in a scratch loop (mutation testing, bisecting):
+  it erases THEIR unstaged work as well as your own uncommitted edits. Copy
+  the file aside and copy it back.
+- A failing suite that lives in a file `git status` shows modified but you
+  did not edit is their in-flight work, not your regression — say which.
+- Measured on this dev server: any authorized route costs 2–3 s per request
+  (`GET …/editor?head=1` alone: 2.2–3.1 s), so a client gesture that awaits one
+  request feels like a second. Take the request off the gesture, do not
+  tune the route.
