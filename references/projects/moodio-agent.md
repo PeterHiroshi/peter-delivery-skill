@@ -2384,6 +2384,19 @@ approval flow was the real pipeline with the real model. What worked:
 
 ## Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)
 
+**`git commit -- <path>` commits the WORKING TREE of that path, not the index**
+(2026-10-08, second lesson). A pathspec commit silently re-stages the whole
+file, so the other session's unstaged hunk in `messages/*.json` went into my
+commit even though I had rebuilt the index entry from HEAD. When a file has
+foreign hunks: rebuild the index entry (`git show HEAD:f` + my edit →
+`git hash-object -w` → `git update-index --cacheinfo`), then commit **without
+a pathspec** (`git commit` / `--amend --no-edit`) — and first check
+`git diff --cached --stat` so nothing the other session staged rides along.
+Verify with `git show HEAD -- <file> | grep "^[-+] "`. Also: when inserting
+an i18n key by regex, anchor on the namespace's opening line
+(`"frameEditor": {` + one indent), never on a neighbouring key — the first
+`"cancel"` after it was inside a nested object.
+
 Peter runs a second Claude session in the SAME worktree. `git diff --stat`
 suddenly listed seven files I had never touched (agent-editing protection),
 and `FrameEditorProvider.tsx` held their hunks next to mine.
