@@ -2392,7 +2392,23 @@ foreign hunks: rebuild the index entry (`git show HEAD:f` + my edit →
 `git hash-object -w` → `git update-index --cacheinfo`), then commit **without
 a pathspec** (`git commit` / `--amend --no-edit`) — and first check
 `git diff --cached --stat` so nothing the other session staged rides along.
-Verify with `git show HEAD -- <file> | grep "^[-+] "`. Also: when inserting
+Verify with `git show HEAD -- <file> | grep "^[-+] "`.
+
+**The clean recipe for a commit in a shared worktree (2026-10-08, third
+lesson):** build it from HEAD's tree in a TEMPORARY index, never from the
+shared one: `GIT_INDEX_FILE=/tmp/x git read-tree HEAD`, then
+`update-index --add --cacheinfo 100644,$(git hash-object -w f),f` for each of
+my paths (a HEAD-derived blob for a file that also carries a foreign hunk),
+`--force-remove` for deletions, `write-tree`, `commit-tree -p HEAD -F msg`,
+`git update-ref refs/heads/<branch> <commit> HEAD`; then sync the SHARED index
+for my paths only (`update-index --cacheinfo 100644,$(git rev-parse HEAD:f),f`)
+so status stays sane. Nothing the other session staged can ride along.
+
+**`open(p, "w").write(fn(open(p).read()))` truncates the file before the read**
+(2026-10-08): Python evaluates the write-mode open first, so the read sees an
+empty file and a foreign unstaged hunk in `messages/en.json` was lost (rebuilt
+from HEAD + the one hunk the other locales showed). Read into a variable, then
+open for writing — and validate JSON before writing, never after. Also: when inserting
 an i18n key by regex, anchor on the namespace's opening line
 (`"frameEditor": {` + one indent), never on a neighbouring key — the first
 `"cancel"` after it was inside a nested object.
