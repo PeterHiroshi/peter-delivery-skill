@@ -155,6 +155,14 @@ toggle. I had made one side of a double call idempotent and left the other.
 
 ### 27. A surviving mutation is an answer, not a gap to paper over (2026-09-18)
 
+**Restore by copy, never by `git checkout`, and only after a checkpoint commit
+(2026-10-08, moodio-agent).** The mutation loop restored each mutated file with
+`git checkout -- <file>` while the real change was still uncommitted: the first
+mutation wiped the rewrite of two files, and a second session's unstaged hunks
+in a shared file would have gone the same way. Commit first (gate 12), then `cp`
+the file aside and copy it back. A pattern that matches zero times after a
+restore is the symptom that the file is no longer what you think it is.
+
 Same session: three mutations of the GET de-duplicator, two caught, one
 survived (removing `.clone()` for the first caller). The tempting move is to
 invent an assertion that fails. The honest one is to work out whether the line
