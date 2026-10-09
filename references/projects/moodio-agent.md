@@ -24,6 +24,10 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
 - `Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)` — merge not rebase, migration renumber, `git add` with a deleted path aborts silently, the JWT file collision, eslint --fix drift on schema.ts, Codex quota
 - `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)` — incl. the temp-index commit recipe, and the write-before-read truncation that struck AGAIN on 2026-10-09 (five locale files, the other session's hunks lost): the only mechanism is a script file that reads into a variable, validates, then opens for writing
+- `A raw pg query shows naive timestamps 8 h off; Drizzle reads them as UTC (2026-10-09, Meegle 15209061)`
+- `A VM-sandboxed component test strips imports: a new import needs a binding in both harness versions (2026-10-09, Meegle 15209061)`
+- `Opening the frame editor in my own headless Chrome, and the CORS cache poisoning behind a blank filmstrip (2026-10-09, Meegle 15209061)`
+- `Driving the real Agent from headless Chrome to catch a client-side race (2026-10-09, Meegle 15209061)`
 
 **Getting a real browser / session on this app**
 
@@ -2403,6 +2407,13 @@ my paths (a HEAD-derived blob for a file that also carries a foreign hunk),
 `git update-ref refs/heads/<branch> <commit> HEAD`; then sync the SHARED index
 for my paths only (`update-index --cacheinfo 100644,$(git rev-parse HEAD:f),f`)
 so status stays sane. Nothing the other session staged can ride along.
+Two traps in the recipe (2026-10-09): the shell is zsh, so a space-separated
+`MINE="a b c"` is ONE path in `for f in $MINE` — use an array `MINE=(a b c)`;
+and a failed chain leaves no ref update, so `git log -1` before retrying.
+Also: when Peter has the worktree's dev server open, he watches stage A
+over HMR WHILE it is built — his screenshots arrive mid-turn as acceptance
+feedback (track order, lane labels, "where did the buttons go" = the
+15-minute plan TTL); answer each in the hand-off, not in a later round.
 
 **`open(p, "w").write(fn(open(p).read()))` truncates the file before the read**
 (2026-10-08) — and it struck again on 2026-10-09 (Meegle 15209061, fourth
@@ -2470,3 +2481,108 @@ frame by clip id so an unmeasured clip draws nothing rather than a fallback,
 and pin the invariant with a source test. Design:
 `docs/design-15209061-in-preview-text-editing.md`.
 
+## A raw pg query shows naive timestamps 8 h off; Drizzle reads them as UTC (2026-10-09, Meegle 15209061)
+
+Most `lib/db/schema.ts` timestamps are `timestamp` WITHOUT time zone, stored
+as UTC wall clock. Drizzle's pg-core column maps them as UTC on read
+(`new Date(value + "+0000")`) and writes `toISOString()`, so the app is
+consistent whatever the process time zone. A scratchpad script that uses
+`pg` directly gets node-postgres's parser instead, which treats a naive
+timestamp as LOCAL time: on this laptop (CST) every `created_at` came back
+8 hours early, and I told Peter a 25-minute-old render job was "queued for
+8 hours and past the worker's 2-hour deadline". Wrong, and retracted.
+
+- In a scratchpad, select `created_at::text` (the raw wall clock, UTC) or
+  `created_at AT TIME ZONE 'UTC'`, never the bare column, before reasoning
+  about ages or deadlines.
+- Cross-check one timestamp against something the app shows (the export
+  file name embeds `createdAt` as `...-HHMMSSZ`) before stating a time.
+- The frame editor's render worker is a separate process. In dev nothing
+  starts it: `/api/cron/frame-editor-jobs` is a Vercel cron (production
+  only). Jobs stay `queued` with `lease_token NULL` until
+  `npx tsx --env-file=.env --env-file=.env.local scripts/frame-editor-worker.ts`
+  runs (`--once` for one claim). Status GETs never dispatch. The app's AWS
+  user cannot read the Lambda's configuration or logs (least privilege), so
+  "is Lambda broken" is answered by the submission receipts and job states,
+  not by the AWS CLI.
+
+## A VM-sandboxed component test strips imports: a new import needs a binding in both harness versions (2026-10-09, Meegle 15209061)
+
+`__tests__/frame-editor-delivery-client.test.ts` (and the worker-cadence
+test) transpile a component's source with every `import` declaration
+removed and run it in `runInNewContext` with a hand-built object of
+bindings. Adding one import to `DeliveryJobs.tsx` made every dialog test
+throw `ReferenceError` in the sandbox, in the WORKING TREE harness (the
+other session's uncommitted version) and, differently anchored, in HEAD's.
+Both needed the binding: the working-tree one as an uncommitted edit I
+told Peter about, HEAD's inside my commit's HEAD-derived copy. Before
+importing anything new into a component, grep `__tests__` for its file
+name next to `runInNewContext`.
+
+Also from the same day: `grep -c "...\`template\`..."` in double quotes
+executes the backticks — a 0 count proved nothing. Use `grep -F` with
+single quotes for literal source lines.
+
+## Opening the frame editor in my own headless Chrome, and the CORS cache poisoning behind a blank filmstrip (2026-10-09, Meegle 15209061)
+
+Peter's "强刷没有效果" after a server-side fix was settled in ten minutes
+once I could see the browser. Recipe that worked without touching his :3000:
+
+- `git worktree add --detach $S/devwt HEAD`, `cp -Rc node_modules devwt/`
+  (a symlinked node_modules is refused by Turbopack: "points out of the
+  filesystem root"; the APFS clone takes 15 s), copy `.env` AND `.env.local`,
+  `npx next dev --turbopack --port 3002` detached, log to the scratchpad.
+- Mint the owner's `moodio_access_token` (jose HS256, `{userId,email,roles}`,
+  `JWT_ACCESS_SECRET`) and set it as a cookie on `localhost`.
+- The editor's URL is `/create/<workstationId>/episodes/<episodeId>?surface=editing`.
+  `/workstation/...` answers 308 to `/create/...` and DROPS the query, so the
+  surface param must go on the `/create` URL. First compile of that page is
+  minutes: `puppeteer.launch({ protocolTimeout: 600000 })` and a
+  `waitForSelector` with its own long timeout, or the CDP call itself times out.
+- Read the DOM markers instead of screenshots: `[data-filmstrip-loading]`,
+  `[data-filmstrip-ready]`, tiles with a `backgroundImage`, `[data-preload-pill]`,
+  and log every CDN request's type, status and `access-control-allow-origin`.
+- Move the checkout to a new commit with `git -C devwt checkout --detach <sha>`;
+  the dev server hot-reloads. Stop it and `git worktree remove --force` after.
+
+What it showed: the filmstrip is `<video crossOrigin="anonymous">` drawn on a
+canvas. The preload's `fetch` (CORS) filled Chrome's cache entry with
+`ACAO: *`; the duration probe (`prepareAsset`) and the picture probe
+(`sequence-settings`) loaded the same URL through a `<video>` WITHOUT
+`crossOrigin`; their revalidation got a CloudFront 304 with no ACAO (the CDN
+adds it only when the request carries `Origin`), the entry lost its CORS
+headers, and the filmstrip's load failed on it. A standalone page that only
+ran the filmstrip logic passed, which is why the first "fix" looked complete.
+Rule: when one URL is loaded by several mechanisms, every one of them must
+ask the same way (all CORS), and anything that needs the bytes twice should
+read the preloaded blob.
+
+## Driving the real Agent from headless Chrome to catch a client-side race (2026-10-09, Meegle 15209061)
+
+"The flash after an Agent edit is gone" could not be settled by reading
+code: every link of the chain looked intact. Three live runs settled it in
+twenty minutes (one LLM call each, on the dev account):
+
+- The chat composer is a contenteditable, not a `<textarea>`: select
+  `textarea, [contenteditable="true"], [role="textbox"]`, take the visible one
+  wider than 200 px, `click()`, `page.keyboard.type(...)`, `Enter`.
+- Read the SSE the client got, not the server's intent: on `requestfinished`
+  of `POST /api/chat/<id>/message`, `response.text()` and grep
+  `"type":"tool_call"` — it shows exactly which status/target/callId events
+  arrived and in what order relative to the editor's `GET …/editor` reloads
+  (log those with their `revision`).
+- Sample the DOM once a second and print only changes: `.tl-agent-flash`
+  count, `.tl-agent-glow`, `.studio-agent-live` text. A 1.6 s flash is easy to
+  miss at coarser sampling.
+- When the chain still hides, instrument the PRIVATE checkout only (console.log
+  with a `[settle-debug]` prefix in the reducer and the effect; rsync the
+  working tree over `$S/devwt`, never the repo) and have the probe forward
+  those console lines. That is what showed `fromRevision === loadedRevision`
+  with `sameDoc: true` — the "before" captured after the reload.
+- A race that depends on the Agent's turn length shows in some runs and not
+  others; one green run proves nothing until the mechanism is understood.
+
+Also: the private checkout must mirror the WORKING TREE (rsync, excluding
+node_modules/.next/.git/.env*) when the other session's HEAD is not
+self-consistent — a clean `git worktree add` of HEAD had 500s on every editor
+route because a committed module imported an untracked file.
