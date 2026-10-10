@@ -107,6 +107,8 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A private reference never enters the repo; an overlay editor must be the painted element (2026-10-08, Meegle 15209061)`
 
 ---
+- `A worktree where tsc OOMs, and the react-compiler lint rules that reject a ref prop and a setState effect (2026-10-10, Meegle 15305159)`
+
 ## Environment traps
 
 ### Worktrees: the design prototype is invisible
@@ -2625,3 +2627,20 @@ Reproducing it, what cost time:
   revisions, so a draft cannot be removed afterwards — the four test drafts on
   Peter's own episodes stayed. Next time use the disposable workstation
   3677c4bd and a new episode there, never his project episodes.
+
+## A worktree where tsc OOMs, and the react-compiler lint rules that reject a ref prop and a setState effect (2026-10-10, Meegle 15305159)
+
+- `npx tsc --noEmit` died with "JavaScript heap out of memory" at the default
+  4 GB in a fresh worktree with its own `node_modules`. It is not a type
+  error: `NODE_OPTIONS=--max-old-space-size=12288 npx tsc --noEmit` ran green
+  in ~2 min. eslint and vitest were fine at 8192.
+- The repo's eslint runs the react-compiler rules. Two of them cost a round:
+  `react-hooks/immutability` refuses `prop.current = x` unless the prop's
+  name ends in `Ref` (rename the prop, e.g. `clockRef`), and
+  `react-hooks/set-state-in-effect` refuses `useEffect(() => setX(...), [dep])`
+  used as "reset on change". Keep the dependency WITH the state
+  (`{ value, doc }`) and derive `doc === current ? value : default` during
+  render instead of an effect.
+- `__tests__/frame-editor-editing.test.ts` runs FrameEditor's `playPause`
+  source in a VM sandbox: any new identifier the handler touches needs a
+  binding there (see the 2026-10-09 section on VM-sandboxed tests).
