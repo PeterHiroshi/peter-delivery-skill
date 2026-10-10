@@ -28,6 +28,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A VM-sandboxed component test strips imports: a new import needs a binding in both harness versions (2026-10-09, Meegle 15209061)`
 - `Opening the frame editor in my own headless Chrome, and the CORS cache poisoning behind a blank filmstrip (2026-10-09, Meegle 15209061)`
 - `Driving the real Agent from headless Chrome to catch a client-side race (2026-10-09, Meegle 15209061)`
+- `A first-only drop failure is a memory, and a synthetic drag must wait for React (2026-10-10, frame editor first drop)` — hold the drop into the window between the resolve's answer and the probe; `mouse.dragAndDrop` hangs, dispatch DragEvents with one DataTransfer; dev test drafts cannot be deleted (immutable trigger)
 
 **Getting a real browser / session on this app**
 
@@ -2586,3 +2587,41 @@ Also: the private checkout must mirror the WORKING TREE (rsync, excluding
 node_modules/.next/.git/.env*) when the other session's HEAD is not
 self-consistent — a clean `git worktree add` of HEAD had 500s on every editor
 route because a committed module imported an untracked file.
+
+## A first-only drop failure is a memory, and a synthetic drag must wait for React (2026-10-10, frame editor first drop)
+
+Peter: "a longer upload dragged onto a fresh timeline is refused; dragging it
+again lands it". Reading the engine, the resolve route and the server catalog
+found nothing length-dependent; what settled it was the shape "first time only"
+plus one measurement: the uploads list resolves 12/12 videos `ready` with no
+`durationFrames`. The drop recalled that remembered server answer as the real
+asset and `assetClip` refused it; the drag's own browser probe then rewrote the
+memory, so the second drop worked. Fix in `recallResolvedAsset` (only
+placeable entries), design doc
+`docs/design-frame-editor-first-drop-remembered-duration.md`.
+
+Reproducing it, what cost time:
+
+- The dev route answers in ~3.5 s, so a 0.2 s gesture drops BEFORE anything is
+  remembered and takes the waiting branch, which works. The failing window is
+  after the first remembered answer and before the probe: hold the drop ~4.3 s
+  on dev (on production the route answers in well under a second, so a normal
+  gesture on a longer file lands in it every time). Log `[probe]` lines for the
+  media POST timing and the `<video>` probe (`HTMLMediaElement.prototype.src`
+  setter patch) to see the window.
+- Puppeteer's CDP `page.mouse.dragAndDrop` worked once and then hung with no
+  event at all. Dispatch `DragEvent`s with one `new DataTransfer()` instead:
+  `dragstart` on the row, then **wait ≥150 ms** (the gap zone is
+  `pointer-events-none` until the `assetDrag` state re-renders; same-tick
+  `dragover` lands on the parent and is not accepted), then
+  `dragenter`/`dragover`/`drop` dispatched on the `[data-new-track-drop]`
+  element itself, `dragend` on the row.
+- A `|`-piped harness buffers to nothing until exit; write the log to a file
+  with `Popen(start_new_session=True)` and poll it.
+- Every open creates a draft (`PUT` revision 1 at mount), and every drop
+  retains the upload into the workstation's backing project
+  (`collection_images`) and writes `editor_media_grants`. The
+  `immutable_editor_history` trigger (migration 0128) refuses `DELETE` on
+  revisions, so a draft cannot be removed afterwards — the four test drafts on
+  Peter's own episodes stayed. Next time use the disposable workstation
+  3677c4bd and a new episode there, never his project episodes.
