@@ -2644,3 +2644,9 @@ Reproducing it, what cost time:
 - `__tests__/frame-editor-editing.test.ts` runs FrameEditor's `playPause`
   source in a VM sandbox: any new identifier the handler touches needs a
   binding there (see the 2026-10-09 section on VM-sandboxed tests).
+- **A mutation loop that restores with `git checkout -- <file>` restores to
+  HEAD, not to the working tree.** 2026-10-10: the loop ran over a file that
+  held UNCOMMITTED review fixes; the first restore wiped them, the commit
+  went out with the test but without the fix, and the branch needed an
+  amend + `--force-with-lease`. Mutate only committed files, or copy the
+  working-tree file to the scratchpad first and restore from the copy.
