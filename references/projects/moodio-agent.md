@@ -2765,6 +2765,14 @@ What worked, in order — about 15 minutes end to end:
   "column moves by the room" (the last is what CapCut does). Snapping
   moved a dropped clip to a neighbour's edge; read the real positions off
   the screenshot afterwards instead of assuming the drag's delta.
+- **Peter works in the same window while I drive it.** Between two of
+  my screenshots the panel layout changed (the toolbar moved from y=328
+  to y=572), a clip moved lanes, and a Chrome sign-in popup took the
+  foreground so two ⌘Z went to Chrome. Re-screenshot before EVERY
+  action, never reuse coordinates from an earlier capture, and check
+  `frontmost` (System Events) before sending a key. ⌘Z also goes to the
+  text panel's edit field when a text clip is selected — undo with the
+  toolbar's own Undo button instead, and confirm by the duration readout.
 - **Restoring his draft.** CapCut autosaves. ⌘Z once per edit (drags and
   closes alike; zoom is not in the history — click the zoom buttons
   back), scroll the view back by dragging the bottom scrollbar thumb,
