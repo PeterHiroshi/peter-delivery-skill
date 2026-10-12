@@ -31,6 +31,8 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A first-only drop failure is a memory, and a synthetic drag must wait for React (2026-10-10, frame editor first drop)`
 - `A media feature accepted in dev can be black in prod: getVideoUrl query-signs only in development (2026-10-12, Meegle 15308241)` — a `crossOrigin` element fed a listing URL 403s on the cookie CDN; the tell is `00:00:00:00 / 00:00:00:00`; exchange through `playbackUrlSigner` (`usePlaybackSource`) — hold the drop into the window between the resolve's answer and the probe; `mouse.dragAndDrop` hangs, dispatch DragEvents with one DataTransfer; dev test drafts cannot be deleted (immutable trigger)
 
+- `Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)` — chrome-devtools MCP works when its profile is free; an `initScript` that holds any `/editor` fetch until `window.__go()` lets the bundles load unthrottled, then `emulate` Fast 3G and release; a probe on `HTMLMediaElement` (seek/src/play/pause + timecode samples) shows a replay as `currentTime` going backwards, no listening needed; a separated clip keys its preload as `audio:<id>` and downloads the picture's file again
+
 **Getting a real browser / session on this app**
 
 - `Verifying rendered UI without a login (2026-09-08)`
@@ -2695,3 +2697,33 @@ decode or a paint problem.
   40-line useState/useEffect stand-in (`__tests__/frame-editor-playback-source.test.ts`);
   two mutants killed in one run. Cheaper than a renderer and it tests the
   mechanism, not the typing.
+
+## Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)
+
+Peter's report (sound repeats at a clip, even after its veil is gone) had
+to be measured, not reasoned about, and the Chrome extension was not
+connected (CLAUDE.md forbids it anyway). What worked in twenty minutes:
+
+- The `chrome-devtools` MCP (`list_pages`, `navigate_page`, `evaluate_script`,
+  `emulate`, `list_network_requests`) drives its own Chrome profile; it is
+  only locked while Peter's own devtools session holds it. Cookie: mint the
+  JWT (`jose` from a worktree's node_modules, `JWT_ACCESS_SECRET`, claims
+  `{userId,email,roles}`), navigate to `/login` first, set
+  `document.cookie=moodio_access_token=…`, then the `/create/<ws>/episodes/<ep>?surface=editing` URL.
+- `emulate networkConditions` throttles the dev server's bundles too, so
+  reload with an `initScript` that wraps `window.fetch` and holds any URL
+  containing `/editor` on a promise until `window.__go()`; wait for the
+  bundles, set Fast 3G, release, `wait_for ["00:00:00:00"]`, click Play.
+- Put the probe in the same `initScript`: `Object.defineProperty` on
+  `HTMLMediaElement.prototype.currentTime`/`src` and wrappers on
+  `play`/`pause`, plus a 100 ms sampler of every `audio,video` element's
+  `currentTime`/`paused`/`readyState`, the transport's timecode
+  (`span.font-mono` matching `dd:dd:dd:dd`) and `[data-clip-preloading]`.
+  A replay is `currentTime` going backwards; two ClipSounds 20 ms apart are
+  a chorus, not a repeat. Dump with an `evaluate_script` that `await`s
+  30–40 s inside the page (Bash `sleep` is blocked).
+- Killing the dev server resets the page's network log; read
+  `list_network_requests` before tearing down.
+- Found: `assetKey` includes the kind, so Separate audio's clip
+  (`audio:<id>`) preloads the picture's file a second time and the #1011
+  hold waits for it (116 s under Fast 3G for bytes already in memory).
