@@ -32,6 +32,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A media feature accepted in dev can be black in prod: getVideoUrl query-signs only in development (2026-10-12, Meegle 15308241)` — a `crossOrigin` element fed a listing URL 403s on the cookie CDN; the tell is `00:00:00:00 / 00:00:00:00`; exchange through `playbackUrlSigner` (`usePlaybackSource`) — hold the drop into the window between the resolve's answer and the probe; `mouse.dragAndDrop` hangs, dispatch DragEvents with one DataTransfer; dev test drafts cannot be deleted (immutable trigger)
 
 - `Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)` — chrome-devtools MCP works when its profile is free; an `initScript` that holds any `/editor` fetch until `window.__go()` lets the bundles load unthrottled, then `emulate` Fast 3G and release; a probe on `HTMLMediaElement` (seek/src/play/pause + timecode samples) shows a replay as `currentTime` going backwards, no listening needed; a separated clip keys its preload as `audio:<id>` and downloads the picture's file again
+- `Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)` — CapCut 8.2 is `VideoFusion-macOS.app` (its drafts are encrypted; `剪映专业版 2.app` is 5.9 with plaintext drafts, not what he uses); the 1920×1080 display is at negative X so cliclick is out — post CGEvents from the decryptor repo's venv; `screencapture -o -l <wid>` is a 1:1 map of the window but EXCLUDES the context menu (its own layer-3 window) — capture the display with `-D 2` once a menu is up; a click on the ruler is the calibration; undo everything after and verify by screenshot
 
 **Getting a real browser / session on this app**
 
@@ -2727,3 +2728,46 @@ connected (CLAUDE.md forbids it anyway). What worked in twenty minutes:
 - Found: `assetKey` includes the kind, so Separate audio's clip
   (`audio:<id>`) preloads the picture's file a second time and the #1011
   hold waits for it (116 s under Fast 3G for bytes already in memory).
+
+## Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)
+
+Peter wanted "闭合空隙" replicated 1:1, and his seven screenshots left two
+cases unseen (a lane with too little room, a lane that cannot move). He
+chose "我来驱动剪映做实验" and named the draft ("操作 5月19日 的这个剪映项目").
+What worked, in order — about 15 minutes end to end:
+
+- **Which app.** Two installs: `/Applications/VideoFusion-macOS.app` is
+  CapCut 8.2 (process `VideoFusion-macOS`, owner name `剪映专业版`), the
+  one he uses — its `draft_info.json` is encrypted, so a draft cannot be
+  written by hand. `剪映专业版 2.app` is 5.9 with plaintext drafts; its
+  behaviour may differ, so it is not evidence.
+- **Driving it.** His CapCut window sits on the 1920×1080 display at
+  X = −1928, so `cliclick` (no negative absolute coordinates) is out.
+  `/Users/mahao/Develop/projs/nemovideo/jianying-draft-output/.venv/bin/python`
+  has `Quartz` + `pyautogui`; post `CGEventCreateMouseEvent` /
+  `CGEventCreateKeyboardEvent` to `kCGHIDEventTap` (left/right click, a
+  25-step drag with `kCGEventLeftMouseDragged`, ⌘Z with
+  `CGEventSetFlags`). Activate first with `osascript … set frontmost of
+  process "剪映专业版" to true`. The driver is in that session's scratchpad
+  (`cc.py`); rebuild it from this description, it is 40 lines.
+- **Seeing it.** `screencapture -x -o -l <windowNumber>` (window number
+  from `CGWindowListCopyWindowInfo`, owner `剪映专业版`, layer 0) gives a
+  1:1 image of the window: image px + (window X, window Y) = screen point
+  on this 1× display. **It excludes a context menu**, which is its own
+  layer-3 window — once a menu is up, capture the display instead
+  (`screencapture -x -D 2 file`; the display index followed the order of
+  a multi-file capture) and subtract the window's offset (here 42, 60).
+- **Calibration.** One left click on the ruler moves the playhead to that
+  x; the screenshot shows whether the mapping is exact before any drag.
+- **Experiment design.** Make the hypotheses give DIFFERENT outcomes: for
+  the collision case, a third lane with plenty of room after the gap
+  distinguished "lane only" from "colliding lane stays, rest moves" from
+  "column moves by the room" (the last is what CapCut does). Snapping
+  moved a dropped clip to a neighbour's edge; read the real positions off
+  the screenshot afterwards instead of assuming the drag's delta.
+- **Restoring his draft.** CapCut autosaves. ⌘Z once per edit (drags and
+  closes alike; zoom is not in the history — click the zoom buttons
+  back), scroll the view back by dragging the bottom scrollbar thumb,
+  click the ruler at the original playhead, then screenshot and compare
+  every clip edge with the first screenshot. Escape did not clear a clip
+  selection; say so in the hand-off.
