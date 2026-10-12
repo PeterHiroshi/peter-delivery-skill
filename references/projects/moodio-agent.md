@@ -28,7 +28,8 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A VM-sandboxed component test strips imports: a new import needs a binding in both harness versions (2026-10-09, Meegle 15209061)`
 - `Opening the frame editor in my own headless Chrome, and the CORS cache poisoning behind a blank filmstrip (2026-10-09, Meegle 15209061)`
 - `Driving the real Agent from headless Chrome to catch a client-side race (2026-10-09, Meegle 15209061)`
-- `A first-only drop failure is a memory, and a synthetic drag must wait for React (2026-10-10, frame editor first drop)` — hold the drop into the window between the resolve's answer and the probe; `mouse.dragAndDrop` hangs, dispatch DragEvents with one DataTransfer; dev test drafts cannot be deleted (immutable trigger)
+- `A first-only drop failure is a memory, and a synthetic drag must wait for React (2026-10-10, frame editor first drop)`
+- `A media feature accepted in dev can be black in prod: getVideoUrl query-signs only in development (2026-10-12, Meegle 15308241)` — a `crossOrigin` element fed a listing URL 403s on the cookie CDN; the tell is `00:00:00:00 / 00:00:00:00`; exchange through `playbackUrlSigner` (`usePlaybackSource`) — hold the drop into the window between the resolve's answer and the probe; `mouse.dragAndDrop` hangs, dispatch DragEvents with one DataTransfer; dev test drafts cannot be deleted (immutable trigger)
 
 **Getting a real browser / session on this app**
 
@@ -2662,3 +2663,35 @@ Reproducing it, what cost time:
   went out with the test but without the fix, and the branch needed an
   amend + `--force-with-lease`. Mutate only committed files, or copy the
   working-tree file to the scratchpad first and restore from the copy.
+
+## A media feature accepted in dev can be black in prod: getVideoUrl query-signs only in development (2026-10-12, Meegle 15308241)
+
+Peter's production screenshot: the Media pool preview (#985, accepted in
+dev two days earlier) showed a black stage with the transport at
+`00:00:00:00 / 00:00:00:00`. The zero TOTAL length is the tell: the
+`<video>` never reached `loadedmetadata`, so it is a load failure, not a
+decode or a paint problem.
+
+- `getVideoUrl` / `getImageUrl` / `getAudioUrl` (`lib/storage/s3.ts`) return a
+  query-signed CloudFront URL when `NODE_ENV=development` ("signed cookies
+  cannot be set locally") and a bare cookie-authenticated URL in production.
+  A listing row's `videoUrl` (`/api/assets`, `fromPickerAsset`) is therefore
+  a different KIND of URL per environment.
+- `<video crossOrigin="anonymous">` sends no cookie → the CDN answers 403 in
+  prod only. `use-credentials` is blocked by the CDN's `ACAO: *`. So any CORS
+  element (video, audio, canvas-drawn frames) fed a listing URL works in dev
+  and fails in prod; a plain `<video>`/`<img>` works in both.
+- The editor's rule stands: every loader of one URL asks with CORS (cache
+  poisoning otherwise), so the fix is to EXCHANGE the listing URL through
+  `playbackUrlSigner.resolve` (POST /api/media/playback-urls; `needsPlaybackSigning`
+  is false for the dev URL, so dev is unchanged) — `usePlaybackSource` in
+  `components/workstation/frame-editor/`. Resolved editor assets
+  (`signMediaUrl`) are already query-signed and need nothing.
+- Class check that found the rest: `grep -rn crossOrigin components/workstation/frame-editor lib/timeline`,
+  then for each hit ask where its URL comes from (listing vs resolve). The
+  poster-less tile cover was the second instance; the drop/filmstrip/probe
+  path resolves first and was fine.
+- Testing a hook without jsdom: `vi.mock("react", () => fake)` with a
+  40-line useState/useEffect stand-in (`__tests__/frame-editor-playback-source.test.ts`);
+  two mutants killed in one run. Cheaper than a renderer and it tests the
+  mechanism, not the typing.
