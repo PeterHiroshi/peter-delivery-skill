@@ -123,6 +123,19 @@ labels, icons, copy) comes from the reference; the codebase supplies only
 what the reference cannot (ids, routes). A deviation is a defect to fix,
 not a question to ask.
 
+**A reference app's BEHAVIOUR is a rule to derive, not an option to offer.**
+Meegle 15308241 (2026-10-12): Peter sent three CapCut screenshots of
+"闭合空隙". I offered him three abstract rules to choose from; he picked
+one, then a batch rule, both of which his own screenshots contradicted
+(a lane with a clip at the click point still moved). It took four more
+screenshots and "先摸清楚剪映的逻辑，告知我，然后再工作" before I measured
+every screenshot (pixel edges → frames) and found the one rule that fit
+all seven. When the reference shows behaviour: measure each screenshot,
+state the rule that explains ALL of them with a per-screenshot table, list
+the cases no screenshot shows — THEN ask about only those. Options offered
+before the derivation make Peter choose blind, and his answer then
+overrides the reference he gave.
+
 **And 1:1 covers every screen the flow touches, not the first one.** Third
 round, same day: the dialog now matched, and Peter opened the RESULT —
 the imported page still had the app's own header (section label, small
