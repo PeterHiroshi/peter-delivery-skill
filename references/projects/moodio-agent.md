@@ -23,7 +23,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Recording API fixtures from a running dev server (2026-09-22, moodio-agent-flash)`
 - `Peter's :3100 is the main worktree with HMR — atomic, tsc-green batches (2026-09-24, moodio-agent-flash)`
 - `Pre-PR convergence of a long shared branch (2026-09-30, Meegle 15162509)` — merge not rebase, migration renumber, `git add` with a deleted path aborts silently, the JWT file collision, eslint --fix drift on schema.ts, Codex quota
-- `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)` — incl. the temp-index commit recipe, and the write-before-read truncation that struck AGAIN on 2026-10-09 (five locale files, the other session's hunks lost): the only mechanism is a script file that reads into a variable, validates, then opens for writing
+- `Two sessions in one worktree: stage by hunk, restore by copy (2026-10-08, Meegle 15209061)` — incl. the temp-index commit recipe, and the write-before-read truncation that struck AGAIN on 2026-10-09 (five locale files, the other session's hunks lost): the only mechanism is a script file that reads into a variable, validates, then opens for writing; and (2026-10-12) find the peer with `ListAgents` and message it before editing a file it is writing
 - `A raw pg query shows naive timestamps 8 h off; Drizzle reads them as UTC (2026-10-09, Meegle 15209061)`
 - `A VM-sandboxed component test strips imports: a new import needs a binding in both harness versions (2026-10-09, Meegle 15209061)`
 - `Opening the frame editor in my own headless Chrome, and the CORS cache poisoning behind a blank filmstrip (2026-10-09, Meegle 15209061)`
@@ -2441,6 +2441,18 @@ an i18n key by regex, anchor on the namespace's opening line
 Peter runs a second Claude session in the SAME worktree. `git diff --stat`
 suddenly listed seven files I had never touched (agent-editing protection),
 and `FrameEditorProvider.tsx` held their hunks next to mine.
+
+**Find the peer before touching its file (2026-10-12, Meegle 15308241).** Peter
+hands one ledger row per message to SEVERAL sessions in one worktree, so a
+file's mtime moving between two reads means a peer is mid-edit, not a glitch.
+`ListAgents` lists them (`meegle-<id>-…-<suffix>`, busy/idle); `SendMessage`
+to the busy one with `notify_when_idle: true` — say which file and hunk I
+need, offer "you fold it in" or "commit yours, I apply on top" — and wait for
+its answer or its commit (`git log -1`), never for a quiet mtime. On this
+task the peer committed its slice four minutes later and named the files it
+owned next, so my 20-line hunk landed on a clean tree by pathspec. A dry-run
+script that fails its own assertion on the scratchpad COPY is the mechanism
+that kept the peer's five locale files untouched (the real write never ran).
 
 - Commit by pathspec is not enough when a FILE is shared: filter the diff by
   hunk (`git diff -- file > full.patch`, keep the hunks whose `+` lines are
