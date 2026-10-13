@@ -2826,3 +2826,13 @@ worktree's `node_modules` predates main's `package.json`. `npm install
 --no-audit --no-fund`, then discard the lockfile rewrite (`git checkout --
 package-lock.json`), then rerun the gates. Prove it is not yours first:
 `git diff <base> origin/main -- package.json` names the package.
+
+**A one-shot `useLayoutEffect(..., [])` over a ref that mounts later reads 0.**
+`useTimelineNavigation` measured the timeline viewport once on mount; the
+viewport element mounts after the hook (the editor renders it once its
+document is in) and is 0 px while the Create tab keeps the surface hidden,
+so the measured width stayed 0 and a "third of the screen" tail silently
+fell back to its ten-second floor. Peter saw it as "怎么又这么少了" after a
+revert that had nothing to do with it. Measure after every render and
+re-attach the observer when `ref.current` changes; `setState` with the same
+number bails out, so it is free.
