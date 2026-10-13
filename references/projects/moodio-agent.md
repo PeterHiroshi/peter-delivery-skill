@@ -33,6 +33,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 
 - `Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)` — chrome-devtools MCP works when its profile is free; an `initScript` that holds any `/editor` fetch until `window.__go()` lets the bundles load unthrottled, then `emulate` Fast 3G and release; a probe on `HTMLMediaElement` (seek/src/play/pause + timecode samples) shows a replay as `currentTime` going backwards, no listening needed; a separated clip keys its preload as `audio:<id>` and downloads the picture's file again
 - `Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)` — CapCut 8.2 is `VideoFusion-macOS.app` (its drafts are encrypted; `剪映专业版 2.app` is 5.9 with plaintext drafts, not what he uses); the 1920×1080 display is at negative X so cliclick is out — post CGEvents from the decryptor repo's venv; `screencapture -o -l <wid>` is a 1:1 map of the window but EXCLUDES the context menu (its own layer-3 window) — capture the display with `-D 2` once a menu is up; a click on the ruler is the calibration; undo everything after and verify by screenshot
+- `Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)` — Apple's FCPXML DTDs are mirrored in the CommandPost repo (`src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`); dump the export from a throwaway test and `xmllint --dtdvalid`; real title/caption conventions come from Subtitle Edit's exporters and OpenFCPXMLKit, a Premiere-calibrated FCP7 Text generator from `takeyama88/premiere-fcp-xml`; restore a mutated file from a scratchpad copy, never `git checkout --`, while a fix is uncommitted; main's new dependency makes a foreign suite fail in the worktree until `npm install`
 
 **Getting a real browser / session on this app**
 
@@ -2779,3 +2780,49 @@ What worked, in order — about 15 minutes end to end:
   click the ruler at the original playhead, then screenshot and compare
   every clip edge with the first screenshot. Escape did not clear a clip
   selection; say so in the hand-off.
+
+## Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)
+
+**Format evidence without the applications.** None of Final Cut, Premiere or
+Resolve is on this machine and Apple's FCPXML reference pages render empty to
+a fetcher. What worked, in order:
+
+- The DTDs: the CommandPost repo mirrors every version —
+  `https://raw.githubusercontent.com/CommandPost/CommandPost/develop/src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`
+  (iMovie ships 1.4–1.7 locally, which lack `caption`). Grep the
+  `ELEMENT`/`ATTLIST` lines for `title`, `caption`, `text`, `text-style`,
+  `text-style-def`, `effect`, `param`, `gap`, `%anchor_item;`, `%clip_attrs;`.
+- A sample to validate: a throwaway test file in `__tests__/` (vitest only
+  runs files there) that builds a document and writes `interchangeFiles()`'s
+  output to the scratchpad, then `xmllint --noout --dtdvalid <dtd> edit.fcpxml`.
+  Delete the test file; the committed test runs the same check only when
+  `FCPXML_DTD` names the file (skips in CI).
+- Conventions the DTD does not give (the Basic Title `uid`, its Position
+  `key`, the caption role `iTT?captionFormat=ITT.<lang>`, `fontColor` as
+  "r g b a" in 0–1, literal newlines in a run): `gh search code "Basic
+  Title.moti"` / `"captionFormat=ITT"` → Subtitle Edit's
+  `FinalCutProXml15.cs` / `FinalCutProXmlCaptions.cs` and OpenFCPXMLKit's
+  `FCPXMLCaptionRole.swift`; fetch raw with
+  `gh api repos/<o>/<r>/contents/<path> -H "Accept: application/vnd.github.raw"`.
+- FCP7 XML Text generator parameters (`str`, `fontname`, `fontsize`,
+  `alignment` 1–3, `fontcolor` alpha/rgb 0–255, `origin` as a fraction of the
+  frame from its centre, font size against a 486-line reference):
+  `takeyama88/premiere-fcp-xml scripts/generate_xml.py`, whose header says it
+  was calibrated against Premiere Pro 2026 by its author. Adobe's forum says
+  FCP classic Text titles do not import. Both go in the report as unverified.
+
+**A mutation pass restored with `git checkout --` wiped an uncommitted fix.**
+Mutating `subtitles.ts` while its Copilot fix was still uncommitted, then
+restoring with `git checkout -- <file>`, silently dropped the fix; the suite
+stayed green because the test for the fix was in another, also-uncommitted
+state. Rule: before a mutation pass, `cp` each target to the scratchpad and
+restore from that copy; `cmp` afterwards. (The second pass that session did
+exactly that.)
+
+**A foreign suite failing after a rebase is main's new dependency.** After
+rebasing onto main that had merged #915, `__tests__/emoji-picker.test.ts`
+failed at import and tsc showed 12 `Cannot find module 'emojibase…'`: the
+worktree's `node_modules` predates main's `package.json`. `npm install
+--no-audit --no-fund`, then discard the lockfile rewrite (`git checkout --
+package-lock.json`), then rerun the gates. Prove it is not yours first:
+`git diff <base> origin/main -- package.json` names the package.
