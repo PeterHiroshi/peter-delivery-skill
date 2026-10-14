@@ -34,6 +34,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)` — chrome-devtools MCP works when its profile is free; an `initScript` that holds any `/editor` fetch until `window.__go()` lets the bundles load unthrottled, then `emulate` Fast 3G and release; a probe on `HTMLMediaElement` (seek/src/play/pause + timecode samples) shows a replay as `currentTime` going backwards, no listening needed; a separated clip keys its preload as `audio:<id>` and downloads the picture's file again
 - `Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)` — CapCut 8.2 is `VideoFusion-macOS.app` (its drafts are encrypted; `剪映专业版 2.app` is 5.9 with plaintext drafts, not what he uses); the 1920×1080 display is at negative X so cliclick is out — post CGEvents from the decryptor repo's venv; `screencapture -o -l <wid>` is a 1:1 map of the window but EXCLUDES the context menu (its own layer-3 window) — capture the display with `-D 2` once a menu is up; a click on the ruler is the calibration; undo everything after and verify by screenshot
 - `Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)` — Apple's FCPXML DTDs are mirrored in the CommandPost repo (`src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`); dump the export from a throwaway test and `xmllint --dtdvalid`; real title/caption conventions come from Subtitle Edit's exporters and OpenFCPXMLKit, a Premiere-calibrated FCP7 Text generator from `takeyama88/premiere-fcp-xml`; restore a mutated file from a scratchpad copy, never `git checkout --`, while a fix is uncommitted; main's new dependency makes a foreign suite fail in the worktree until `npm install`
+- `Export speed: time a job from its own evidence, verify the shared Lambda in prod, and a full suite that fails from load (2026-10-14, export speed PR #1061)` — S3 markers + `diagnostics/worker.json` split a job's time without guessing; a relative path in a heredoc wrote into the MAIN checkout after the cwd reset; `canvas_test` is required for the CI-equivalent suite; load >100 fakes 17 failing files
 
 **Getting a real browser / session on this app**
 
@@ -2836,3 +2837,43 @@ fell back to its ten-second floor. Peter saw it as "怎么又这么少了" after
 revert that had nothing to do with it. Measure after every render and
 re-attach the observer when `ref.current` changes; `setState` with the same
 number bails out, so it is free.
+
+## Export speed: time a job from its own evidence, verify the shared Lambda in prod, and a full suite that fails from load (2026-10-14, export speed PR #1061)
+
+- **Split an export job's time from what it left behind, not from the code.**
+  `editor_jobs` gives created → `submission_started_at` → `updated_at` (read
+  with `::text` or `extract(epoch from …)`; JS parsing of the naive timestamp
+  shifts it 8 h), `editor_job_submissions.created_at` is the receipt, and the
+  job bucket (`aws --profile moodio-aws-peter`) holds `media/<token>.started`,
+  `media/<token>.json`, `output.mp4` and `diagnostics/worker.json` /
+  `media-<token>.json` with per-phase times. That table showed 85% of a
+  2-minute export was the worker re-claiming between steps, not Lambda; the
+  previous round had optimised the 5-second render.
+- **The media Lambda `moodio-frame-editor-media` is ONE function for dev and
+  prod** (its role grants `moodio-agent-prod-1` and the prod jobs bucket). CI
+  never deploys a Lambda: a push only builds and pushes; the
+  `deploy-development` dispatch is what moves the shared function, and its
+  `source-bucket` list REPLACES the role's grants (pass both buckets). To prove
+  what prod runs without ECR read access: `lambda get-function` digest → grep
+  that digest in the Actions run logs → commit; then a prod jobs-bucket
+  `diagnostics/media-*.json` written after the deploy proves prod traffic hit
+  the new handler. A CloudWatch filter on a bucket name can come back empty
+  even then — trust the S3 object.
+- **The Bash tool's cwd resets to the primary working directory between
+  calls.** A Python heredoc with a RELATIVE path, run before my `cd`, inserted
+  83 lines into the main checkout's test file. Every script path absolute, or
+  `git -C <worktree>`; check `git -C <main> status` after any scripted edit.
+- **CI-equivalent full suite locally** needs a loopback PostgreSQL database
+  named exactly `canvas_test` (two suites refuse any other name) and all three
+  of `CANVAS_GENERATION_` / `TEAM_PROJECT_` / `EDITOR_AUTHORITY_TEST_DATABASE_URL`
+  on it; a disposable `postgres:18` container is enough. Run it in a separate
+  detached `git worktree` with a `node_modules` symlink: no `.next/dev/types`
+  (the dev server rewrites those mid-run and tsc reports garbage errors there),
+  and mutations never hot-reload into Peter's :3000.
+- **With 15 sessions on the machine, load average can exceed 100**, and a full
+  run then fails 17 unrelated files with "Test timed out", "Timeout waiting for
+  worker" and "Failed to start forks worker". Check `uptime` first; rerun only
+  the failed files with `--maxWorkers=1 --testTimeout=60000` as a diagnostic;
+  green there plus CI green is the evidence. In zsh pass a file list with
+  `xargs`, never an unquoted `$FILES`.
+
