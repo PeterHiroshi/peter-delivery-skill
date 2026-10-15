@@ -2917,3 +2917,14 @@ and every worktree copied from it) has `FRAME_EDITOR_BUNDLE_REVISION`
 render on 2026-10-14 used `631c34443d…` (200). `curl -o /dev/null -w
 "%{http_code}" <site>/sites/frame-editor-<rev>/index.html` tells them apart in
 a second. Any render from such an env fails, whatever the change under test.
+
+Fix that worked (Peter reported the same failure): point the task worktree's
+own `.env` (`FRAME_EDITOR_BUNDLE_REVISION` and the revision inside
+`FRAME_EDITOR_RENDER_SITE`) at the deployed `631c34443d…`; his running `next
+dev` reloaded it with no restart — the next job's `config.bundleRevision`
+read back from `editor_jobs` showed the new value. To prove a partial render
+picked the right frames, compare against a whole render of the SAME revision
+(the episode usually has one): static shots make per-frame PSNR ambiguous
+(chunk-start I-frames even match bit for bit), so compare hard-cut positions
+(frame-to-frame mean diff > 12 on 213×120 grey) and cross-correlate mono PCM
+for the audio offset.
