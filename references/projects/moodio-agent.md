@@ -34,6 +34,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Throttling only the editor's media: gate its first fetch, then emulate (2026-10-12, editor sound repeat)` — chrome-devtools MCP works when its profile is free; an `initScript` that holds any `/editor` fetch until `window.__go()` lets the bundles load unthrottled, then `emulate` Fast 3G and release; a probe on `HTMLMediaElement` (seek/src/play/pause + timecode samples) shows a replay as `currentTime` going backwards, no listening needed; a separated clip keys its preload as `audio:<id>` and downloads the picture's file again
 - `Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)` — CapCut 8.2 is `VideoFusion-macOS.app` (its drafts are encrypted; `剪映专业版 2.app` is 5.9 with plaintext drafts, not what he uses); the 1920×1080 display is at negative X so cliclick is out — post CGEvents from the decryptor repo's venv; `screencapture -o -l <wid>` is a 1:1 map of the window but EXCLUDES the context menu (its own layer-3 window) — capture the display with `-D 2` once a menu is up; a click on the ruler is the calibration; undo everything after and verify by screenshot
 - `Driving DaVinci Resolve to test an exported file (2026-10-15, SRT empty lines)` — free App Store build: no external scripting, GUI only; the Read tool brings VS Code to the front, so a `keystroke` lands in Peter's chat input unless one script fronts, checks and types; menu-bar items by AppleScript, file dialogs by setting the sheet's text field; a subtitle reaches the timeline only by a slow 60-step drag
+- `A change to EditorComposition needs a new render site (2026-10-15, PR #1069)` — renders load the composition from `FRAME_EDITOR_RENDER_SITE` (`job-io.ts` `serveUrl`), not the app: say so in the PR and design doc, never "nothing else to deploy"
 - `Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)` — Apple's FCPXML DTDs are mirrored in the CommandPost repo (`src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`); dump the export from a throwaway test and `xmllint --dtdvalid`; real title/caption conventions come from Subtitle Edit's exporters and OpenFCPXMLKit, a Premiere-calibrated FCP7 Text generator from `takeyama88/premiere-fcp-xml`; restore a mutated file from a scratchpad copy, never `git checkout --`, while a fix is uncommitted; main's new dependency makes a foreign suite fail in the worktree until `npm install`
 - `Export speed: time a job from its own evidence, verify the shared Lambda in prod, and a full suite that fails from load (2026-10-14, export speed PR #1061)` — S3 markers + `diagnostics/worker.json` split a job's time without guessing; a relative path in a heredoc wrote into the MAIN checkout after the cwd reset; `canvas_test` is required for the CI-equivalent suite; load >100 fakes 17 failing files
 - `Mutations under Peter's live dev server, and a render_failed that is the site bundle (2026-10-15, export in→out range)` — his :3000 serves the task worktree, so mutating files there flashes broken code into his app: mutate in a detached sibling worktree with node_modules symlinked; the worker drops Remotion's errors — read them with `getRenderProgress`; `FRAME_EDITOR_BUNDLE_REVISION` d2371040 is an undeployed site (403)
@@ -2967,3 +2968,19 @@ worked, and the one thing that went wrong:
   evidence beside the render. `sips --cropOffset` takes Y before X.
 - **Clipboard.** `pbpaste` to a backup before any `pbcopy`, restore and `cmp`
   afterwards.
+
+## A change to EditorComposition needs a new render site (2026-10-15, PR #1069)
+
+I wrote "nothing else needs deploying" in PR #1069 because the SRT package is
+written by the app and the Lambda only zips it. Copilot caught what that
+missed: the same PR changed `EditorComposition` (the subtitle look), and
+Lambda renders load the composition from the separately published site
+(`FRAME_EDITOR_RENDER_SITE`, passed as `serveUrl` in
+`lib/timeline/server/job-io.ts`). Until a site revision built from the commit
+is published (the composition-only bootstrap in `lambda/frame-editor/README.md`)
+and `FRAME_EDITOR_RENDER_SITE` + `FRAME_EDITOR_BUNDLE_REVISION` are updated
+together, renders keep the old composition while the preview shows the new
+one. Before writing a PR's deployment note, grep the diff for anything under
+`components/workstation/frame-editor/` that the composition imports
+(`EditorComposition`, its children, `lib/timeline/editor/*` it reads) — any hit
+means a site publication step, stated in the PR and the design doc.
