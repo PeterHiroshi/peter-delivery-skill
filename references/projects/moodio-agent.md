@@ -35,6 +35,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Observing CapCut's behaviour by driving it on Peter's own draft (2026-10-12, Meegle 15308241)` — CapCut 8.2 is `VideoFusion-macOS.app` (its drafts are encrypted; `剪映专业版 2.app` is 5.9 with plaintext drafts, not what he uses); the 1920×1080 display is at negative X so cliclick is out — post CGEvents from the decryptor repo's venv; `screencapture -o -l <wid>` is a 1:1 map of the window but EXCLUDES the context menu (its own layer-3 window) — capture the display with `-D 2` once a menu is up; a click on the ruler is the calibration; undo everything after and verify by screenshot
 - `Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)` — Apple's FCPXML DTDs are mirrored in the CommandPost repo (`src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`); dump the export from a throwaway test and `xmllint --dtdvalid`; real title/caption conventions come from Subtitle Edit's exporters and OpenFCPXMLKit, a Premiere-calibrated FCP7 Text generator from `takeyama88/premiere-fcp-xml`; restore a mutated file from a scratchpad copy, never `git checkout --`, while a fix is uncommitted; main's new dependency makes a foreign suite fail in the worktree until `npm install`
 - `Export speed: time a job from its own evidence, verify the shared Lambda in prod, and a full suite that fails from load (2026-10-14, export speed PR #1061)` — S3 markers + `diagnostics/worker.json` split a job's time without guessing; a relative path in a heredoc wrote into the MAIN checkout after the cwd reset; `canvas_test` is required for the CI-equivalent suite; load >100 fakes 17 failing files
+- `Mutations under Peter's live dev server, and a render_failed that is the site bundle (2026-10-15, export in→out range)` — his :3000 serves the task worktree, so mutating files there flashes broken code into his app: mutate in a detached sibling worktree with node_modules symlinked; the worker drops Remotion's errors — read them with `getRenderProgress`; `FRAME_EDITOR_BUNDLE_REVISION` d2371040 is an undeployed site (403)
 
 **Getting a real browser / session on this app**
 
@@ -2877,3 +2878,42 @@ number bails out, so it is free.
   green there plus CI green is the evidence. In zsh pass a file list with
   `xargs`, never an unquoted `$FILES`.
 
+## Mutations under Peter's live dev server, and a render_failed that is the site bundle (2026-10-15, export in→out range)
+
+**His :3000 serves the task worktree.** `lsof -iTCP:3000 -sTCP:LISTEN` →
+`lsof -a -p <pid> -d cwd` showed `next-server` running in
+`.work/worktrees/feat/export-in-out-range` itself. A mutation script that
+rewrites files in that worktree hot-reloads each mutant into the app he is
+clicking (one, "admit drops range", was live for minutes before I noticed).
+Check the holder's cwd BEFORE any script that writes source files, and run
+mutations in a detached sibling worktree instead:
+
+```bash
+git worktree add --detach "$SCRATCH/mutwt" HEAD
+ln -s "$PWD/node_modules" "$SCRATCH/mutwt/node_modules"   # vitest and pglite run fine from it
+git -C "$SCRATCH/mutwt" checkout -q --detach <new HEAD>   # after each new commit
+```
+
+Restore a mutant with `git checkout HEAD -- <file>` only once the change is
+committed (rule from the 2026-10-13 section).
+
+**A `render_failed` with no detail.** The worker turns Remotion's
+`fatalErrorEncountered` into `render_failed` and keeps none of the messages;
+the admin diagnostics showed `read_failed`. The render id is on the
+submission (admin diagnostics → `provider.renderId`); read the errors with
+the app's own `.env` credentials:
+
+```js
+const { getRenderProgress } = require(require.resolve("@remotion/lambda/client", { paths: [worktree] }));
+await getRenderProgress({ region: "us-east-2", functionName: env.FRAME_EDITOR_RENDER_FUNCTION,
+  bucketName: env.FRAME_EDITOR_JOB_BUCKET, renderId, skipLambdaInvocation: true }); // .errors[].message
+```
+
+(`require(path.join(root, "node_modules/@remotion/lambda/client"))` fails:
+subpath exports need `require.resolve`.) Here it said `getStaticCompositions`
+undefined — the site URL answered S3 `AccessDenied`. The `.env` (main checkout
+and every worktree copied from it) has `FRAME_EDITOR_BUNDLE_REVISION`
+`d237104088…`, whose site is not deployed (403), while every successful dev
+render on 2026-10-14 used `631c34443d…` (200). `curl -o /dev/null -w
+"%{http_code}" <site>/sites/frame-editor-<rev>/index.html` tells them apart in
+a second. Any render from such an env fails, whatever the change under test.
