@@ -2984,3 +2984,18 @@ one. Before writing a PR's deployment note, grep the diff for anything under
 `components/workstation/frame-editor/` that the composition imports
 (`EditorComposition`, its children, `lib/timeline/editor/*` it reads) — any hit
 means a site publication step, stated in the PR and the design doc.
+
+**Update (same day, PR #1069):** the site is now published and found
+automatically: named after the composition's content hash
+(`lambda/frame-editor/composition-revision.cjs`), published by the "Publish
+Frame Editor Render Site" workflow on `main` and pull requests when missing,
+found by the app from its build (`next.config.js`) in
+`FRAME_EDITOR_RENDER_SITE_BUCKET`. After it merges, a composition change needs
+no deployment note beyond "the workflow publishes it" — but a deployment that
+still pins `FRAME_EDITOR_RENDER_SITE` / `FRAME_EDITOR_BUNDLE_REVISION` keeps
+the old site. Two things learned building it: GitHub's `pull_request` path
+filter is evaluated against the whole PR diff, so once a PR touches the
+paths, every later push (docs too) runs the job; and the publish step's own
+log line (`Composition <hash> of commit <sha>`) beside `node -e
+'require("./next.config.js").env'` locally is the read-back that both sides
+name the same site.
