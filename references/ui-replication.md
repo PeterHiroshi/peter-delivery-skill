@@ -45,23 +45,41 @@ Whether it ended the toothpaste rounds is decided by his review, not by me.
 
 **R2 — his decisions → final UI/UX spec + interaction JSON. Still no code. WAIT.**
 
-- The spec holds only adopted items, as observable behaviour with the measured
-  numbers.
-- The interaction JSON is the acceptance oracle. One entry per adopted state:
+- Store his decisions verbatim first (JSON in a gitignored dir of the worktree,
+  not the session scratchpad — the next session needs them).
+- The spec holds only what changes, as observable behaviour with the measured
+  numbers. Re-measure the reference for it (`probe-lib.cjs`: box, colours, font,
+  radius, padding, cursor per element per state) and read the reference's source for
+  rules a screenshot cannot show (resize clamps, what a toggle restores).
+- **Pending confirmations, not another question round.** Where his answers leave a
+  placement open, or two decisions meet (adopt the demo toolbar × keep a button the
+  demo lacks; move a control whose meaning changes — the "volume" was the document's
+  master gain, not a monitor volume), write a proposal with a default and list them
+  first. He answers only those; everything else is settled.
+- Split what is no longer a UI change (a new data model) into its own item with a
+  design doc, and say so in the spec — do not let it ride in the UI round.
+- One source file (`spec.example.py`) generates both the review page and the
+  interaction JSON, so they cannot drift. Entry shape:
 
   ```json
-  { "id": "F4-export-popover", "ledger": "F4",
-    "demo": { "shot": "d10-export.png", "steps": ["click role=button name='Export timeline'"] },
-    "target": { "route": "/create/:ws/episodes/:ep?surface=editing", "pre": ["timeline has ≥1 clip"] },
-    "steps": [ { "do": "click", "on": { "role": "button", "name": "Export" } } ],
-    "expect": [ { "on": { "role": "dialog" }, "visible": true,
-                  "box": { "anchor": "above:Export", "w": 310, "tol": 8 },
-                  "text": ["Format", "Resolution", "Range"] } ],
-    "shot": "expected/F4.png" }
+  { "id": "F1.popover-anchored", "ledger": "F1", "decision": "adopt",
+    "steps": [ { "do": "click", "on": { "role": "button", "name": "Sequence settings", "exact": false } } ],
+    "expect": [ { "assert": "box", "on": { "role": "dialog", "name": "Sequence settings" }, "w": 372, "tol": 4 },
+                { "assert": "above", "on": { "role": "dialog", "name": "Sequence settings" },
+                  "ref": { "role": "button", "name": "Sequence settings", "exact": false } } ],
+    "demo": { "shot": "evidence/demo/d05-seq-settings.png", "region": "428,186,808,660" } }
   ```
 
-  Targets by accessible role + name (or a test id), never coordinates —
-  coordinates belong to R1 exploration scripts only.
+  Targets are role + accessible name, never coordinates; a name the current app
+  lacks is a name the build must provide. `{placeholders}` and `needs` flags come
+  from a fixture file, so one oracle runs against any draft.
+- **Keep guards.** Every "keep" decision gets an entry too, so the build cannot
+  silently remove what he chose to keep.
+- **Baseline replay = the oracle's own test.** Before handing R2 over, replay it on
+  the CURRENT product: adopt entries must FAIL (else they are vacuous), keep guards
+  must PASS (else the guard is wrong — two were, 2026-10-16: a marker target nested
+  in a button, a clip below the fold). The only acceptable keep failures are guards
+  naming post-build structure; say which.
 
 **R3 — build (rule 31 stage A) against the JSON**, then replay every entry on the
 running app as the self-check before the hand-off; report pass / fail per entry.
@@ -83,7 +101,12 @@ A failing entry is a defect, not a question.
   before every step — a clean state per capture without the 8 s reload.
 - `measure.cjs demo|app x,y:label …` — the ancestor-chain style dump.
 - `pair.py` (side by side) / `stack.py` (wide strips) crops; `report-build.py` +
-  `items.example.py` build the R1 page. `puppeteer-core` installs into the
+  `items.example.py` build the R1 page; `spec.example.py` is the R2 single source
+  (helpers `R`, `box`, `css`, `order`… + PENDING + ITEMS + KEEP_GUARDS).
+- `replay.cjs <interactions.json> <fixture.json> <out.json> [idRegex]` — resolves
+  role + name in the page, runs steps, checks the 17 assertion kinds, reloads after
+  any entry that acted, SKIPs entries whose placeholders/flags the fixture lacks,
+  and refuses a run that landed anywhere but the target URL. `puppeteer-core` installs into the
   scratchpad in 11 s and drives the system Chrome; no download.
 
 ## Discipline while capturing the current product
@@ -97,3 +120,7 @@ A failing entry is a defect, not a question.
   remove a cookie banner from the DOM instead of clicking it (a click records a
   consent); prefer a draft whose shape resembles the demo's (a 42-track stress
   draft made every timeline crop unreadable).
+- A restarted headless Chrome drops a session cookie: every target then reads "not
+  found" from a login page. Put the cookie (with an expiry) in the fixture and
+  have the runner assert the landing URL — a silent auth redirect produced a
+  convincing-looking all-FAIL baseline on 2026-10-16.
