@@ -467,19 +467,14 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
   GitHub OIDC deploy role likewise needed minutes before `AssumeRoleWithWebIdentity` worked.
 - Smoke: `uv run python scripts/smoke_invoke.py --region us-east-1 [--start]`; always ends with
   `stop_runtime_session`. Evidence doc: `limfx-harness/docs/evidence/2026-10-16-us-east-1-first-invoke.md`.
-- Bedrock Converse: bare `anthropic.claude-haiku-4-5-…` is rejected for on-demand; use the
-  cross-region inference profile id `us.anthropic.…`. Even then the account returned
-  "Model use case details have not been submitted" — Peter must submit the Anthropic use-case form
-  in the Bedrock console before any real model call works.
-- **GitHub OIDC → AWS for new IcestoneTech repos:** the org's new repos have `use_immutable_subject: true`
-  (`gh api repos/IcestoneTech/<repo>/actions/oidc/customization/sub`), so the token `sub` is
-  `repo:IcestoneTech@162268637/<repo>@<repo_id>:ref:…`; a trust policy listing only
-  `repo:IcestoneTech/<repo>:ref:…` fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity`
-  and IAM says nothing more. Add a "print the OIDC claims" step before `configure-aws-credentials`
-  (kept in `limfx-harness/.github/workflows/ci.yml`) and read CloudTrail's `userIdentity.userName`.
-- **Never apply `infra/iam/*.json` templates by hand** with `update-assume-role-policy file://…`: IAM
-  accepts an unrendered `${ACCOUNT_ID}` Principal silently and then denies everything. Render first
-  (bootstrap does) — cost me three failed CI runs on 2026-10-16.
+- **No Bedrock models (Peter 2026-10-16).** Harnesses on AgentCore call the existing OpenAI-compatible relay
+  (INTL Kimi `api.moonshot.ai`, CN QuickRouter), same `openai/<model>` naming as `backend/app/agents/models.py`.
+  Credentials live in Secrets Manager `limfx/harness/relay/<REGION>` (JSON `provider/base_url/api_key/model`),
+  read by the execution role at container start; never in the image or in Runtime `environmentVariables`.
+  (Historical: Bedrock would also have needed the Anthropic use-case form and `us.` inference-profile ids.)
+- **adk2 is the first real Runtime consumer** (Peter 2026-10-16, back to the design order); `sop` is only the
+  pipeline/conformance probe. Private git deps (`limfx-tools` sub-CLIs) resolve in Docker via
+  `RUN --mount=type=ssh` + CI `webfactory/ssh-agent` with repo secret `LIMFX_TOOLS_DEPLOY_KEY`.
 - Code Interpreter reaches S3 only via its execution role in `SANDBOX` network mode (`aws s3 cp`
   inside); real filesystem mounts (S3 Files / EFS) need `VPC` mode — not used.
 - ap-southeast-1 (CN) is reachable but deliberately not bootstrapped until D12 (cross-border) is signed.
