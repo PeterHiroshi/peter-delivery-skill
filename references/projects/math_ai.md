@@ -471,6 +471,15 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
   cross-region inference profile id `us.anthropic.…`. Even then the account returned
   "Model use case details have not been submitted" — Peter must submit the Anthropic use-case form
   in the Bedrock console before any real model call works.
+- **GitHub OIDC → AWS for new IcestoneTech repos:** the org's new repos have `use_immutable_subject: true`
+  (`gh api repos/IcestoneTech/<repo>/actions/oidc/customization/sub`), so the token `sub` is
+  `repo:IcestoneTech@162268637/<repo>@<repo_id>:ref:…`; a trust policy listing only
+  `repo:IcestoneTech/<repo>:ref:…` fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity`
+  and IAM says nothing more. Add a "print the OIDC claims" step before `configure-aws-credentials`
+  (kept in `limfx-harness/.github/workflows/ci.yml`) and read CloudTrail's `userIdentity.userName`.
+- **Never apply `infra/iam/*.json` templates by hand** with `update-assume-role-policy file://…`: IAM
+  accepts an unrendered `${ACCOUNT_ID}` Principal silently and then denies everything. Render first
+  (bootstrap does) — cost me three failed CI runs on 2026-10-16.
 - Code Interpreter reaches S3 only via its execution role in `SANDBOX` network mode (`aws s3 cp`
   inside); real filesystem mounts (S3 Files / EFS) need `VPC` mode — not used.
 - ap-southeast-1 (CN) is reachable but deliberately not bootstrapped until D12 (cross-border) is signed.
