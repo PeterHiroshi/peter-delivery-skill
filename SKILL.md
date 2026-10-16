@@ -66,8 +66,9 @@ Peter is the only one who can accept a UI, so his review comes **first**, not la
 
 A task that names a prototype skips straight to A and replicates 1:1 — the
 prototype IS the design, no design doc, no alternatives, no "improvements"
-(rule 22). Anything the prototype and the requirement are both silent about does
-not ship (rule 25).
+(rule 22). On a surface that already ships, the diff ledger and his per-item
+picks come before A (`ui-replication.md`). Anything the prototype and the
+requirement are both silent about does not ship (rule 25).
 
 ## The scope ledger (rule 1 above, rule 30 in full)
 
@@ -100,6 +101,7 @@ and say so first. Do not build a second process pack — this is it.
 | Task | Route |
 | --- | --- |
 | **Names a prototype / mockup / reference UI** | Stage A, 1:1, hand both screenshots over, WAIT. Nothing else starts before he accepts |
+| **…and the surface already ships** | Run both → diff ledger, his pick per item → spec + interaction JSON → THEN stage A ([`ui-replication.md`](references/ui-replication.md)) |
 | **UI / interaction / visual** | This contract + **look at it**, or hand over the cases. `ui-ux-pro-max` for design *choices*; [`references/ui-design-principles.md`](references/ui-design-principles.md) for the judgements he has already made |
 | Bug, cause unknown | `superpowers:systematic-debugging`, then gate 5 (the whole class) |
 | Pure logic / backend / data flow | Three-bullet design note → build → tests → **one** adversarial subagent pass on the diff |
@@ -127,6 +129,7 @@ starting a task, not when stuck),
 [`project-onboarding.md`](references/project-onboarding.md) (a repo I have not touched
 recently), [`testing-that-earns-its-keep.md`](references/testing-that-earns-its-keep.md),
 [`visual-verification.md`](references/visual-verification.md),
+[`ui-replication.md`](references/ui-replication.md) (a reference UI onto a shipping surface: diff ledger → picks → interaction JSON),
 [`deliverable-formats.md`](references/deliverable-formats.md) (hand-off text),
 [`packs-and-gaps.md`](references/packs-and-gaps.md),
 [`maintaining-this-skill.md`](references/maintaining-this-skill.md).

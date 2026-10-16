@@ -153,6 +153,18 @@ same applies to any task where the acceptance criterion is visual and the
 reference exists: the reference is the spec, the replica is the first
 deliverable, everything else waits.
 
+**When the surface already ships, the first deliverable is the DIFF, not the
+replica** (Peter 2026-10-16, Editing tab vs a whole-product demo):
+「demo中不是每个UI都是要变的……列出来和当前UI/UX不一致的，然后我去逐个验收并做取舍；只有
+完成1后你才能再去产出最终的UI/UX报告以及交互json，否则又会出现之前“挤牙膏”式的修改」.
+A product-vision demo against a shipping screen is not a change list: 1:1 would
+build what he rejects, and finding the differences one review at a time is the
+toothpaste pattern. Run BOTH, hand over every difference as one ledger with
+demo|current crops and a decision per item (R1); turn his decisions into the
+final spec plus an interaction JSON — the acceptance oracle replayed before every
+hand-off (R2); only then stage A (R3). No code before R2 is accepted. Method,
+JSON shape and scripts: [`ui-replication.md`](../ui-replication.md).
+
 ### 23. `ccl-skills` is DISABLED, not merely opt-in — recall one by name for a genuine risk gate (Peter 2026-09-15, 2026-09-19, switched off 2026-09-20)
 
 The pack (product-rd-workflow, web-react-dev, multi-agent-delegation, code-review,

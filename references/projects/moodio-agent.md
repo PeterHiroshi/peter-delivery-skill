@@ -56,6 +56,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A source guard cannot see DOM structure (2026-09-14, Meegle 14665402)`
 - `Measure the bug screenshot instead of squinting at it (2026-09-20)`
 - `Driving the production Agent2 in-process against the dev DB (2026-10-08, Meegle 15209061)`
+- `Diffing a scratch/demos standalone HTML against the Editing tab (2026-10-16, editor UI optimization)` — the demo's Editing is project → top tab **Timeline**; method in `ui-replication.md`; prove read-only with `editor_drafts.head_revision` before/after; the export *jobs* view acknowledges the badge, the settings view does not; DOM-remove the cookie banner
 
 - `Reusing a pipeline inherits its vocabulary (2026-09-20, Meegle 14732749)`
 **The composer, canvas and overlays**
@@ -2999,3 +3000,24 @@ paths, every later push (docs too) runs the job; and the publish step's own
 log line (`Composition <hash> of commit <sha>`) beside `node -e
 'require("./next.config.js").env'` locally is the read-back that both sides
 name the same site.
+
+## Diffing a scratch/demos standalone HTML against the Editing tab (2026-10-16, editor UI optimization)
+
+Method: `references/ui-replication.md`. Repo-specific parts:
+
+- `scratch/demos/*.html` are design-tool bundles. In `Moodio 3.0 L+D standalone.html`
+  the editor is: Skip onboarding → Projects → open 「霸道总裁别爱上我家猫」 → top tab
+  **Timeline** (state `screen: 'canvasdetail', cvMidTab: 'Editing'`). Its media pool
+  images are not bundled (`../standalone-img/...` 404) — compare structure, not pixels.
+  "L+D" = light + dark: `logic.setState({ theme: 'dark' })`.
+- Current side: detached sibling worktree + `cp -Rc` node_modules from a worktree that
+  has them, `npx next dev --turbopack --port 3002`, minted `moodio_access_token`
+  (section "Opening the frame editor in my own headless Chrome"). Peter's drafts:
+  `select head_revision from editor_drafts where episode_id = …` before and after.
+  Pick a draft shaped like the demo (`3677c4bd…/33e38849…`: picture, subtitle, audio
+  lanes) — `75255305…` is a 42-track stress draft.
+- Writes to avoid while capturing: the export **jobs** view (`DeliveryJobs` view
+  `"jobs"`) posts `acknowledge`; the cookie banner's buttons record a consent; the
+  master-volume slider and anything in Clip properties are document edits. The
+  agent chat opens floating over the editor on first load — "Hide chat" closes it.
+- Dark theme for a capture: toggle `dark`/`light` on `<html>` (next-themes), no reload.

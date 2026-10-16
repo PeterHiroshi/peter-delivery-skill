@@ -54,6 +54,7 @@ evidence of what happened when it was missed.
 | `references/reuse-over-duplication.md` | Derive over pass; ~half of one session's bugs |
 | `references/testing-that-earns-its-keep.md` | Regression pins vs discovery; mutation testing |
 | `references/task-playbook.md` | Opening moves per task type |
+| `references/ui-replication.md` | A reference UI onto a shipping surface: run both, diff ledger, his picks, interaction JSON (`scripts/ui-replication/`) |
 | `references/deliverable-formats.md` | Status reports, commits, PRs, Lark messages |
 | `references/moodio-agent.md` | Repo-specific traps |
 
