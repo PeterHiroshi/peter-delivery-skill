@@ -2,6 +2,60 @@
 
 Notes that cost time to learn. Read before working in this repo.
 
+## Symptom index
+
+| Symptom / need | Section |
+| --- | --- |
+| Where does a v5 change go; may I merge to develop | v5 integration branch |
+| New task, where is the worktree | Worktrees |
+| Jira helper raises `'tuple' object has no attribute 'json'` or 404 on agile path | Jira helper gotchas |
+| PR done, what is the hand-off | Hand-off |
+| Import fails "[REGION] DB URL env not set" | Environment traps |
+| "failures pre-existed" | Baseline honesty |
+| Deploy / tag / rollback | Release pipeline |
+| AWS / gh pagination surprises | Infra traps |
+| Diagram-heavy doc, need to see the Mermaid; Jira Blocks link direction | Rendering Mermaid in design docs |
+| Where is harness / tools / skills code; how are the new repos pinned | v5 repo topology (submodules) |
+| Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
+
+## v5 integration branch (Linc, 2026-10-15)
+
+- All v5 (Euclid, Epic LFX-512) work lands on **`feat/LFX-v5-integration`** via
+  Draft PR #447. Sub-tasks: own branch off that branch → PR **base
+  `feat/LFX-v5-integration`**, not develop. Nothing v5 merges to develop until
+  Linc re-approves the whole; no auto-merge. Creating/updating #447 does not
+  deploy dev.
+- Peter owns LFX-513～518 (harness / tools / runtime / daemon); Linc owns
+  519～530 (business). Linc's integration handbook for Peter:
+  `docs/plans/LFX-519/peter-integration.md` — read its six boundaries before
+  touching the harness contract. Linc updates it as he goes; re-read, don't cache.
+- Design docs for Peter's tasks: `docs/plans/LFX-513/…` (Chinese, same as
+  Linc's `docs/plans/LFX-5xx/` folders).
+
+## Worktrees
+
+- Layout (Peter moved it 2026-10-15 evening): `<repo>/.worktrees/<LFX-id>-<slug>` with branch
+  `feat/<LFX-id>-<slug>`; `peter-delivery-worktree.conf` is written
+  (`BASE_DIR=<repo>/.worktrees`, `NAMING=strip`, `ID_IN_BRANCH=0`), so `append-worktree.sh --id LFX-513 --slug …`
+  now produces that shape. If Peter moves a worktree folder by hand, run `git worktree repair <new path>`
+  from the main checkout (the registry showed the old path as `prunable`). Give him **absolute paths** to
+  worktree files: relative links resolve against the main checkout he has open and 404. The command wrapper assumes Meegle for title lookup —
+  pass `--task` explicitly here; Jira is the tracker.
+- Copy `backend/.env` **and** `frontend/.env.local` (both ignored). `uv sync` in
+  `backend/` takes a couple of minutes; start it in the background.
+- Main checkout may sit on `feat/LFX-v5-integration`; a worktree cannot check out
+  the same branch, so sub-task branches are the way in.
+
+## Jira helper gotchas (`~/.claude/skills/jira-skill-distilled`)
+
+- `jira_request()` / `agile_request()` return `(data, err)` tuples, not responses.
+- Paths are **relative to the API root**: `jira_request("GET", "/search/jql?…")`,
+  `agile_request("GET", "/board/35/sprint?state=active")`. Passing `/rest/api/3/…`
+  doubles the prefix → 404.
+- JQL search is `/search/jql` (the old `/search` is gone). Sprint field is
+  `customfield_10020`. Board 35, project LFX.
+- Descriptions/comments are ADF; walk `content[]` to get text.
+
 ## Hand-off
 
 - **No Lark message after a PR.** The hand-off is: `gh pr comment` automated
@@ -368,3 +422,55 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 - An async `start()` in a React hook needs a synchronous latch plus a generation counter that
   teardown bumps; a check of "is it running" before the awaits lets a second caller (menu
   replay during auto-start) or an unmount produce an orphan overlay or a re-activated seam.
+
+## Rendering Mermaid in design docs (2026-10-15)
+
+- `mmdc` is not installed; `npx --yes @mermaid-js/mermaid-cli@11.4.2 -p puppeteer.json -i doc.md -o out.md -e png -b white`
+  with `puppeteer.json = {"executablePath":"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome","args":["--no-sandbox"]}`
+  renders every fenced diagram in a markdown file to PNG in about a minute, no Chromium download. Run it in the
+  scratchpad and `Read` the PNGs before handing a diagram-heavy doc to Peter (gate 4 applies to diagrams too).
+- Jira `issueLink` with type `Blocks`: put the **blocker** in `inwardIssue`, the blocked issue in `outwardIssue`
+  (verified on LFX-531; the intuitive direction comes out reversed).
+
+## v5 repo topology (submodules) — 2026-10-16
+
+- `math_ai` is both the business repo and the integration umbrella: `IcestoneTech/limfx-harness`,
+  `limfx-tools`, `limfx-skills` are git submodules under `packages/`; the submodule SHA is the
+  contract version pin. Local clones live as siblings: `~/Develop/projs/icestonetech/limfx-*`.
+  No separate umbrella repo, no private PyPI (Peter decided 2026-10-16; plan
+  `docs/plans/LFX-513/p1-execution-plan.zh-CN.md` §1 D-A).
+- Boundary by mechanism: imports `google.adk`/`strands`/codex/claude SDK or runs a model loop →
+  limfx-harness; ToolSpec / code or browser execution → limfx-tools; `SKILL.md` → limfx-skills;
+  business truth, ToolGateway admission + receipt signing, device relay, registry choice → math_ai.
+- **limfx-tools is a collection of standalone sub-CLIs** (`clis/fs|exec|material|artifact` Python,
+  `clis/build|browser` Node), each with its own executable, `tool.json`, `mcp --stdio`, version and
+  tag `cli/<name>/vX.Y.Z`; `limfx-tools` is only the discovery umbrella. Peter rejected the first
+  "one host CLI + plugins" shape the same day — a tool that cannot run without the host is not
+  reusable by a local Codex / Claude Code. Inventory: `limfx-tools/docs/tool-inventory.md`.
+- The new repos are pushed to `main` directly (Peter's own repos, no Linc gate); math_ai still
+  goes PR → `feat/LFX-v5-integration`. Sub-tasks live under LFX-513/514/515/516 (LFX-532..543,
+  label `v5-harness`), not in the sprint.
+- Jira helper: this site's `gh` (2.x on the Mac) has no `gh run list --commit`; filter
+  `--json headSha` instead.
+
+## AgentCore facts (verified 2026-10-16, account 014498621858, profile `icestonetech-admin`)
+
+- `icestonetech-admin` is SSO (`AWSReservedSSO_AdministratorAccess…/peter.ma`); it expires. `peter-ec2`
+  is a static IAM user with no AgentCore/ECR/S3-list rights — useless for this work.
+- Runtime container: ARM64, `0.0.0.0:8080`, `POST /invocations` (JSON or SSE), `GET /ping`
+  (`Healthy`/`HealthyBusy`); session id arrives as header `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id`
+  (min 33 chars) and our server adopts it as `run_id`. Managed `sessionStorage` mounts at
+  `/mnt/<dir>` on first invocation. `idleRuntimeSessionTimeout` floor is 60 s.
+- Bootstrap: `limfx-harness/infra/agentcore/bootstrap.py` (idempotent; writes
+  `infra/agentcore/<region>.json`, committed). First `create_agent_runtime` after creating the
+  execution role fails with "role validation failed" for a few seconds — the script retries. The
+  GitHub OIDC deploy role likewise needed minutes before `AssumeRoleWithWebIdentity` worked.
+- Smoke: `uv run python scripts/smoke_invoke.py --region us-east-1 [--start]`; always ends with
+  `stop_runtime_session`. Evidence doc: `limfx-harness/docs/evidence/2026-10-16-us-east-1-first-invoke.md`.
+- Bedrock Converse: bare `anthropic.claude-haiku-4-5-…` is rejected for on-demand; use the
+  cross-region inference profile id `us.anthropic.…`. Even then the account returned
+  "Model use case details have not been submitted" — Peter must submit the Anthropic use-case form
+  in the Bedrock console before any real model call works.
+- Code Interpreter reaches S3 only via its execution role in `SANDBOX` network mode (`aws s3 cp`
+  inside); real filesystem mounts (S3 Files / EFS) need `VPC` mode — not used.
+- ap-southeast-1 (CN) is reachable but deliberately not bootstrapped until D12 (cross-border) is signed.
