@@ -83,7 +83,24 @@ Whether it ended the toothpaste rounds is decided by his review, not by me.
 
 **R3 — build (rule 31 stage A) against the JSON**, then replay every entry on the
 running app as the self-check before the hand-off; report pass / fail per entry.
-A failing entry is a defect, not a question.
+A failing entry is a defect, not a question — until triage proves it is the
+oracle's. Triage each FAIL into one of two piles and say which in the hand-off
+(2026-10-16: 14 first-run FAILs = 2 product defects + 12 oracle defects):
+
+- **Product defect** → fix, checkpoint-commit, move the dev worktree to the new
+  commit (the server runs the detached worktree, NOT the working tree — a fix
+  "still failing" was this), re-run the entry.
+- **Oracle defect** → fix the spec/runner and list the change as a deviation from
+  the R2 text Peter reviewed. The recurring ones: a same-named role elsewhere on
+  the page (the top bar's *Assets* tab; scope with `within`); a click whose centre
+  is covered by another control (the popover over the player; a hover "+" over a
+  tile — use `at`); a fixture item that does not meet the entry's `given` (the
+  first "video" clip was already linked — pick it by data attribute); a measure
+  that the reference itself does not meet ("fits" ≠ no scroll when both keep a
+  tail after the last clip).
+- A cascade is not N defects: one entry's persisted preference (a collapsed
+  sidebar in localStorage) fails the next ones. Clear per-viewer storage before
+  every load (`resetStorage`), then re-run before triaging the rest.
 
 **R4 — B / C as usual.**
 
@@ -106,7 +123,11 @@ A failing entry is a defect, not a question.
 - `replay.cjs <interactions.json> <fixture.json> <out.json> [idRegex]` — resolves
   role + name in the page, runs steps, checks the 17 assertion kinds, reloads after
   any entry that acted, SKIPs entries whose placeholders/flags the fixture lacks,
-  and refuses a run that landed anywhere but the target URL. `puppeteer-core` installs into the
+  reports `blocked_by` entries (declared cuts) as BLOCKED, and refuses a run that
+  landed anywhere but the target URL. Names follow accname precedence (content
+  before `title`); a text target is the innermost match; steps scroll their
+  target into view; a hover travels to its target (react-aria tooltips ignore a
+  pointer that teleports after a key press). `puppeteer-core` installs into the
   scratchpad in 11 s and drives the system Chrome; no download.
 
 ## Discipline while capturing the current product
@@ -114,7 +135,11 @@ A failing entry is a defect, not a question.
 - Its own dev server on its own port from a detached sibling worktree (never
   Peter's :3000); the diff-report request covers this capture — say so in the
   hand-off, since rule 24 otherwise asks first.
-- Read-only on his real data: record the draft's head revision before and after
+- Read-only on his real data, enforced, not hoped for: the fixture's
+  `blockWrites` (`"METHOD-regex url-regex"`) aborts the product's write requests
+  and reports the entry that sent one as WROTE — on 2026-10-16 an oracle click
+  landed on a tile's hover "+" (Add at playhead) and only the reload after it kept
+  a clip out of his draft. Still record the draft's head revision before and after
   and report both; open settings views but not views that write (moodio: the
   export *jobs* list acknowledges the unread badge; the *settings* view does not);
   remove a cookie banner from the DOM instead of clicking it (a click records a
