@@ -62,3 +62,11 @@ tab, not a row inside a tab).
 | disabled for the right reason | the `title` on the disabled element, localized |
 
 Every fix here: revert it alone and watch the number move back.
+
+## Chat progress for end users vs. admins (math_ai, Peter 2026-10-16)
+
+Peter on the first harness timeline (tool names, exit codes, sha prefixes, `adk2@2.12.0 · gpt-6.1-sol` in the chat bubble): "harness 感太强了". The rule he set:
+
+- **End users (students, parents) get emotional value and plain language**: a few friendly steps they can follow ("读懂题目 → 我写了一小段程序来算 → 算出来了，正在核对 → 整理成答案"), reassuring wording on failure/retry, nothing that needs a programmer to decode. Optional "看看我是怎么算的" for a simplified narrative.
+- **Never show the harness, model, sha, exit codes, token usage or tool names to users.** Those belong only in the admin console (session replay / 回扫用户 session), where the full technical timeline is wanted as-is.
+- Same event stream, two renderers: keep one reducer, two presentations (`SolveJourney` for users, `AdminHarnessTimeline` for admins).
