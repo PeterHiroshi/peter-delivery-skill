@@ -475,6 +475,16 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 - **adk2 is the first real Runtime consumer** (Peter 2026-10-16, back to the design order); `sop` is only the
   pipeline/conformance probe. Private git deps (`limfx-tools` sub-CLIs) resolve in Docker via
   `RUN --mount=type=ssh` + CI `webfactory/ssh-agent` with repo secret `LIMFX_TOOLS_DEPLOY_KEY`.
+- **adk2 is live on the Runtime and solved AIME 2024 I #11 (371) end to end on 2026-10-16** — the
+  acceptance shape Peter wants for every harness: a real problem, model-initiated `fs.write → stage →
+  py.run → fs.ls/fs.read`, S3 objects read back and sha-checked, session stopped. Reproduce with
+  `scripts/smoke_invoke.py --region us-east-1 --start --goal <problem> --expect-tools fs.write,py.run,fs.read|fs.ls`.
+- Gotchas met while landing adk2: OpenAI function names forbid `.` (model-facing names are `fs_write`);
+  ADK 2.12 cancel is `Runner.run_async(abort_signal: asyncio.Event)`; an unresolved workspace root under
+  macOS `/var` (→ `/private/var`) made every `py.run source_ref` look like a path escape; uv 0.6 cannot
+  resolve the `override-dependencies` trick needed for limfx-tools' git-pinned contract, use uv ≥ 0.13.
+- `writeFiles.blob` on Code Interpreter stores the base64 text verbatim: binary uploads go as base64
+  `text` + `base64 -d` + `sha256sum` inside the sandbox (limfx-tools `backends/agentcore_ci`).
 - Code Interpreter reaches S3 only via its execution role in `SANDBOX` network mode (`aws s3 cp`
   inside); real filesystem mounts (S3 Files / EFS) need `VPC` mode — not used.
 - ap-southeast-1 (CN) is reachable but deliberately not bootstrapped until D12 (cross-border) is signed.
