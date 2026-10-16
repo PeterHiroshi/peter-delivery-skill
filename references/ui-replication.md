@@ -51,6 +51,10 @@ Whether it ended the toothpaste rounds is decided by his review, not by me.
   numbers. Re-measure the reference for it (`probe-lib.cjs`: box, colours, font,
   radius, padding, cursor per element per state) and read the reference's source for
   rules a screenshot cannot show (resize clamps, what a toggle restores).
+  **Every state the reference shows, not the resting one**: the range bar's spec
+  took its one grey from the no-range state; the reference's own drag shot showed a
+  light rail with the range as the darker fill, the build drew a faint overlay, and
+  Peter found "can't tell which part is in range" (2026-10-16).
 - **Pending confirmations, not another question round.** Where his answers leave a
   placement open, or two decisions meet (adopt the demo toolbar × keep a button the
   demo lacks; move a control whose meaning changes — the "volume" was the document's
@@ -97,7 +101,10 @@ oracle's. Triage each FAIL into one of two piles and say which in the hand-off
   tile — use `at`); a fixture item that does not meet the entry's `given` (the
   first "video" clip was already linked — pick it by data attribute); a measure
   that the reference itself does not meet ("fits" ≠ no scroll when both keep a
-  tail after the last clip).
+  tail after the last clip); a name two controls share (a clip named "Text" and
+  the Text track's name button) — correcting the resolver's name precedence
+  flipped which one matched first, so pick such items by data attribute and make
+  each expectation one only the intended element can meet.
 - A cascade is not N defects: one entry's persisted preference (a collapsed
   sidebar in localStorage) fails the next ones. Clear per-viewer storage before
   every load (`resetStorage`), then re-run before triaging the rest.
