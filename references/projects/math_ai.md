@@ -475,6 +475,12 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 - **adk2 is the first real Runtime consumer** (Peter 2026-10-16, back to the design order); `sop` is only the
   pipeline/conformance probe. Private git deps (`limfx-tools` sub-CLIs) resolve in Docker via
   `RUN --mount=type=ssh` + CI `webfactory/ssh-agent` with repo secret `LIMFX_TOOLS_DEPLOY_KEY`.
+- **adk2's model is QuickRouter `gpt-6.1-sol`** (Peter 2026-10-16 evening: "别用 kimi-k2.6，用 gpt-6.1 系列，走 quickrouter").
+  QuickRouter's only 6.1 id is `gpt-6.1-sol`; base MUST be `https://api.quickrouter.us/v1` (no `/v1` → non-JSON);
+  same key as `api.quickrouter.ai` (`backend/.env` `QUICK_ROUTER_API_KEY`); mirror math_ai's `gpt-6-astra-qr`
+  entry (`reasoning_effort: high`, no temperature). Switching models = rotate the secret, no image change.
+  QuickRouter reports a ~4.2k cached prefix even for a one-line probe, so never bill from harness-side
+  token counts alone. System python needs `SSL_CERT_FILE=certifi` to reach QuickRouter.
 - **adk2 is live on the Runtime and solved AIME 2024 I #11 (371) end to end on 2026-10-16** — the
   acceptance shape Peter wants for every harness: a real problem, model-initiated `fs.write → stage →
   py.run → fs.ls/fs.read`, S3 objects read back and sha-checked, session stopped. Reproduce with
