@@ -18,7 +18,13 @@ Notes that cost time to learn. Read before working in this repo.
 | Where is harness / tools / skills code; how are the new repos pinned | v5 repo topology (submodules) |
 | Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
 
-## v5 integration branch (Linc, 2026-10-15)
+## v5 integration branch (Linc, 2026-10-15) — superseded 2026-10-16 evening
+
+**Peter 2026-10-16 evening: Linc's business side is finished; everything left is Peter's. The target is
+now "meets the bar for a PR to `develop`" (dev env at limfx.ai test), then production via the release
+tag flow. A Chinese completion report (`docs/completion-reports/LFX-512-completion-report.md`, the eight
+CLAUDE.md sections) is part of the deliverable.** The integration-branch rule below is history.
+
 
 - All v5 (Euclid, Epic LFX-512) work lands on **`feat/LFX-v5-integration`** via
   Draft PR #447. Sub-tasks: own branch off that branch → PR **base
