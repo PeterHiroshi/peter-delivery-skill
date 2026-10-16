@@ -163,6 +163,14 @@ in a shared file would have gone the same way. Commit first (gate 12), then `cp`
 the file aside and copy it back. A pattern that matches zero times after a
 restore is the symptom that the file is no longer what you think it is.
 
+**A mutant's verdict is only as fresh as the code that ran (2026-10-16,
+moodio-agent).** Two Python mutants of the same byte length, written within one
+second, ran the first one's cached `.pyc` (CPython validates it by mtime in
+whole seconds and size): the second "failed" with the first's error and was
+reported killed while it survived. Run the loop with `PYTHONDONTWRITEBYTECODE=1`
+and delete `__pycache__` before each run; any cache keyed on mtime has the same
+hole. Two mutants failing on the identical line is the symptom.
+
 Same session: three mutations of the GET de-duplicator, two caught, one
 survived (removing `.clone()` for the first caller). The tempting move is to
 invent an assertion that fails. The honest one is to work out whether the line
