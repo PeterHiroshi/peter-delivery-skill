@@ -10,7 +10,7 @@ Notes that cost time to learn. Read before working in this repo.
 | New task, where is the worktree | Worktrees |
 | Jira helper raises `'tuple' object has no attribute 'json'` or 404 on agile path | Jira helper gotchas |
 | PR done, what is the hand-off | Hand-off |
-| Import fails "[REGION] DB URL env not set" | Environment traps |
+| Import fails "[REGION] DB URL env not set"; pytest collection dies with 资源绑定不满足环境隔离要求 | Environment traps |
 | "failures pre-existed" | Baseline honesty |
 | Deploy / tag / rollback | Release pipeline |
 | AWS / gh pagination surprises | Infra traps |
@@ -77,6 +77,20 @@ CLAUDE.md sections) is part of the deliverable.** The integration-branch rule be
 - `develop` has no branch protection on GitHub — the rule is process-only.
 
 ## Environment traps
+
+- **Running backend tests from a worktree (2026-10-16):** `tests/conftest.py` loads `backend/.env`
+  with `override=True`, and `.env` binds Redis db 0 (listed as INTL production in
+  `config/production_bindings.yaml`), so with the default `APP_ENV` (→ development) the env guard
+  in `app/db.py` raises at collection for anything importing `solve_request_ledger`. Use
+  `APP_ENV=local USE_MOCK_DB=true REGION=INTL` (plus `LFX520_BINDING_TEST_MONGO=1` and the
+  `lfx520read` replica set on 27121 for real-Mongo suites). Two shell-variable attempts failed
+  before asking the subagent that had it green — ask earlier.
+- **Worktree + main venv:** run `/Users/mahao/Develop/projs/icestonetech/math_ai/backend/.venv/bin/python -m pytest`
+  from the worktree's `backend/`; install the contract into that venv in editable mode or run
+  `scripts/vendor_contract.sh` first (LFX-548 made `vendor/limfx-harness-contract` the source).
+- **Docker build context is `./backend`:** anything from `packages/` must be vendored in by
+  `scripts/vendor_contract.sh` (CI does it; locally run it after `git submodule update --init`).
+
 
 - A hook blocks edits in the main checkout while worktrees exist: edit in the
   worktree, merge from the main checkout. `git merge` run inside the worktree
