@@ -116,8 +116,10 @@ async function check(page, a) {
   const writes = [];
   if (fx.blockWrites) {
     const rules = fx.blockWrites.map(r => { const [m, u] = r.split(' '); return [new RegExp('^(' + m + ')$'), new RegExp(u)]; });
-    await page.setRequestInterception(true);
-    page.on('request', req => { if (req.isInterceptResolutionHandled()) return; const hit = rules.some(([m, u]) => m.test(req.method()) && u.test(req.url())); if (hit) { writes.push(req.method() + ' ' + req.url()); req.abort('blockedbyclient'); } else req.continue(); });
+    // CDP Fetch on the API paths only: puppeteer's setRequestInterception turns the HTTP cache off, and a dev build then refetches every chunk on each reload (4x slower).
+    const cdp = await page.createCDPSession();
+    await cdp.send('Fetch.enable', { patterns: [{ urlPattern: fx.blockScope || '*/api/*', requestStage: 'Request' }] });
+    cdp.on('Fetch.requestPaused', ev => { const hit = rules.some(([m, u]) => m.test(ev.request.method) && u.test(ev.request.url)); if (hit) { writes.push(ev.request.method + ' ' + ev.request.url); cdp.send('Fetch.failRequest', { requestId: ev.requestId, errorReason: 'BlockedByClient' }).catch(() => {}); } else cdp.send('Fetch.continueRequest', { requestId: ev.requestId }).catch(() => {}); });
   }
   const load = async () => { if (fx.resetStorage && page.url().startsWith(new URL(fx.url).origin)) await page.evaluate((pre) => { for (const k of Object.keys(localStorage)) if (pre.some(p => k.startsWith(p))) localStorage.removeItem(k); }, fx.resetStorage); await page.goto(fx.url, { waitUntil: 'domcontentloaded', timeout: 600000 }); await sleep(fx.settleMs || 20000); if (!page.url().startsWith(fx.url.split('?')[0])) throw new Error('landed on ' + page.url() + ' (auth?)'); await page.evaluate(fx.cleanJs || '0'); };
   const cur = page.url(); if (cur.startsWith(fx.url.split('?')[0]) === false || cur.includes('/auth/')) await load();

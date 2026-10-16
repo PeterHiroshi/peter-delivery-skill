@@ -139,7 +139,10 @@ oracle's. Triage each FAIL into one of two piles and say which in the hand-off
   `blockWrites` (`"METHOD-regex url-regex"`) aborts the product's write requests
   and reports the entry that sent one as WROTE — on 2026-10-16 an oracle click
   landed on a tile's hover "+" (Add at playhead) and only the reload after it kept
-  a clip out of his draft. Still record the draft's head revision before and after
+  a clip out of his draft. Block through CDP `Fetch` on `/api/*` only: puppeteer's
+  `setRequestInterception` switches the HTTP cache off and a dev build then
+  refetches every chunk per reload (a 10-minute replay became 45). Prove the guard
+  once per fixture (a PUT to a dummy id must fail and be recorded). Still record the draft's head revision before and after
   and report both; open settings views but not views that write (moodio: the
   export *jobs* list acknowledges the unread badge; the *settings* view does not);
   remove a cookie banner from the DOM instead of clicking it (a click records a
