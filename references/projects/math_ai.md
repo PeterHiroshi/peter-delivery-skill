@@ -533,5 +533,6 @@ One command: `bash scripts/local_agentcore_e2e.sh` (branch feat/LFX-548-deploy, 
 
 - **Platform V2** (`platformVersion=V2`, boto3 ≥ 1.43.114, not in CFN/CDK): snapshot at the first healthy `/ping`, restored per new session. Measured from the laptop: new-session `harness/describe` 4.2 / 2.6 / 2.4 s vs V1 26 s container boot for the 568 MB image. Update takes ~4 min; env vars ≤ 2.5 KB. Everything after the first Healthy ping runs per session, so warm-up must precede it.
 - TTFT split on dev (laptop, V1): submit→dispatch 64 s (all Atlas), ack 2 s, ack→first event 15 s (unattributed; runtime access log only has uvicorn lines — needs app-level phase logs), first event→first token 1 s warm. Adapter logs `harness run <id> timings:` per run.
+- **Streaming reads: `iter_chunks(n)` / `read(n)` on a chunked SSE body blocks until n bytes** (http.client keeps consuming chunks). The adapter's 4 KB read held `run.started` (~200 B) until the model's first tokens — 24 s of "nothing happens" that looked like a runtime problem. Read with urllib3 `read1` (returns what is available). Attribute transport lags by comparing the runtime's own timestamps with the consumer's arrival, never by guessing at the proxy.
 - Runtime CloudWatch group: `/aws/bedrock-agentcore/runtimes/<runtime-id>-DEFAULT`; filter with epoch ms computed in Python (zsh `date -j` is not portable).
 
