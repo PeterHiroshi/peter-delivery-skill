@@ -17,7 +17,7 @@ Notes that cost time to learn. Read before working in this repo.
 | Diagram-heavy doc, need to see the Mermaid; Jira Blocks link direction | Rendering Mermaid in design docs |
 | Where is harness / tools / skills code; how are the new repos pinned | v5 repo topology (submodules) |
 | Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
-| Local manual e2e against dev AgentCore (script, Atlas latency knobs, macOS traps, restart race) | Local e2e traps |
+| Local manual e2e against dev AgentCore (script, Atlas latency knobs, macOS traps, restart race); which worktree/port is "the latest version" of the chat UI | Local e2e traps |
 | AgentCore cold start / TTFT numbers; platform V2 | AgentCore facts |
 
 ## v5 integration branch (Linc, 2026-10-15) — superseded 2026-10-16 evening
@@ -521,6 +521,7 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 
 One command: `bash scripts/local_agentcore_e2e.sh` (branch feat/LFX-548-deploy, runbook §8). Redis local 6399/db2, Mongo = INTL dev Atlas by default (`E2E_MONGO=local` falls back to the rs on 27121), agent side = dev AgentCore. Login `e2e-agentcore@limfx.test`.
 
+- **"The latest version" of the LFX-547 chat UI = `.worktrees/e2e-agentcore` (branch `local/e2e-agentcore`), served by the script's Vite on :5172.** The :5173 server is the stale `LFX-547-transcript` worktree. Identify the screen Peter screenshots by a string only the newest commits have, then `lsof -a -p <pid> -d cwd` on the port. Another session usually has uncommitted work in that worktree: edit only clean files, commit by pathspec. (2026-10-17)
 - **macOS has no `setsid`** — the first version of the script "started" the backend and nothing listened. `nohup … </dev/null >log 2>&1 &` with every fd redirected is enough to detach; and never pipe the script's stdout (`| grep`) from a tool call: the Vite child keeps the pipe open and the call hangs.
 - **`stop` then start = no restart**: uvicorn drains open SSE streams before exiting, so `curl /health` still answered and the script said "already listening"; the old code kept running. `stop` now waits for the ports (`nc -z`, not `lsof`: lsof takes seconds per call on macOS) and prints the pid to `kill -9`.
 - **Laptop → Atlas is ~200 ms RTT.** Linc's limits assume in-region: Mongo txn 5 s / commit 1000 ms (`artifact_delivery/repository.py`, now `DELIVERY_TRANSACTION_TIMEOUT_SECONDS` / `DELIVERY_COMMIT_TIMEOUT_MS`), publish I/O 30 s (`ARTIFACT_STAGE_IO_TIMEOUT_SECONDS`), whole managed solve 300 s (`AGENTCORE_SOLVE_TIMEOUT_SECONDS`, default now 900). Symptoms when one is too low: `single_problem_input._persist` TimeoutError, then `billing_finalization_error`; publish_candidate TimeoutError → `event: error {"message": ""}`; collect cancelled at 300 s → `billing_finalization_error`. The script sets all three in remote mode.
