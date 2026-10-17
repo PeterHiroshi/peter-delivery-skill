@@ -17,6 +17,8 @@ Notes that cost time to learn. Read before working in this repo.
 | Diagram-heavy doc, need to see the Mermaid; Jira Blocks link direction | Rendering Mermaid in design docs |
 | Where is harness / tools / skills code; how are the new repos pinned | v5 repo topology (submodules) |
 | Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
+| Local manual e2e against dev AgentCore (script, Atlas latency knobs, macOS traps, restart race) | Local e2e traps |
+| AgentCore cold start / TTFT numbers; platform V2 | AgentCore facts |
 
 ## v5 integration branch (Linc, 2026-10-15) — superseded 2026-10-16 evening
 
@@ -514,3 +516,22 @@ Peter reported "3 hours, 89 sent, frozen". What settled it in ~40 minutes, in or
 - Code Interpreter reaches S3 only via its execution role in `SANDBOX` network mode (`aws s3 cp`
   inside); real filesystem mounts (S3 Files / EFS) need `VPC` mode — not used.
 - ap-southeast-1 (CN) is reachable but deliberately not bootstrapped until D12 (cross-border) is signed.
+
+## Local e2e traps (2026-10-17)
+
+One command: `bash scripts/local_agentcore_e2e.sh` (branch feat/LFX-548-deploy, runbook §8). Redis local 6399/db2, Mongo = INTL dev Atlas by default (`E2E_MONGO=local` falls back to the rs on 27121), agent side = dev AgentCore. Login `e2e-agentcore@limfx.test`.
+
+- **macOS has no `setsid`** — the first version of the script "started" the backend and nothing listened. `nohup … </dev/null >log 2>&1 &` with every fd redirected is enough to detach; and never pipe the script's stdout (`| grep`) from a tool call: the Vite child keeps the pipe open and the call hangs.
+- **`stop` then start = no restart**: uvicorn drains open SSE streams before exiting, so `curl /health` still answered and the script said "already listening"; the old code kept running. `stop` now waits for the ports (`nc -z`, not `lsof`: lsof takes seconds per call on macOS) and prints the pid to `kill -9`.
+- **Laptop → Atlas is ~200 ms RTT.** Linc's limits assume in-region: Mongo txn 5 s / commit 1000 ms (`artifact_delivery/repository.py`, now `DELIVERY_TRANSACTION_TIMEOUT_SECONDS` / `DELIVERY_COMMIT_TIMEOUT_MS`), publish I/O 30 s (`ARTIFACT_STAGE_IO_TIMEOUT_SECONDS`), whole managed solve 300 s (`AGENTCORE_SOLVE_TIMEOUT_SECONDS`, default now 900). Symptoms when one is too low: `single_problem_input._persist` TimeoutError, then `billing_finalization_error`; publish_candidate TimeoutError → `event: error {"message": ""}`; collect cancelled at 300 s → `billing_finalization_error`. The script sets all three in remote mode.
+- **Per-token Mongo write** (`runs.advance` per delta) made the stream stutter at ~220 ms/token; now throttled to 1/s. Any new per-event side effect must be batched.
+- **Managed path hid the admission reason**: route turned every `DeliveryConflict`/`ValueError` into 409 SYS_CONFLICT with `from None`; the real cause (`;name=` in the chat's data URL) took 20 minutes to find. The route now logs it; look for "single-answer admission rejected" first.
+- **Stopping a background tool task kills its children**: the backend started by that task received SIGTERM when I `TaskStop`ped it and the user's run died. Start servers from a foreground call that returns, never from a backgrounded one you may stop.
+- **The e2e worktree and the feature worktrees drift**: changes made in the e2e tree for testing must be committed on the feature branch and merged back (checkout the e2e copies first), or a subagent committing by pathspec sweeps them into its commit.
+
+## AgentCore facts (additions 2026-10-17)
+
+- **Platform V2** (`platformVersion=V2`, boto3 ≥ 1.43.114, not in CFN/CDK): snapshot at the first healthy `/ping`, restored per new session. Measured from the laptop: new-session `harness/describe` 4.2 / 2.6 / 2.4 s vs V1 26 s container boot for the 568 MB image. Update takes ~4 min; env vars ≤ 2.5 KB. Everything after the first Healthy ping runs per session, so warm-up must precede it.
+- TTFT split on dev (laptop, V1): submit→dispatch 64 s (all Atlas), ack 2 s, ack→first event 15 s (unattributed; runtime access log only has uvicorn lines — needs app-level phase logs), first event→first token 1 s warm. Adapter logs `harness run <id> timings:` per run.
+- Runtime CloudWatch group: `/aws/bedrock-agentcore/runtimes/<runtime-id>-DEFAULT`; filter with epoch ms computed in Python (zsh `date -j` is not portable).
+
