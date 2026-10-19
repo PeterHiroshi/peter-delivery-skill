@@ -47,6 +47,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `A real OTP login in headless Chrome, no Peter needed (2026-09-10)`
 - `Selecting a canvas node from the browser: real click, not synthetic (2026-09-10)`
 - `Verifying a Safari-only bug for real (2026-09-10, Meegle 14354221)`
+- `Measuring Safari jank (2026-10-19, Meegle 15454706)` — headful + real Safari/Chrome via AppleScript (approval), per-frame MOVE metric not frame times, in-page 120 Hz input (Playwright mouse can't judge smoothing), both real browsers 60 fps on the ProMotion screen, `sample` works on Safari's WebContent, peer-session load fakes regressions, a stylesheet split served stale dev CSS and a self-measuring wall hung Safari
 - `Canvas video tiles: harness and the rest-state play badge (2026-09-11, Meegle 14652790)`
 - `Wangsu gateway + admin replay acceptance without Peter (2026-09-11, Meegle 14661162)`
 - A login-free REAL session: mint the access JWT from `.env` (2026-09-11)
@@ -3021,3 +3022,41 @@ Method: `references/ui-replication.md`. Repo-specific parts:
   master-volume slider and anything in Clip properties are document edits. The
   agent chat opens floating over the editor on first load — "Hide chat" closes it.
 - Dark theme for a capture: toggle `dark`/`light` on `<html>` (next-themes), no reload.
+
+## Measuring Safari jank (2026-10-19, Meegle 15454706)
+
+Peter: the workbench wall is smooth in Chrome, janky in Safari. What worked:
+
+- **Headless WebKit sees nothing** (no display, no compositing): p95 18 ms
+  for every variant. Headful Playwright WebKit (`webkit.launch({headless:
+  false})`, gstack's playwright-core) and the real browsers do. Real Safari:
+  `osascript -e 'tell application "Safari"' -e 'make new document with
+  properties {URL:"…"}' -e 'activate' …`, close with `close (every window whose
+  name starts with "DONE")`; Chrome: `make new window` + `set URL of active
+  tab`. Ask Peter first. A covered window stops rAF: record
+  `visibilityState` and discard covered phases. The page POSTs its result to a
+  node collector (harness `scratch/15454706-krea/safari-perf/`).
+- **Frame times cannot see input stutter; the motion can.** Record the wall's
+  per-frame move (median move of full-size tiles from their inline transforms):
+  60 fps with p95 18 ms was moving 18/40/18 px. Drive input IN the page (a
+  120 Hz `setInterval` dispatching `WheelEvent`s). Playwright's `mouse` stamps
+  an event after the driver computed its position, so no input smoothing can
+  even it out — do not judge resampling with it.
+- On this Mac's built-in ProMotion screen **real Safari and real Chrome both
+  ran rAF at 60**; only Playwright's Chromium ran 120. I first wrote "Safari
+  60, Chrome 120" into the design doc and had to correct it.
+- `sample <pid> 3` works on Safari's own WebContent process: it showed Peter's
+  hung tab (6 GB) spending every sample in one `Document::resolveStyle`.
+- Peer sessions load the machine (load average up to 104 on 16 cores) and fake
+  regressions in both directions. Print `uptime` with every run, alternate
+  A/B, repeat ≥3, wait with a background `until [ load -lt 14 ]` loop.
+- Splitting `.wb-*` rules into a new `@import`ed sheet left Peter's running
+  Turbopack dev server serving a global CSS without them until restart. The
+  wall (a `ResizeObserver` on itself) then took its height from its tiles,
+  mounted more, grew to 90,000 tiles and hung Safari. A self-measuring
+  element keeps its box (`position`, `inset`, `overflow`, `contain`) inline.
+- Mutation testing while Peter's :3000 serves the worktree: copy the module
+  into `scratch/mut/` with its own vitest config (`include:
+  ["scratch/mut/*.test.ts"]`, alias `@` → worktree root); never mutate the
+  real file, it hot-reloads into his open tab.
+

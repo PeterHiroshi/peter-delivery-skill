@@ -88,6 +88,11 @@ Before proposing any performance fix, produce that table:
    and appears in none of them. Here it was two thirds of the bill.
 4. **Say which numbers are the environment.** Peter must not optimise a
    Pacific crossing that production does not pay.
+5. **Measure what the eye sees, and the machine you measure on.** For motion,
+   that is per-frame displacement, not frame time: on 2026-10-19 Safari's
+   wall held 60 fps at p95 18 ms while moving 18/40/18 px a frame (input out
+   of step with the frames). And print the load with every run: other
+   sessions pushed the load average to 104 and faked a "regression" twice.
 
 And the class of the duplicate itself, worth its own line: **a value read only
 when the response lands does not belong in a fetch effect's dependency array.**
