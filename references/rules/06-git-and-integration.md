@@ -142,3 +142,8 @@ shot routes in the same worktree. Consequences, all of which bit or nearly bit:
   empty intersection plus "their file is dirty against HEAD" is the proof.
 - Re-run the gates right before reporting — a green run from ten minutes ago
   was over a different tree.
+- **Mutating a shared file can erase a peer's write.** "cp file → edit one
+  line → run tests → cp back" overwrites anything another session wrote to
+  that file inside the window (2026-10-19, five sessions on one branch).
+  Message the peers before mutating a file they work in, or compare its mtime
+  just before restoring and abort the restore if it moved.

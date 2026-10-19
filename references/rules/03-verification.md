@@ -40,6 +40,14 @@ For anything that renders, see
 [`references/visual-verification.md`](references/visual-verification.md). If
 genuinely blocked, say so in those words and let Peter decide.
 
+**A gate that crashed looks green to a grep.** moodio-agent's `tsc` dies at
+Node's default heap (exit 134, no `error TS` lines), so `| grep 'error TS'`
+reads as clean (2026-10-19, flagged by a peer session). Read the gate's exit
+code and its last lines, never only a filtered count — the same holds for an
+eslint run whose file list a shell glob mangled (`app/(dashboard)/…`,
+`[[...session]]`): pass paths NUL-separated (`git diff --name-only -z | xargs
+-0`) and expect the known warning count, not zero.
+
 ### 7. A config change is not live until the thing that reads it has re-read it
 
 Writing a value is not applying it. Every layer has its own moment of reading, and
