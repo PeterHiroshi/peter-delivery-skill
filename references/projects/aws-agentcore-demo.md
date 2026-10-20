@@ -54,6 +54,9 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
   apps/web/.next`, restart with `AWS_PROFILE=icestonetech-admin pnpm dev`.
 - pnpm script shell expands `$` in args — run `../node_modules/.bin/tsx src/smoke/chat.ts` directly.
 - zsh: `GID` is read-only; `set -- $spec` does not word-split.
+- Peter runs his own `pnpm bridge start` in a terminal. Stop a bridge I started by the PID I
+  recorded (`echo $!`), never `pkill -f "tsx src/cli.ts start"` — on 2026-10-21 that killed his
+  bridge along with my repro. A test device of mine also competes for his runs (freshest poll wins).
 - `icestonetech-admin` is temporary keys (session token) in `~/.aws/credentials`; when they expire
   every AWS call fails and only Peter can renew them — no other local profile reaches 014498621858.
   Restarting the dev server does not help. Say so and keep doing what needs no AWS (CI uses OIDC).
