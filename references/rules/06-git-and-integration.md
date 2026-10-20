@@ -172,4 +172,8 @@ Whenever I add or touch a workflow — and once in each repo I start working in:
   message, not left silent.
 - **The next run's annotations are the evidence**: zero warnings, "Post Run" cache/agent lines
   included. Version bumps without reading a run afterwards are not done.
+- **A commit has several workflow runs — read all of them.** `gh run list --commit <sha>`, wait for
+  every one, then the annotations of every check run (`gh api repos/<r>/commits/<sha>/check-runs`
+  → `check-runs/<id>/annotations`). 2026-10-20 I watched the first run of a commit (the submodule
+  check), saw green and reported "CI 全部通过" while the Deploy/test run had failed.
 
