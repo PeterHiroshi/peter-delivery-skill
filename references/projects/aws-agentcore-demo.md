@@ -19,6 +19,11 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
 | A smoke message with `$500` arrives as `00` | Local dev |
 | zsh loop variables misbehave (`GID`, `set -- $x`) | Local dev |
 | Deploy order, what each pipeline does | Deploy |
+| First push of the repo started no workflow run | CI / GitHub |
+| Every deploy job: "Not authorized to perform sts:AssumeRoleWithWebIdentity" | CI / GitHub |
+| Amplify: random empty 429; pairing command says localhost:3000; bridge 401 "Basic" | Amplify |
+| Session list / history shows `{"message": {"role": …` JSON | Amplify |
+| Any AWS call: ExpiredToken (CLI and dev server) | Local dev |
 
 ## Models
 - Claude on Bedrock is blocked for this account until the Anthropic use-case form is submitted
@@ -49,8 +54,28 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
   apps/web/.next`, restart with `AWS_PROFILE=icestonetech-admin pnpm dev`.
 - pnpm script shell expands `$` in args — run `../node_modules/.bin/tsx src/smoke/chat.ts` directly.
 - zsh: `GID` is read-only; `set -- $spec` does not word-split.
+- `icestonetech-admin` is temporary keys (session token) in `~/.aws/credentials`; when they expire
+  every AWS call fails and only Peter can renew them — no other local profile reaches 014498621858.
+  Restarting the dev server does not help. Say so and keep doing what needs no AWS (CI uses OIDC).
 
 ## Deploy
 - `pnpm --filter @acdemo/infra bootstrap <steps>`; runtimes via `scripts/push-image.sh` +
   `deploy:runtime`; README "Deploy" has the order. Pipelines per module in `.github/workflows`
   (OIDC role `acdemo-github-deploy`, main only). Amplify step needs the first push + a GitHub token.
+
+## CI / GitHub (measured 2026-10-20)
+- The first push of a new repo's main starts NO path-filtered run (new main compared with itself).
+  Every module workflow has `workflow_dispatch`; touching each `.yml` (their own path) or
+  `gh workflow run <name>` starts them. Wait loops: `gh run list --commit` needs the FULL sha.
+- New repos use GitHub's immutable OIDC subject `repo:PeterHiroshi@33413323/aws-agentcore-demo@1426863891:…`
+  (`gh api repos/<o>/<r>/actions/oidc/customization/sub`); the trust in `infra/src/steps/iam.ts`
+  uses it (design M15). `pnpm --filter X pack` fails on pnpm 9.3 — pack from the package dir.
+
+## Amplify (app d2ojvwir8ax29n, `https://main.d2ojvwir8ax29n.amplifyapp.com`, basic auth)
+- Credentials: Secrets Manager `acdemo/amplify-basic-auth` (`--region us-east-1` — the profile has
+  no default region). Probe script pattern: curl `-u user:pass` every route; 401 unauthenticated.
+- CloudFront answers an empty 429 to ~1 in 8 PARALLEL requests (sequential: none) → client and
+  bridge retry 429. SSR `req.url` is `https://localhost:3000` → never derive public URLs from it.
+  Basic auth takes `Authorization` → bridge uses `X-Acdemo-Device-Token` + `ACDEMO_BASIC_AUTH`
+  (design M16). Harness Memory events are Strands JSON envelopes → `lib/memory-text.ts` (M17).
+
