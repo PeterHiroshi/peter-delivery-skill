@@ -81,4 +81,8 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
   bridge retry 429. SSR `req.url` is `https://localhost:3000` → never derive public URLs from it.
   Basic auth takes `Authorization` → bridge uses `X-Acdemo-Device-Token` + `ACDEMO_BASIC_AUTH`
   (design M16). Harness Memory events are Strands JSON envelopes → `lib/memory-text.ts` (M17).
+- Verifying shipped client code: the workbench is client-only (lazy chunk), so grepping the chunks
+  `index.html` references finds nothing. Take the lazy chunk ids + hashes from the webpack runtime's
+  `r.u` map (`webpack-*.js`) and grep those. GitHub runners queued 5–10 min on 2026-10-21: a wait
+  loop needs ≥ 15 min.
 
