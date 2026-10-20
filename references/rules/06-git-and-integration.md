@@ -12,6 +12,9 @@ publishing it. Approval for one push does not carry to the next.
 A request to change something ("全部使用最新的git action命令版本") is the same: it covers the
 edit, not the push. On 2026-10-20 I pushed four repos' CI changes (one of them a `main` that
 deploys) on that request alone — wrong; commit, show the diff summary, ask.
+An approved deploy plan ("push main, let CI run") covers the pushes it names. A fix found while
+watching that CI is a NEW push — the same day I pushed five fix commits to a fresh repo's
+deploying `main` under the plan's approval. Commit the fix, ask, then push.
 
 **One standing exception** (Peter, 2026-09-20): **this skill's own repo**
 (`~/.claude/skills/peter-delivery`) — commit and push it without asking. It is
