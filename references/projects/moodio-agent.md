@@ -38,6 +38,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Validating an FCPXML export without Final Cut, and a mutation pass that wiped my own fix (2026-10-13, Meegle 15308241)` — Apple's FCPXML DTDs are mirrored in the CommandPost repo (`src/extensions/cp/apple/fcpxml/dtd/FCPXMLv1_10.dtd`); dump the export from a throwaway test and `xmllint --dtdvalid`; real title/caption conventions come from Subtitle Edit's exporters and OpenFCPXMLKit, a Premiere-calibrated FCP7 Text generator from `takeyama88/premiere-fcp-xml`; restore a mutated file from a scratchpad copy, never `git checkout --`, while a fix is uncommitted; main's new dependency makes a foreign suite fail in the worktree until `npm install`
 - `Export speed: time a job from its own evidence, verify the shared Lambda in prod, and a full suite that fails from load (2026-10-14, export speed PR #1061)` — S3 markers + `diagnostics/worker.json` split a job's time without guessing; a relative path in a heredoc wrote into the MAIN checkout after the cwd reset; `canvas_test` is required for the CI-equivalent suite; load >100 fakes 17 failing files
 - `Mutations under Peter's live dev server, and a render_failed that is the site bundle (2026-10-15, export in→out range)` — his :3000 serves the task worktree, so mutating files there flashes broken code into his app: mutate in a detached sibling worktree with node_modules symlinked; the worker drops Remotion's errors — read them with `getRenderProgress`; `FRAME_EDITOR_BUNDLE_REVISION` d2371040 is an undeployed site (403)
+- `A server-side change the dev server never loaded, and a live check that deleted real data (2026-10-20, multiple timelines)` — Turbopack kept the old `lib/db/schema.ts` table object (`( is null` in the SQL) and old `lib/timeline/server` code: restart :3000 (ask) after server changes and read `.next/dev/logs/next-development.log`; a destructive live step asserts its precondition first; mutation testing on the real files AGAIN despite the section above
 
 **Getting a real browser / session on this app**
 
@@ -3059,4 +3060,30 @@ Peter: the workbench wall is smooth in Chrome, janky in Safari. What worked:
   into `scratch/mut/` with its own vitest config (`include:
   ["scratch/mut/*.test.ts"]`, alias `@` → worktree root); never mutate the
   real file, it hot-reloads into his open tab.
+
+## A server-side change the dev server never loaded, and a live check that deleted real data (2026-10-20, multiple timelines)
+
+Meegle 15308241 (multiple timelines). Peter's `:3000` ran the task worktree.
+
+- **Stale server modules under Turbopack.** After a schema change
+  (`editor_drafts.deleted_at`) every editor route answered 500. The SQL in
+  `.next/dev/logs/next-development.log` read `left join … on ( is null and …`:
+  `isNull(editorDrafts.deletedAt)` built from a table object without the
+  column, i.e. the running server still held the old `lib/db/schema.ts`. Later
+  a plain change in `lib/timeline/server/timelines.ts` (create no longer
+  writes revision 1) did not load either. tsc and PGlite were green both
+  times; only the live call showed it. Route: after any server-side change,
+  restart the dev server (it is Peter's process — ask) before the gate-8 call,
+  and read that log file, not the response's `editor_unavailable`.
+- **A crashed live run leaves data that changes the next run's meaning.** The
+  first run died mid-way and left an extra timeline; the next run's
+  "delete the last one → 409" step then deleted the episode's real timeline
+  (soft, restored by clearing `deleted_at`). A destructive step in a live
+  check asserts its precondition right before it (list, count == 1), and the
+  script cleans up in `finally`.
+- **Taking the note, not just having it.** The section above already says
+  never mutate the real files while :3000 serves the worktree; two mutation
+  rounds here did exactly that (each mutant hot-reloaded into Peter's tab for
+  seconds). Before mutation testing in this repo, check `lsof -iTCP:3000` and
+  which checkout it serves.
 
