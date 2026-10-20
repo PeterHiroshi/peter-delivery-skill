@@ -121,7 +121,7 @@ is how "the full process ran and bugs still shipped" happens.
 | [`03-verification.md`](references/rules/03-verification.md) | 1, 2, 7, 8, 9, 18b, 20, 27, 29 | before any completion claim; config/pipeline/route/provider changes |
 | [`04-harness-and-measurement.md`](references/rules/04-harness-and-measurement.md) | 12, 13, 26 | building a harness; any "it is slow" |
 | [`05-asking-and-evidence.md`](references/rules/05-asking-and-evidence.md) | 4, 11, 15, 16, 17 | a gap in what I know; a clarification; a supplied file; a deletion |
-| [`06-git-and-integration.md`](references/rules/06-git-and-integration.md) | 6, 21, 28 | committing, pushing, opening a PR, rebasing |
+| [`06-git-and-integration.md`](references/rules/06-git-and-integration.md) | 6, 21, 28, 33 | committing, pushing, opening a PR, rebasing, touching CI workflows |
 | [`07-code-craft.md`](references/rules/07-code-craft.md) | 10, 14, 18a | props vs derivation; refs/latches; read-back after a rewrite |
 
 Other references: [`task-playbook.md`](references/task-playbook.md) (first actions — read it when
