@@ -18,6 +18,7 @@ Notes that cost time to learn. Read before working in this repo.
 | Where is harness / tools / skills code; how are the new repos pinned | v5 repo topology (submodules) |
 | Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
 | Local manual e2e against dev AgentCore (script, Atlas latency knobs, macOS traps, restart race); which worktree/port is "the latest version" of the chat UI | Local e2e traps |
+| CI job runs to the time limit with no log (pytest "hangs" only on GitHub runners) | CI stalls: megabyte lines |
 | AgentCore cold start / TTFT numbers; platform V2 | AgentCore facts |
 
 ## v5 integration branch (Linc, 2026-10-15) — superseded 2026-10-16 evening
@@ -538,3 +539,16 @@ One command: `./dev.sh` at the repo root (since 2026-10-19, commit 10a09601; att
 - **Streaming reads: `iter_chunks(n)` / `read(n)` on a chunked SSE body blocks until n bytes** (http.client keeps consuming chunks). The adapter's 4 KB read held `run.started` (~200 B) until the model's first tokens — 24 s of "nothing happens" that looked like a runtime problem. Read with urllib3 `read1` (returns what is available). Attribute transport lags by comparing the runtime's own timestamps with the consumer's arrival, never by guessing at the proxy.
 - Runtime CloudWatch group: `/aws/bedrock-agentcore/runtimes/<runtime-id>-DEFAULT`; filter with epoch ms computed in Python (zsh `date -j` is not portable).
 
+
+## CI stalls: megabyte lines (2026-10-20)
+
+Symptom: the backend pytest job ran to the job limit, no log (cancelled jobs keep none); local
+macOS and a Debian container finished the same shard in 1–2 min. Three wrong hypotheses cost a
+day (memory, Ubuntu 26 image, stdin, stuck interpreter exit) because each was "fixed" before
+evidence. What found it: run pytest with output to a FILE, upload it as an always() artifact,
+then read the job log of a run that ended as *failure* (not cancelled) — timestamps showed pytest
+exited at 3 min and `cat pytest-ci.log` stalled. Cause: parametrize values of 1–7 MB became test
+ids printed by -vv; the runner's per-line log processing stalls on such a line and the writer
+blocks. Guard now in tests/conftest.py (ids capped at 1000 chars) and the step prints
+`cut -c1-2000`. Lesson: when CI "hangs", first get a file log out (artifact), then look at the
+longest line (`awk '{print length}' | sort -n | tail`).
