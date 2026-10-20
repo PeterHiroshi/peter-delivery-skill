@@ -19,6 +19,7 @@ Notes that cost time to learn. Read before working in this repo.
 | Deploying or invoking AgentCore Runtime; Bedrock model call fails | AgentCore facts |
 | Local manual e2e against dev AgentCore (script, Atlas latency knobs, macOS traps, restart race); which worktree/port is "the latest version" of the chat UI | Local e2e traps |
 | CI job runs to the time limit with no log (pytest "hangs" only on GitHub runners) | CI stalls: megabyte lines |
+| "准备好了解题环境 N 秒" too slow; is it cold start; measuring solve latency in production terms | Solve latency: laptop vs production terms |
 | AgentCore cold start / TTFT numbers; platform V2 | AgentCore facts |
 
 ## v5 integration branch (Linc, 2026-10-15) — superseded 2026-10-16 evening
@@ -552,3 +553,22 @@ ids printed by -vv; the runner's per-line log processing stalls on such a line a
 blocks. Guard now in tests/conftest.py (ids capped at 1000 chars) and the step prints
 `cut -c1-2000`. Lesson: when CI "hangs", first get a file log out (artifact), then look at the
 longest line (`awk '{print length}' | sort -n | tail`).
+
+## Solve latency: laptop vs production terms (2026-10-20)
+
+- The transcript's preparing row runs from submit to `harness_status running` (after `harness.start` acks).
+  The backend's `solve phases … at=start_ack` INFO line breaks it down per phase (Mongo count, S3, describe, ack).
+- **From the laptop against INTL dev Atlas, the row is the database, not cold start**: ~100–156 serial
+  commands × ~0.23 s (ping median 225 ms) ≈ 25–35 s. The AgentCore ack is 0.4–1.4 s warm, 3–5 s for a new
+  chat. No batching gets the laptop under 3 s (credit reservation alone is 19 commands).
+- **Production-terms instrument** (Peter chose this yardstick): run the backend against the CI replica set
+  (`limfx-ci-mongo-rs-b`, :27018) with a DB seeded from Atlas for `e2e-agentcore@limfx.test` only (users,
+  user_credits, subscriptions, ledger_accounts incl. system accounts, ledger_entries, credit_reservations).
+  `app/config.py` loads `.env` with override, so swap the worktree's `.env` Mongo lines (and restore after);
+  env vars do not win. Script: scratchpad `prodlike_seed.py`; drive with `drive.py` / `drive_warm.py`.
+  Measured: follow-up row 2.0–2.6 s, new chat 5.5–6.0 s cold / 3.2–4.0 s warmed, of which 1.2–1.9 s is the
+  laptop's S3 PUT. The first solve after a backend start pays `describe` on a cold runtime session (~4 s).
+- **Model time to first text on a new chat's first turn varies 10–39 s** (n=7). A 2-vs-2 A/B once showed the
+  warmed side 13 s slower; pooled with earlier unwarmed runs the effect vanished. Never read an effect off
+  two samples of this number.
+
