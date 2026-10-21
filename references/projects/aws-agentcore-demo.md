@@ -57,6 +57,8 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
 - Peter runs his own `pnpm bridge start` in a terminal. Stop a bridge I started by the PID I
   recorded (`echo $!`), never `pkill -f "tsx src/cli.ts start"` — on 2026-10-21 that killed his
   bridge along with my repro. A test device of mine also competes for his runs (freshest poll wins).
+  Any test of the CLI sets `ACDEMO_BRIDGE_HOME=<empty dir>` — without it `acdemo-bridge start` reads
+  HIS `~/.acdemo-bridge` and runs as his device (2026-10-21, killed by SIGPIPE within a second).
 - `icestonetech-admin` is temporary keys (session token) in `~/.aws/credentials`; when they expire
   every AWS call fails and only Peter can renew them — no other local profile reaches 014498621858.
   Restarting the dev server does not help. Say so and keep doing what needs no AWS (CI uses OIDC).
