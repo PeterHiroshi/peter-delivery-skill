@@ -74,7 +74,7 @@ AgentCore Runtime, local Codex via `harness/bridge`. Design + measured facts M1�
   Every module workflow has `workflow_dispatch`; touching each `.yml` (their own path) or
   `gh workflow run <name>` starts them. Wait loops: `gh run list --commit` needs the FULL sha.
 - `gh` "error connecting to api.github.com" while github.com and git-over-SSH work (2026-10-21): the
-  resolved IP 172.182.252.137 timed out. Read-only API calls work with
+  resolved IP 172.182.252.137 timed out (transient: fine again within the hour). Meanwhile read-only calls work with
   `curl --resolve api.github.com:443:140.82.113.6 -H "Authorization: Bearer $(gh auth token)" …`.
   The bridge package's release is `bridge-v<version>` (assets via `releases/assets/<id>`, Accept octet-stream).
 - New repos use GitHub's immutable OIDC subject `repo:PeterHiroshi@33413323/aws-agentcore-demo@1426863891:…`
