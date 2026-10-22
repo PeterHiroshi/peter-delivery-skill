@@ -5,6 +5,33 @@ Every rule here is one shape — I checked the thing I *could* check and reporte
 > Part of the `peter-delivery` contract. Rule numbers are stable — repo notes and
 > `SKILL.md`'s gate table address rules by number, so they are never renumbered.
 
+### Direct review by the implementing agent
+
+**Standing instruction, Peter, 2026-10-22:** Claude CLI is no longer available;
+review the work myself. An unavailable reviewer had delayed already reviewable
+artifacts. This personal policy replaces default external/subagent review for
+Peter's tasks; no reviewer login or client setup is a delivery prerequisite.
+
+Before reporting a review result:
+
+1. Read the actual candidate diff against the requirement and source evidence.
+   Include changed tests, configuration, generated-output bindings and relevant
+   unchanged callers; do not review only a summary or my intended behavior.
+2. Run a fact/consistency pass, then a separate adversarial pass over failure,
+   cancellation, stale inputs, permissions/privacy, data loss and compatibility.
+   Check the complete affected class; write down concrete counterexamples.
+3. Verify each finding, repair confirmed defects and rerun affected checks.
+   Use the existing runtime/rendered evidence rules; self-review cannot replace
+   tests, route calls, rendered inspection or other acceptance evidence.
+4. Record the reviewed commit/diff, findings and disposition, checks actually run
+   and remaining gaps. Recheck subsequent changes. Call this **self-review**;
+   a waived external review is neither a passed independent review nor evidence
+   of production readiness.
+
+Only a new explicit request changes this review policy. Repository-enforced CI,
+security controls, UI acceptance and merge/release authorization still apply.
+Do not silently bypass those controls or change account/client configuration.
+
 ### 1. Never say "完成 / done"
 
 Say what is verified and what is not:

@@ -36,7 +36,7 @@ Report them per line. The rules column says which file to load for the detail.
 | --- | --- | --- | --- |
 | 1 | **Design doc committed in the repo (English, `docs/…`) and the scope ledger — written, presented and answered BEFORE code.** A scratchpad file or a chat message is not the artifact | any task with a reference, more than one requirement, or a class sweep across surfaces — bug fixes included | r5, r30 · 02, 01 |
 | 2 | **Never say 完成 / done** — say what is verified and what is not | always | r1 · 03 |
-| 3 | **tsc + the relevant tests + scoped eslint green, re-run immediately before reporting** | always | r2, r28 · 03, 06 |
+| 3 | **Direct self-review + tsc + the relevant tests + scoped eslint green, re-run immediately before reporting** | always | r2, r28 · 03, 06 |
 | 4 | **Looked at the rendered result — or handed Peter the numbered test cases.** No browser/devtools/headless run unless he asked or approved my ask | anything that renders | r24, r19 · 02, 01 |
 | 5 | **Enumerated the whole class by MECHANISM**, and derived the set inside the test (import walk / registry / glob) rather than hand-listing it | any bug report | r3 · 01 |
 | 6 | **Mutation-tested every new assertion**; a surviving mutation is reported with the reason no test can see it | new tests | r27 · 03 |
@@ -60,7 +60,7 @@ Peter is the only one who can accept a UI, so his review comes **first**, not la
   test cases. **This round is the acceptance round.** Its own local commit.
 - **B — wire the backend.** Swap the seam's implementation, signature unchanged, so
   no UI code moves. NOW: tests (seam contract + the route called live), migration,
-  locale sweep, one adversarial diff pass.
+  locale sweep, one adversarial self-review of the actual diff.
 - **C — harden.** Concurrency, caps, error codes. A risk gate only for money /
   permissions / data loss / migrations.
 
@@ -85,6 +85,13 @@ implementation.
 
 ## Routing
 
+**Standing review policy (Peter, 2026-10-22):** review the actual diff myself.
+Claude CLI is retired from this workflow. Do not invoke external reviewer CLIs,
+repair/install one, wait for login, or ask Peter to restore one as a delivery
+prerequisite. Apply the direct self-review steps in
+[`03-verification.md`](references/rules/03-verification.md); label the result
+**self-reviewed**, never independently reviewed.
+
 Always in play:
 
 - `superpowers:verification-before-completion` — before any completion claim
@@ -104,8 +111,8 @@ and say so first. Do not build a second process pack — this is it.
 | **…and the surface already ships** | Run both → diff ledger, his pick per item → spec + interaction JSON → THEN stage A ([`ui-replication.md`](references/ui-replication.md)) |
 | **UI / interaction / visual** | This contract + **look at it**, or hand over the cases. `ui-ux-pro-max` for design *choices*; [`references/ui-design-principles.md`](references/ui-design-principles.md) for the judgements he has already made |
 | Bug, cause unknown | `superpowers:systematic-debugging`, then gate 5 (the whole class) |
-| Pure logic / backend / data flow | Three-bullet design note → build → tests → **one** adversarial subagent pass on the diff |
-| Money / permissions / data loss / migrations | Say the risk out loud, design note first, adversarial pass in **challenge** mode |
+| Pure logic / backend / data flow | Three-bullet design note → build → tests → **one** adversarial self-review of the actual diff |
+| Money / permissions / data loss / migrations | Say the risk out loud, design note first, direct adversarial self-review of the high-risk paths |
 | Multi-step feature | `superpowers:writing-plans` → `executing-plans` |
 
 **Category check before invoking anything heavy:** does this tool observe the thing

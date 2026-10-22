@@ -211,8 +211,8 @@ gate. The pack was never delivering the guarantee it was being paid for. What
 replaces it costs a small fraction:
 
 1. the repo's own gates — tsc, the whole suite, scoped eslint (the hardest of them);
-2. **one** adversarial diff pass (a single subagent with a numbered checklist, or
-   `/codex`) — Peter's review is the one that matters for UI;
+2. **one** direct adversarial self-review of the actual diff, following
+   `03-verification.md` — Peter's acceptance still decides the UI;
 3. mutation-checking every new assertion (rule 5 of the done table);
 4. calling a changed route on the running app (rule 29);
 5. the scope ledger (rule 30) for the half neither testing nor review ever covered.
