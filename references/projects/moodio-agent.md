@@ -12,6 +12,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 **Environment & dev server**
 
 - `Environment traps`
+- `HAST component types resolve an enclosing React installation (2026-10-23, PR #1195)`
 - `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them) — CORRECTION 2026-10-08: `frame-editor-persistence-postgres.test.ts` runs locally (50 cases) and caught an approve-applies regression; run it before claiming an editor server change is green
 - `Files that defeat grep (2026-09-07)`
 - `The remote DB is slow enough to fake a bug (2026-09-07)`
@@ -3012,6 +3013,16 @@ composition's content hash and CI publishes them on PR and `main` pushes
 (`docs/design-15308241-render-site-by-content.md`): the deploy note says
 "new site, published by CI; older deployments fail on such documents", never
 "no new bundle needed" — I wrote exactly that before reading index.tsx.
+
+**Development HMR (2026-10-23, PR #1195):** `next.config.js` computes the
+composition hash when configuration loads. HMR can load a new OTIO schema
+while job admission still embeds the old hash: `pictureFit` then failed in
+`calculateMetadata` before any frame, despite all assets being ready. Publish
+the committed composition at its own hash, reload Peter's dev configuration
+with his approval, and inspect `BUILT_COMPOSITION_REVISION` in the compiled
+job-config chunks. Retain old sites and admitted jobs' saved configurations;
+never overwrite a site to repair new inputs.
+
 ## Diffing a scratch/demos standalone HTML against the Editing tab (2026-10-16, editor UI optimization)
 
 Method: `references/ui-replication.md`. Repo-specific parts:
@@ -3096,3 +3107,12 @@ Meegle 15308241 (multiple timelines). Peter's `:3000` ran the task worktree.
   seconds). Before mutation testing in this repo, check `lsof -iTCP:3000` and
   which checkout it serves.
 
+## HAST component types resolve an enclosing React installation (2026-10-23, PR #1195)
+
+`hast-util-to-jsx-runtime` types its component map with global `JSX`, which
+resolved to React 18 under an enclosing `node_modules` on this machine.
+React 19 page components then failed at `Article.tsx:56`: first legacy
+string refs, then incompatible CSS after removing refs. Fix the help-page
+render boundary's map using `JSX.IntrinsicElements` imported from `react`.
+Do not patch each wrapper or suppress the diagnostic. The emitted JavaScript
+was identical; run `next typegen`, full tsc and the help-docs suites.
