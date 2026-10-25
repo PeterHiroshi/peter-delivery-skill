@@ -132,6 +132,7 @@ recently), [`testing-that-earns-its-keep.md`](references/testing-that-earns-its-
 [`ui-replication.md`](references/ui-replication.md) (a reference UI onto a shipping surface: diff ledger → picks → interaction JSON),
 [`deliverable-formats.md`](references/deliverable-formats.md) (hand-off text),
 [`packs-and-gaps.md`](references/packs-and-gaps.md),
+[`multi-agent-collaboration.md`](references/multi-agent-collaboration.md) (Forge / Codex / Claude Code on one repo: ownership, hand-off, cross-review),
 [`maintaining-this-skill.md`](references/maintaining-this-skill.md).
 
 ## Project context
