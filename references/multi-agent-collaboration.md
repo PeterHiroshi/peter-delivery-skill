@@ -48,6 +48,12 @@ scoped `codex exec` per area when the diff is large. If the review cannot be
 obtained (quota, timeout), report it as ⚠️ not obtained. Never report it as
 done (see the moodio-agent note).
 
+Do not wait to be asked. Before requesting or performing a merge, run the
+independent Codex review (`codex exec review --base <base>`, or `--commit <sha>`)
+on every PR or diff. Record the findings and what happened to each one (fixed in
+which commit, or declined and why) in a PR comment. A PR with no recorded Codex
+review is not ready to merge.
+
 ## C5. Approvals belong to one repo
 
 Each repo's `AGENTS.md` and its project note decide who approves pushes and
