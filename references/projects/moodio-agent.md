@@ -2187,6 +2187,11 @@ Two things that do work:
   not override a value already in `process.env`, so
   `AUDIO_PROCESS_LOCAL_RUNNER=… npx next dev` configures the runner without
   touching a file Peter's running server would reload from.
+- Before handing off a localhost URL, verify its PID cwd and HEAD against the
+  intended candidate, then compare the served client bundle and API behavior.
+  PR #1196's reset readback hit the old release on :3000: it returned no asset
+  cards while the fix on :3195 returned three. A successful API response did
+  not establish that the repair was loaded; the wrong URL cost another retry.
 - **`:3000` may belong to another worktree.** The "always :3000, kill the
   holder" note is about MY own stray servers. Check
   `lsof -p <pid> -a -d cwd` first: evicting another task's session, or
