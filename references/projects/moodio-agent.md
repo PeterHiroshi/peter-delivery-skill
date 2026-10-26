@@ -242,6 +242,15 @@ CANVAS_GENERATION_TEST_DATABASE_URL=postgresql://canvas_test:canvas_test@127.0.0
   {ltree}})` (`@electric-sql/pglite/contrib/ltree` — `folders.path` needs it)
   behind a Proxy-mocked `@/lib/db`. `createEntity`/`updateEntity` run on it
   unchanged. A standalone suite beats porting the big concurrent one.
+- PR #1196 (2026-10-26): onboarding admission adds two ordinary-route reads
+  (canvas workstation and user enrollment). Ordered DB doubles must answer
+  these separately, not consume generation rows or stub the real policy out.
+  Run the full non-LLM suite with all three CI database URL variables; targeted
+  walkthrough tests missed the ordinary-route fixtures and users.settings DDL.
+- A sandboxed source-test copy needs tracked CSS and SQL as well as TypeScript.
+  PR #1196's control failed 11 assertions on omitted files before any mutation.
+  Require a green control; bind source needles to the actual call, since a
+  dependency array can satisfy the same argument string accidentally.
 - A mutation loop must not run `__tests__/agent-2` whole: its
   `llm-integration.test.ts` hits real APIs (~4 min per mutant). Target the
   suites that own the assertions, and `python3 -u` or output stays buffered.
