@@ -278,6 +278,9 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
   data-only backport can leave new Markdown under an old plain-text node (Moodio
   onboarding, 2026-10-26). Read back the actual node title and rendered body on
   that branch before handing it over; source-content equality cannot prove UI parity.
+  Replacing the old owner can also bypass its rollout gate: Moodio native
+  onboarding ignored the legacy `onbguide` check. Carry that gate through entry
+  and native action APIs, while preserving durable enrollment and paid receipts.
 - Concretely for a studio surface: pure logic in `lib/workstation/<x>.ts`,
   state + handlers in a hook or the surface, markup in the component;
   the server never learns a class name or a layout decision.
