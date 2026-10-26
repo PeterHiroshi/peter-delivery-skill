@@ -247,6 +247,10 @@ CANVAS_GENERATION_TEST_DATABASE_URL=postgresql://canvas_test:canvas_test@127.0.0
   these separately, not consume generation rows or stub the real policy out.
   Run the full non-LLM suite with all three CI database URL variables; targeted
   walkthrough tests missed the ordinary-route fixtures and users.settings DDL.
+- Development reset SQL with a default ROLLBACK must label its result as a
+  rehearsal: a SELECT inside the transaction does not prove a durable reset.
+  Verify through the application after COMMIT. Compare backup data separately
+  from capture timestamps and the observed server-managed seen watermark.
 - A sandboxed source-test copy needs tracked CSS and SQL as well as TypeScript.
   PR #1196's control failed 11 assertions on omitted files before any mutation.
   Require a green control; bind source needles to the actual call, since a
