@@ -251,6 +251,10 @@ CANVAS_GENERATION_TEST_DATABASE_URL=postgresql://canvas_test:canvas_test@127.0.0
   rehearsal: a SELECT inside the transaction does not prove a durable reset.
   Verify through the application after COMMIT. Compare backup data separately
   from capture timestamps and the observed server-managed seen watermark.
+  Read the actual reward response: GET `/api/tutorial/credits` returns
+  `alreadyGranted` and `receipt`, not `claimed`. A failed readback after COMMIT
+  requires read-only diagnosis, never another debit. If reward-reset approval
+  follows a progress reset, preserve any new walkthrough started in between.
 - A sandboxed source-test copy needs tracked CSS and SQL as well as TypeScript.
   PR #1196's control failed 11 assertions on omitted files before any mutation.
   Require a green control; bind source needles to the actual call, since a
