@@ -510,8 +510,17 @@ the onboarding-guide v2 pass, end to end, with screenshots of every beat:
   renders with all providers and no session. Delete it before committing.
 - Locale is the `NEXT_LOCALE` cookie; dark mode is `localStorage.theme`
   (next-themes with `attribute: "class"` — setting `.dark` by hand is undone).
-- Start the dev server detached with a log file. `npm run dev | head -200`
-  killed the server with SIGPIPE halfway through a run.
+- Start the dev server detached with a log outside the project. `npm run dev |
+  head -200` killed the server with SIGPIPE halfway through a run.
+- PR #1196 (2026-10-26): physical worktree dependencies support Turbopack.
+  Forcing webpack with an 8 GiB heap triggered Next's memory restart while
+  entering the canvas. Turbopack then reached the same Step 4/13 twice without
+  restart; guide readiness still exceeded 15 seconds. Verify the rendered
+  landing, not the successful resume or Flight response alone.
+- If a copied gstack `browse` binary says `Script not found "status"`, the
+  installed `browse/dist/server-node.mjs` can run through Node from the copy
+  with dependencies. Isolate BROWSE_STATE_FILE under /tmp; use its authenticated
+  loopback command API and never print its token or imported cookies.
 - No repo edits while a browser run is in flight: Fast Refresh remounts the
   component and a scripted flow restarts from the top, which looks like a bug.
 - A worktree can pass tsc/vitest with an empty `node_modules` (Node resolves
