@@ -31,6 +31,11 @@ exactly where the acceptance criterion lives.
 | a build artifact | the build itself runs in CI |
 | concurrency / ordering | it forces the interleaving |
 
+Database helpers that accept a caller-owned transaction must reuse its connection
+for policy reads. A global lookup can exhaust the pool while every connection is
+held by those transactions. Prove this with all pool connections held before
+admission; a mocked permission check cannot expose checkout starvation.
+
 Check the config, not your memory: `vitest.config`, `jest.config`, `conftest.py`,
 `pom.xml` surefire config, `go test` tags. A project stating "no jsdom, test pure
 logic not components" is telling you render bugs have **no automated home** —
