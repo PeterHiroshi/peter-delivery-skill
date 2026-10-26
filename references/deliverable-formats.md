@@ -52,8 +52,11 @@ migrations, flags, and anything intentionally unchanged.
 
 ## Lark message
 
-**After an approved PR, unprompted — except for icestonetech projects.** English
-regardless of conversation language. 1–3 sentences, pasteable, with the link.
+**In the same final reply as every PR hand-off, unprompted, under an explicit
+Lark message label — except for icestonetech projects.** Include existing and
+updated PRs. English regardless of conversation language: 1–3 self-contained,
+pasteable sentences with the actual PR link inside. A generic English closing
+line does not replace this message, even in a brief reply.
 
 **Not for `IcestoneTech/*` repos** (e.g. `math_ai`). Peter said so on 2026-09-06
 after PR #374 there: the hand-off is already the `gh pr comment` automated

@@ -26,6 +26,12 @@ riding along is worth a line in the report.
 
 **The moment `gh pr create` prints a URL, the PR is not delivered yet — the
 hand-off text is part of it, and it is written in the SAME reply, unprompted.**
+Where the organisation below requires Lark, every final PR hand-off must have
+an explicit **Lark message** section: a self-contained, copyable English message
+with the actual PR link inside. This applies to existing and updated PRs too.
+Do not substitute a generic English closing line, rely on an earlier reply, or
+omit the message for brevity. Check that it is present before ending the reply.
+
 Waiting to be asked has cost Peter a round trip more than once (2026-09-08, PR
 #580). Which hand-off depends on the remote's organisation, so read it rather
 than guessing from the directory name:
