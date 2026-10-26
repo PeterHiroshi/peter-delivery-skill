@@ -274,6 +274,10 @@ design: "你一定要把 UI 和 UX 隔离开，未来 UI 可能还会发生变�
 - Replicate the prototype fast and 1:1 first (rule 22); the time saved is
   for the reshaping rounds that follow. A component that mixes fetches,
   state and prototype markup is the thing that makes those rounds slow.
+  Verify that the deliverable branch contains the referenced native renderer: a
+  data-only backport can leave new Markdown under an old plain-text node (Moodio
+  onboarding, 2026-10-26). Read back the actual node title and rendered body on
+  that branch before handing it over; source-content equality cannot prove UI parity.
 - Concretely for a studio surface: pure logic in `lib/workstation/<x>.ts`,
   state + handlers in a hook or the surface, markup in the component;
   the server never learns a class name or a layout decision.
