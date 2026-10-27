@@ -3183,4 +3183,9 @@ executable modes and timestamps, and verify the actual copied runtime at smoke.
 Compare source alignment both in PCM and after AAC encoding. Fractional frame
 rates resolve to the nearest output sample. Activating the new runtime is a
 separate deployment; publishing a composition alone cannot apply this correction.
-Keep failure injection and private media outside the product repository.
+`retryConfiguration` creates a new config from the running app's current site,
+while retaining the source document revision. Update that app's site selection as
+well as the native runtime. User retry accepts failed/cancelled jobs; admin retry
+accepts failed jobs only. A successful but incorrect movie needs a new export,
+not a fabricated failure state. Keep failure injection and private media outside
+the product repository.
