@@ -184,6 +184,12 @@ reported killed while it survived. Run the loop with `PYTHONDONTWRITEBYTECODE=1`
 and delete `__pycache__` before each run; any cache keyed on mtime has the same
 hole. Two mutants failing on the identical line is the symptom.
 
+**One-shot scheduler mocks must consume callbacks when dispatched.** On
+2026-10-27 (timeline picture fitting), removing a geometry notification still
+passed because the test invoked the previous animation-frame callback twice.
+Clear the pending callback before calling it; a notification must enqueue its
+own work. Otherwise the harness supplies the very event the mutant removed.
+
 Same session: three mutations of the GET de-duplicator, two caught, one
 survived (removing `.clone()` for the first caller). The tempting move is to
 invent an assertion that fails. The honest one is to work out whether the line
