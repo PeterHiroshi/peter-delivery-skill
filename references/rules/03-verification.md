@@ -264,6 +264,13 @@ summed all artifacts. **A field the client patches locally must be derived by
 the same rule the server uses on reload** — put that rule in one helper and
 test it against the server's semantics.
 
+**Keep measured precision through storage; round only the display.** On
+2026-10-27, a video probe stored 5.062 seconds as 5.1, so the editor admitted
+122 frames at 24 fps and export refused the actual 5.062-second file. Trace
+the measured value through stored metadata into the consumer's frame count.
+Test a previously saved rounded clip too: repairing the producer alone cannot
+repair immutable revisions already made from its output.
+
 Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
 assertions — including one that passed because it matched a string inside a
 comment. Break the code, confirm the specific test fails, restore. See
