@@ -41,6 +41,12 @@ Check the config, not your memory: `vitest.config`, `jest.config`, `conftest.py`
 logic not components" is telling you render bugs have **no automated home** —
 then looking is not optional, it is the only coverage.
 
+**Inline geometry is not used layout.** On 2026-10-27, timeline fitting
+passed mocked media-prop tests while Tailwind's `max-width: 100%` shrank the
+oversized picture and left its negative centering offset intact. Check the
+host's reset constraints with any oversized media box. A node regression can
+pin that CSS contract; it still does not establish browser appearance.
+
 For anything that renders, see
 [`references/visual-verification.md`](references/visual-verification.md). If
 genuinely blocked, say so in those words and let Peter decide.
