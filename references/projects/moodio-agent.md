@@ -41,6 +41,8 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 - `Mutations under Peter's live dev server, and a render_failed that is the site bundle (2026-10-15, export in→out range)` — his :3000 serves the task worktree, so mutating files there flashes broken code into his app: mutate in a detached sibling worktree with node_modules symlinked; the worker drops Remotion's errors — read them with `getRenderProgress`; `FRAME_EDITOR_BUNDLE_REVISION` d2371040 is an undeployed site (403)
 - `A server-side change the dev server never loaded, and a live check that deleted real data (2026-10-20, multiple timelines)` — Turbopack kept the old `lib/db/schema.ts` table object (`( is null` in the SQL) and old `lib/timeline/server` code: restart :3000 (ask) after server changes and read `.next/dev/logs/next-development.log`; a destructive live step asserts its precondition first; mutation testing on the real files AGAIN despite the section above
 
+- `Fullscreen Space needs the shuttle owner (2026-10-27, PR #1223)` — J/LL keep the native player paused; test the real shuttle controller, not only a clock mock
+
 **Getting a real browser / session on this app**
 
 - `Verifying rendered UI without a login (2026-09-08)`
@@ -3147,3 +3149,15 @@ string refs, then incompatible CSS after removing refs. Fix the help-page
 render boundary's map using `JSX.IntrinsicElements` imported from `react`.
 Do not patch each wrapper or suppress the diagnostic. The emitted JavaScript
 was identical; run `next typegen`, full tsc and the help-docs suites.
+
+
+## Fullscreen Space needs the shuttle owner (2026-10-27, PR #1223)
+
+The fullscreen Space fix initially called the supplied native clock's `toggle`.
+Reverse (J) and fast (LL) playback belong to `useShuttle`: it advances frames
+while the native player is paused, so that toggle starts forward playback
+instead of pausing. Copilot found this after the native-clock tests passed.
+Route timeline Space through `useShuttle.toggle`; keep the asset clock for Media
+pool previews. Exercise J/LL → Space → Space against the real hook and guard
+both host-to-preview callback bindings. A mocked `isPlaying`/`toggle` pair cannot
+establish which layer owns playback.
