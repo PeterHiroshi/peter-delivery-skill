@@ -12,6 +12,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 **Environment & dev server**
 
 - `Environment traps`
+- `Decoder fallback can discard audio trims (2026-10-27)`
 - `HAST component types resolve an enclosing React installation (2026-10-23, PR #1195)`
 - `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them) — CORRECTION 2026-10-08: `frame-editor-persistence-postgres.test.ts` runs locally (50 cases) and caught an approve-applies regression; run it before claiming an editor server change is green
 - `Files that defeat grep (2026-09-07)`
@@ -3161,3 +3162,16 @@ Route timeline Space through `useShuttle.toggle`; keep the asset clock for Media
 pool previews. Exercise J/LL → Space → Space against the real hook and guard
 both host-to-preview callback bindings. A mocked `isPlaying`/`toggle` pair cannot
 establish which layer owns playback.
+
+
+## Decoder fallback can discard audio trims (2026-10-27)
+
+`@remotion/media` 4.0.532's render-time `Audio` fallback to `Html5Audio`
+omits `trimBefore` and `trimAfter`. A successful job can replay a trimmed
+source from zero: a 3.375-second in-point became a 3.375-second audio lag.
+Normal local decoding preserved the trim; disabling `AudioDecoder` in a
+throwaway render entry reproduced the faulty output. Render audio clips with
+`Html5Audio` directly and preserve video-backed audio references. Verify both
+decoder conditions and a nonzero render range against decoded source waveforms;
+container timestamps and a green job cannot establish content alignment. Keep
+failure injection and private media outside the product repository.
