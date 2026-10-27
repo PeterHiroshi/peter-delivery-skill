@@ -3188,6 +3188,9 @@ while retaining the source document revision. Update that app's site selection a
 well as the native runtime. User retry accepts failed/cancelled jobs; admin retry
 accepts failed jobs only. A successful but incorrect movie needs a new export,
 not a fabricated failure state. Raw PCM impulse tests require full host FFmpeg:
-ARM image runners lack it, and the SDK's reduced binary omits the raw PCM output
-muxer. Install the CI test dependency explicitly; do not skip the assertions.
-Keep failure injection and private media outside the product repository.
+Both the ARM image and general-suite runners lack it; the SDK's reduced binary
+omits that output muxer. Install the dependency in every job running the tests.
+Check the prospective merge tree too: main can omit non-solo lanes entirely,
+so assert silence for an omitted lane or a zero-volume consumer, while audible
+fixtures still require their audio consumer. Keep failure injection and private
+media outside the product repository.
