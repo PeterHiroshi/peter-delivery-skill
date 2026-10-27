@@ -3187,5 +3187,7 @@ separate deployment; publishing a composition alone cannot apply this correction
 while retaining the source document revision. Update that app's site selection as
 well as the native runtime. User retry accepts failed/cancelled jobs; admin retry
 accepts failed jobs only. A successful but incorrect movie needs a new export,
-not a fabricated failure state. Keep failure injection and private media outside
-the product repository.
+not a fabricated failure state. Raw PCM impulse tests require full host FFmpeg:
+ARM image runners lack it, and the SDK's reduced binary omits the raw PCM output
+muxer. Install the CI test dependency explicitly; do not skip the assertions.
+Keep failure injection and private media outside the product repository.
