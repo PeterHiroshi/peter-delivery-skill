@@ -3173,5 +3173,8 @@ Normal local decoding preserved the trim; disabling `AudioDecoder` in a
 throwaway render entry reproduced the faulty output. Render audio clips with
 `Html5Audio` directly and preserve video-backed audio references. Verify both
 decoder conditions and a nonzero render range against decoded source waveforms;
-container timestamps and a green job cannot establish content alignment. Keep
-failure injection and private media outside the product repository.
+container timestamps and a green job cannot establish content alignment.
+`Html5Audio` mixing still rounds leading delay to integer milliseconds in this
+version; frame 383 at 24 fps starts 0.333 ms early. Disclose that measured limit
+rather than calling it measurement noise or sample-accurate output. Keep failure
+injection and private media outside the product repository.
