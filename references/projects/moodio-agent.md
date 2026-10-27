@@ -3174,7 +3174,13 @@ throwaway render entry reproduced the faulty output. Render audio clips with
 `Html5Audio` directly and preserve video-backed audio references. Verify both
 decoder conditions and a nonzero render range against decoded source waveforms;
 container timestamps and a green job cannot establish content alignment.
-`Html5Audio` mixing still rounds leading delay to integer milliseconds in this
-version; frame 383 at 24 fps starts 0.333 ms early. Disclose that measured limit
-rather than calling it measurement noise or sample-accurate output. Keep failure
-injection and private media outside the product repository.
+Its file mixer also rounds leading delay to whole milliseconds: frame 383 at
+24 fps starts 16 samples (0.333 ms) early at 48 kHz. This is real placement error,
+not measurement noise. A pinned version/source-checksummed build transformation
+can use `Math.round(delay * sampleRate)` with FFmpeg's `S` suffix; never edit the
+installed dependency. Cover both image and legacy ZIP preparation, preserve ZIP
+executable modes and timestamps, and verify the actual copied runtime at smoke.
+Compare source alignment both in PCM and after AAC encoding. Fractional frame
+rates resolve to the nearest output sample. Activating the new runtime is a
+separate deployment; publishing a composition alone cannot apply this correction.
+Keep failure injection and private media outside the product repository.
