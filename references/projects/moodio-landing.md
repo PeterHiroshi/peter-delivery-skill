@@ -87,3 +87,5 @@ Current `CLAUDE.md` and Peter's 2026-09-28 instruction require **one PR per task
 against main**. The old fan-out to every branch is retired. Product push/PR need
 separate approval. Include the English Lark text in the PR-link reply and file
 the link on the Meegle task, following `06-git-and-integration.md`.
+If `gh` stalls in the macOS keyring, use the GitHub connector for PR/status/review
+APIs; SSH `git fetch/push` worked. Do not block a PR on repairing CLI credentials.
