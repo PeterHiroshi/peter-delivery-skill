@@ -22,7 +22,9 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 Task 15654343 (2026-10-28): branch
 `feat/15654343-nextjs-landing-foundation`, worktree
 `.work/worktrees/15654343-nextjs-landing-foundation`. These commands apply to
-that branch; production/main migration has not been verified yet.
+that branch; production/main migration has not been verified yet. Final scope is
+framework/SSR/SEO/CVE only (native child 15660747): keep the old homepage and
+content chrome, no new navigation/sections/tabs or generated placeholders.
 
 - Node.js 24, `npm ci`, `npm run build`; `npm run start -- --port 4173`, then
   `npm run test:http -- --mutations`. These HTTP checks do not open a browser.
@@ -46,7 +48,9 @@ The baseline already has `test:seo` and an opt-in browser suite; the old claim
 that this repo has no tests is obsolete. Its default build validates live Sanity
 and fails on content errors. `tsc` and builds still do not prove browser layout,
 media behavior or third-party tracking. Hand Peter numbered interaction cases
-unless he explicitly requests/approves browser automation (rule 24).
+unless he explicitly requests/approves browser automation (rule 24). Repeated inert
+Happy DOM mutation runs must await `happyDOM.close()` between cases; synchronous
+loops retaining windows exhausted the default 4GB heap.
 
 ## Sanity content
 
