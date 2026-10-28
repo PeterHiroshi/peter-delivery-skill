@@ -1,90 +1,85 @@
 # moodio-landing
 
-Vite + vanilla TypeScript + GSAP ScrollTrigger. Standalone static marketing site for
-`https://www.moodio.art/`, deployed on Vercel, separate from the Next.js app repo
-(`moodio-agent`, which serves `app.moodio.art`). Remote org is `JerryYang666`, so the
-Lark hand-off applies (not the icestonetech flow).
+The main-checkout baseline `b9a1073` uses Vite + vanilla TypeScript + GSAP and
+build-time Sanity content rendering. Task 15654343 migrates it to Next.js in a
+separate worktree; consult the branch section below before choosing commands.
+The marketing site (`www.moodio.art`) is separate from `moodio-agent`
+(`app.moodio.art`). Remote org `JerryYang666`: one PR to main plus Lark hand-off.
 
-## What the gates do NOT cover
+## Symptom index
 
-There is **no test suite at all** — `package.json` has `dev`, `typecheck`, `build`,
-`preview` and nothing else. `npm run build` is `tsc --noEmit && vite build`: it proves
-the TypeScript compiles, and nothing about what renders, what a script does at
-runtime, or whether a `public/` file is reachable.
+| Symptom / task | Route |
+| --- | --- |
+| Next.js foundation worktree, SSR or language redirects | Next.js foundation branch |
+| Which checks prove content and rendering | Verification boundaries |
+| CMS fetch failure or explicit offline preview | Sanity content |
+| Lockfile, cached artwork, or encoded media paths | Asset and install traps |
+| Browser testing explicitly requested | Browser via DevTools CLI |
+| PR targets | Git hand-off |
 
-So for anything user-visible or third-party, looking is the *only* coverage. What
-worked (2026-09-07, verifying analytics tags):
+## Next.js foundation branch
 
-- `npx vite preview --port 4173`, then drive a **separate** headless Chrome over the
-  DevTools protocol. Peter usually has Chrome running against
-  `~/.cache/chrome-devtools-mcp/chrome-profile`, and the MCP browser tools fail with
-  "browser is already running for that profile". Do not kill his instance — launch
-  your own with `--user-data-dir=<tmp>` and `--remote-debugging-port=9333`.
-- Chrome rejects CDP websockets by origin: pass `"--remote-allow-origins=*"`
-  **quoted**, or zsh globs the `*` and Chrome never starts.
-- That setup proves the real things: `dataLayer` populated, `window.clarity` is a
-  function, third-party containers returning 200, JSON-LD actually parsing, page still
-  rendering (`document.body.scrollHeight`), plus a screenshot.
+Task 15654343 (2026-10-28): branch
+`feat/15654343-nextjs-landing-foundation`, worktree
+`.work/worktrees/15654343-nextjs-landing-foundation`. These commands apply to
+that branch; production/main migration has not been verified yet.
 
-## Traps
+- Node.js 24, `npm ci`, `npm run build`; `npm run start -- --port 4173`, then
+  `npm run test:http -- --mutations`. These HTTP checks do not open a browser.
+- With `src/app`, use **`src/proxy.ts`**, not root `proxy.ts`. The misplaced
+  file produced a green build while language redirects did nothing and every
+  response used `html lang=en`. Check real redirects and returned HTML language.
+- The worktree's initial install left Inter's package directory but no font
+  files. Inspect the actual package files; a fresh `npm ci` restored them. Do
+  not try alternate CSS imports before checking the installed artifact.
+- CLI compilers/preflight must load the same `.env` mode as Next. `@next/env`
+  is CJS: use default import `nextEnv` and `nextEnv.loadEnvConfig` outside Next
+  under Node/tsx; its named import failed under Node 24 ESM. Bootstrap before
+  importing modules that capture environment variables.
+- Homepage legacy builders compile to inert locale markup before dev/build;
+  Next returns that markup in SSR and the client attaches enhancements in place.
+  Recompile legacy sources with `npm run prepare:home` during development.
 
-- **`npm install` rewrites `package-lock.json` on macOS**, dropping Linux/WASM
-  optional deps (`@emnapi/*`, ~23 lines). It is an artifact of the install platform,
-  not a change — `git checkout package-lock.json` before committing.
-- **`public/assets/` is not just assets.** `vite build` emits the hashed JS/CSS bundle
-  into `/assets/` too. Anything that pattern-matches that path (robots.txt, cache
-  headers, CDN rules) hits the bundle as well. See rule 11.
-- **Vite decodes `%20` in `index.html`.** Source has
-  `/hero%20video/hero%20mix%202.webm`; `dist/index.html` has literal spaces. Percent-
-  encoded paths in robots.txt or config will not match what the page requests.
-- `vercel.json` sets `cleanUrls: true`. Local `vite preview` serving a `.txt` at 200
-  does **not** prove production does — the IndexNow key file must be `curl`ed against
-  the deployed site.
-- Nothing in `src/` has `alt` attributes or heading tags. All markup is built
-  imperatively in `src/sections/*.ts`; `index.html` has only `#app` plus a `<noscript>`
-  fallback. A spec describing "current alt values" is probably describing that
-  fallback, not the rendered page — check before believing it.
+## Verification boundaries
 
-## Sanity content pages (2026-09-28)
+The baseline already has `test:seo` and an opt-in browser suite; the old claim
+that this repo has no tests is obsolete. Its default build validates live Sanity
+and fails on content errors. `tsc` and builds still do not prove browser layout,
+media behavior or third-party tracking. Hand Peter numbered interaction cases
+unless he explicitly requests/approves browser automation (rule 24).
 
-Blog / news / campaign / scenario come from Sanity project `26ufsyvn` and are
-prerendered by `scripts/prerender.ts` into root-level `blog/ news/ campaign/
-scenario/` (git-ignored) that `vite.config.ts` picks up as extra pages.
+## Sanity content
 
-- `SANITY_FIXTURE=studio/samples/all.ndjson npm run prerender` renders offline.
-  Use it when `*.apicdn.sanity.io` times out from this machine (it did for a whole
-  session on 2026-09-24, then worked on 09-28 — network, not config).
-- The default build **skips** content pages when Sanity is unreachable and exits 0.
-  `PRERENDER_STRICT=1` is the only way to make the build prove the live dataset.
-- Content routes to check after a deploy: `/blog/`, `/sitemap-content.xml`.
+Project `26ufsyvn`, dataset `production`. The Vite baseline writes root-level
+content HTML at build time. The Next.js branch uses server-side published reads
+cached for 60 seconds and preserves blog/news/campaign/scenario URLs.
+`SANITY_FIXTURE=studio/samples/all.ndjson` is an explicit offline preview, never
+an automatic production fallback. On the Next.js branch, fixtures are noindex,
+robots disallows crawling, and sitemaps are empty; use the same env for build,
+start and HTTP tests. Check `/blog/`, both sitemaps and robots after deployment.
 
-## Browser via the DevTools CLI (2026-09-24)
+## Asset and install traps
 
-When the `chrome-devtools` MCP server times out at session start, the CLI still
-works without a global install: `npx -y -p chrome-devtools-mcp@latest chrome-devtools <cmd>`
-(wrap it in a script; zsh will not word-split a `$CMD` variable). Its daemon
-launches Chrome **headless by default** — `chrome-devtools stop && chrome-devtools
-start --headless false` when Peter wants to watch. Argument shapes differ per
-command: `take_snapshot <pageId>`, `click <pageId> <uid>`, but
-`evaluate_script "<fn>" --pageId <n>`. Each call re-spawns npx, ~5–30 s; batch
-steps in one shell script and run it in the background. A visible Chrome window
-will not resize below ~500 px, so real phone widths need device emulation.
+- `npm install` can drop platform-specific optional lock entries on macOS.
+  Review drift mechanically; never discard deliberate dependency changes.
+- On Vite, `/assets/` mixes artwork with emitted JS/CSS. On Next, framework
+  bundles live under `/_next/`; only content-hashed `/optimized/` artwork gets
+  the custom immutable header. Do not cache unhashed public artwork forever.
+- Vite decodes `%20` paths in built HTML. Compare requested URLs, not just the
+  source spelling. Production IndexNow availability must be checked at its
+  deployed `.txt` URL; a local 200 does not prove Vercel routing/settings.
 
-## PR fan-out convention
+## Browser via DevTools CLI
 
-**Overridden by Peter on 2026-09-28: one PR per task, not one per branch.** He
-closed the fan-out for the Sanity change (#78–#90) and asked for a single PR
-(#77). `CLAUDE.md` still says otherwise — ask before fanning out again, or fix
-`CLAUDE.md`.
+Only after Peter asks/approves: if the MCP server times out, the CLI worked via
+`npx -y -p chrome-devtools-mcp@latest chrome-devtools <cmd>`. It starts headless;
+use `stop` then `start --headless false` when he wants to watch. `take_snapshot`
+takes pageId; `evaluate_script` takes the function and `--pageId`. Do not kill
+Peter's Chrome or reuse its locked profile. Real phone widths require emulation.
 
-`CLAUDE.md` mandates it: every change opens a PR against `main` **and every other open
-branch**, archive branches included, no filtering. That was 16 PRs on 2026-09-07.
+## Git hand-off
 
-- Enumerate bases mechanically: `git branch -r` minus own head, then `comm -23`
-  against what `gh pr list --head <branch>` reports.
-- `gh` throws transient `graphql: EOF` errors under this volume. Wrap **both** create
-  and the verification listing in retries, and never treat an empty listing as
-  "nothing exists" — see the "failed verification query" note under rule 9.
-- PRs against non-`main` branches will show conflicts, because the head branches off
-  `main` and carries commits those branches lack. That is expected and documented;
-  note it in the PR body rather than skipping the branch.
+Current `CLAUDE.md` and Peter's 2026-09-28 instruction require **one PR per task,
+against main**. The old fan-out to every branch is retired. Product push/PR need
+separate approval. Include the English Lark text in the PR-link reply and file
+the link on the Meegle task, following `06-git-and-integration.md`.
