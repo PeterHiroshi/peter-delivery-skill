@@ -6,6 +6,7 @@
 | --- | --- |
 | PR ownership CI fails although a local follow-up check passed | [Use the full PR base](#ownership-ci-must-use-the-full-pr-base) |
 | Adding a second tool operation breaks legacy reads or ignores host callback time | [Preserve read evaluation order](#preserve-read-evaluation-order) |
+| PostgreSQL tests skip or the existing venv has stale first-party artifacts | [Use an exact scratch PostgreSQL environment](#use-an-exact-scratch-postgresql-environment) |
 
 ## Ownership CI must use the full PR base
 
@@ -22,3 +23,11 @@ The fix was a central ownership cross-reference; policy and product bytes stayed
 When extending the fixed operation set, preserve legacy attribute lookup and argument evaluation at their original consumption sites inside the lease/session/budget. Test property-backed duck ports and serializers, including refusal to call after elapsed synchronous work; ordinary methods cannot observe that ordering. Synchronous Python callbacks are not preemptible, so this is not a hard wall-clock bound.
 
 Keep timeout fault delays beyond the test threshold: a 200 ms broker delay passed a 500 ms assertion for a 20 ms budget. A broker-entry-only budget mutant exposed the gap; 120 ms caught it while the original path took about 22 ms. Preserve the failing candidate evidence and bind corrected source and installed-wheel checks to a new exact revision.
+
+## Use an exact scratch PostgreSQL environment
+
+2026-10-30: [backend PR166 follow-up](https://github.com/IcestoneTech/novmuser-ai-x-backend/pull/166#issuecomment-6512213195) ran the four changed scheduler functions on exact `23a6997`: seven local PostgreSQL 16.2 variants passed, zero skipped, seven memory variants deselected. The existing venv had contracts 0.5.0/skills 0.2.2 instead of locked 0.5.3/0.2.5. Use a Git archive, private offline frozen environment and marker-aware closure/vendor checks; do not reuse that venv as-is.
+
+The known local tool was cached ARM64 `pgserver==0.1.4`. Its bundled initdb/postgres/pg_ctl binaries can run directly; importing the helper can touch a shared macOS platformdirs lock and search processes. Allocate new mode-0700 PGDATA/socket paths, explicit synthetic Unix DSN and no TCP listener. An exact Unix-socket sandbox was validated with Unix-positive, TCP-negative and real C/libpq controls; env-i alone is not network enforcement, and Python DNS guards are not comprehensive C-level DNS proof. This is a QA route, not a production PostgreSQL version decision.
+
+Collect explicit PostgreSQL node IDs before execution and compare each to its PASS entry. Capture the owned child PID, UID, start identity and PGDATA before stopping it; verify zero test schemas, process/PID/socket disappearance and unchanged source. Archive small evidence before removing only the new scratch copies; preserve shared caches and existing services. Never reuse ambient DSNs or repurpose HOME. A rejected retry must not overwrite old evidence: gate output on successful directory creation by that invocation and create result files exclusively. Seven local cases do not prove RDS/S3/native or whole-task acceptance.
