@@ -14,8 +14,9 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 | Which checks prove content and rendering | Verification boundaries |
 | CMS fetch failure or explicit offline preview | Sanity content |
 | Lockfile, cached artwork, or encoded media paths | Asset and install traps |
-| Figma MCP cannot read the Version 2 design | Figma MCP access |
+| Figma MCP access, video originals, shader or opaque pattern exports | Figma MCP access |
 | Browser testing explicitly requested | Browser via DevTools CLI |
+| Native modal closes but focus returns to body | Native dialog lifecycle |
 | PR targets | Git hand-off |
 
 ## Next.js foundation branch
@@ -81,6 +82,9 @@ Only after Peter asks/approves: if the MCP server times out, the CLI worked via
 use `stop` then `start --headless false` when he wants to watch. `take_snapshot`
 takes pageId; `evaluate_script` takes the function and `--pageId`. Do not kill
 Peter's Chrome or reuse its locked profile. Real phone widths require emulation.
+For full-page comparison, set below-fold images eager and await image decoding
+and `document.fonts.ready`; otherwise lazy images can appear blank in captures.
+Use stable reduced-motion posters when comparing animated source artwork.
 
 ## Git hand-off
 
@@ -108,3 +112,27 @@ Version 2 is node `4527:10114`, 1441 × 8856. Its parent `2256:2326` is a page,
 so design context needs the child frame; dot grids make full-frame responses
 sparse, requiring targeted content subtrees.
 See https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/.
+
+Later retries recovered quota-limited reads; the changed account/seat setting
+was not observed, so do not invent a cause. MCP `download_assets` exposed the
+VideoPaint poster but not the original movie. After inspecting the source
+VideoPaint/hash via MCP, the original Figma node's Properties → download video
+control supplied the actual MP4. Preserve provenance, transcode a web copy to
+`public`, and verify the consumed local URL, duration, audio and Range response.
+
+For decorative transparent groups, use `exportAsync({ format: 'PNG',
+contentsOnly: true })`, not a screenshot flattened onto the page background.
+The latter hid the Version 2 CTA gradient behind an opaque pale rectangle.
+Inspect alpha and the composite render. The recruiting Pattern Grid shader
+returned source but required `file://shader-runtime-index.json/`; runtime
+resource access remained unresolved on this connection. Preserve source and
+declare that visual gap rather than replacing the shader with a guessed effect.
+
+## Native dialog lifecycle
+
+2026-10-30, Version 2: closing a conditionally rendered native `<dialog>` in a
+passive `useEffect` cleanup restored focus to `body`; direct close while still
+connected restored the trigger. `useLayoutEffect` cleanup closes before React
+removes the DOM node and restores the prior body overflow. Verify Escape and
+close-button dismissal through real browser input and read back the active
+trigger; a disappearing modal alone does not prove focus restoration.
