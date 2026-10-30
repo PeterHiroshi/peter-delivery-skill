@@ -182,8 +182,10 @@ export unverified; declare those boundaries rather than inferring access loss.
 
 A later supplied screenshot omitted Work and About, but Peter's subsequent
 written warm-up requirements retained Selected Work and a brief About while
-moving detailed people/research to separate tabs. Reconcile content scope with
-the latest explicit requirements before forcing screenshot page height. Missing
+moving detailed people/research to separate tabs. Peter then explicitly removed
+Selected Work to match the screenshot and chose non-interactive Work labels in
+the header and footer; the brief About remains. Reconcile scope with the latest
+explicit correction before forcing screenshot page height. Missing
 real film credits/testimonials and portraits remain declared gaps; never fill
 them with invented content. Peter later clarified the reference header has no
 Contact us; keep contact entries in the hero, FAQ and closing/footer, including
