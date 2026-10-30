@@ -14,6 +14,7 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 | Which checks prove content and rendering | Verification boundaries |
 | CMS fetch failure or explicit offline preview | Sanity content |
 | Lockfile, cached artwork, or encoded media paths | Asset and install traps |
+| Figma MCP cannot read the Version 2 design | Figma MCP access |
 | Browser testing explicitly requested | Browser via DevTools CLI |
 | PR targets | Git hand-off |
 
@@ -89,3 +90,11 @@ separate approval. Include the English Lark text in the PR-link reply and file
 the link on the Meegle task, following `06-git-and-integration.md`.
 If `gh` stalls in the macOS keyring, use the GitHub connector for PR/status/review
 APIs; SSH `git fetch/push` worked. Do not block a PR on repairing CLI credentials.
+
+## Figma MCP access
+
+2026-10-30: For Moodio.art Version 2, Figma MCP `create_session` and
+`get_design_context` both returned “no edit access”; `whoami` identified
+`peter.ma@moodio.art` with a View seat. Obtain file access or switch the MCP
+account, then retry the design context before deriving scope or implementing.
+A working fix has not yet been verified.
