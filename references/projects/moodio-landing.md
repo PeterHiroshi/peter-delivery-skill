@@ -12,6 +12,7 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 | --- | --- |
 | Next.js foundation worktree, SSR or language redirects | Next.js foundation branch |
 | Which checks prove content and rendering | Verification boundaries |
+| Marketing metadata, native About sitemap or public social profiles | Marketing SEO |
 | CMS fetch failure or explicit offline preview | Sanity content |
 | Lockfile, cached artwork, or encoded media paths | Asset and install traps |
 | Figma source swaps, MCP access, media, shader or opaque exports | Figma MCP access |
@@ -63,6 +64,31 @@ cached for 60 seconds and preserves blog/news/campaign/scenario URLs.
 an automatic production fallback. On the Next.js branch, fixtures are noindex,
 robots disallows crawling, and sitemaps are empty; use the same env for build,
 start and HTTP tests. Check `/blog/`, both sitemaps and robots after deployment.
+
+## Marketing SEO
+
+2026-10-30: the new English homepage's early return skipped page JSON-LD, and
+the native About route bypassed shared metadata/noindex and the CMS-only sitemap.
+`src/lib/seo/marketing.ts` now owns native page metadata/graphs; the sitemap
+includes native About once and excludes a shadow CMS About/timestamp. Content
+sitemap stays CMS-only. `src/content/social.ts` is the shared owner-supplied
+profile registry for Organization `sameAs` and the new footer. Reuse the safe
+JSON-LD serializer and `metadataFor`, including preview/fixture noindex.
+
+Known-good route: `npm run test:seo`, `npm run build`, then a production server
+and `TEST_BASE_URL=http://127.0.0.1:<port> npm run test:http -- --mutations`.
+Run separate servers with matching `VERCEL_ENV=preview` or explicit
+`SANITY_FIXTURE` for preview/fixture checks. The HTTP harness now distinguishes
+native English/About from legacy Chinese/CMS chrome; obsolete “no redesign” or
+“About must 404” assertions must not hide SEO regressions. New marketing source
+mutations: `npm run test:marketing-mutations`; legacy mutations stay active.
+
+Google retired FAQ rich results in May 2026 (developers.google.com/search/updates).
+Do not add stale FAQPage answers to the new homepage or promise that feature.
+VideoObject needs the actual first-publication date, not a download/build date;
+Peter confirmed it was unknown, so it remains deferred. Profile sharing queries
+can be dropped while retaining account paths; preserve supplied short URLs and
+do not turn copied social-share email fragments into company contact details.
 
 ## Asset and install traps
 
