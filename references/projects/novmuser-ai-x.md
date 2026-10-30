@@ -8,6 +8,7 @@
 | Adding a second tool operation breaks legacy reads or ignores host callback time | [Preserve read evaluation order](#preserve-read-evaluation-order) |
 | PostgreSQL tests skip or the existing venv has stale first-party artifacts | [Use an exact scratch PostgreSQL environment](#use-an-exact-scratch-postgresql-environment) |
 | Account-scoped browser keys still consume or overwrite legacy data | [Separate old and new key domains](#separate-old-and-new-key-domains) |
+| A rejected session triggers reconnect saves, or a body error hides a received denial | [Classify session responses before recovery](#classify-session-responses-before-recovery) |
 
 ## Ownership CI must use the full PR base
 
@@ -40,3 +41,11 @@ Collect explicit PostgreSQL node IDs before execution and compare each to its PA
 Put the new discriminator **before** every legacy fixed prefix, and keep the account/work tuple unambiguous. Do not assume all historical IDs are UUIDs without producer evidence. Exercise old-versus-new collisions, normal new-account writes, stale writes/removals and unchanged legacy bytes. Follow-up `b2294c7` passed seven collision regressions and 76 helper tests; its independent resume probe preserved old bytes while normal new writes worked. Full auth/caller/browser acceptance remains separate.
 
 Keep each rerun in a new evidence directory with exclusive outputs. A mutation rerun overwrote eight prior raw logs and their index; record that loss explicitly, preserve existing reviews and bind new claims only to the new bytes. Do not reconstruct missing raw logs or label later results as the old run.
+
+## Classify session responses before recovery
+
+2026-10-30: local frontend candidate `57652e7` published network recovery before classifying canonical session denials. The synchronous reconnect listener could dispatch a second dirty-save PUT while the credential still appeared admitted. Five actual probe regressions failed with two PUTs instead of one; the local correction passed those five plus approved and generic-ACL recovery controls. This is synthetic route/component evidence, not native or full-auth acceptance.
+
+Classify current-owner 401 and validated waitlist profiles before publishing effectful recovery or retrying a declared JSON 503. Route owned probe failures to the session handler; a catch that merely swallows the failure cannot expire the session. Preserve successful unread streams and generic-ACL recovery, and settle definite old-account create responses before suppressing stale UI effects.
+
+HTTP status and body availability are separate: empty/malformed 401 must not disappear behind JSON parsing, and a truncated 401/403/422 must retain known status and owner provenance without confirming recovery. Test the resulting session state, request counts and old-owner isolation; error-name assertions alone do not see these effects.
