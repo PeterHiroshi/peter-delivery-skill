@@ -93,12 +93,18 @@ APIs; SSH `git fetch/push` worked. Do not block a PR on repairing CLI credential
 
 ## Figma MCP access
 
-2026-10-30: For Moodio.art Version 2, Figma MCP `create_session`,
-`get_design_context`, metadata and screenshot returned “no edit access”;
-`whoami` identified `peter.ma@moodio.art` with a View seat. Peter confirmed this account can open
-the file in view-only mode. Figma documents view-only file access for reading,
-but a separate Figma forum report observed the same error until edit access was
-granted; this does not establish the root cause here. Try a user-provided copy
-in their drafts or another accessible file; no workaround is verified yet.
-See https://developers.figma.com/docs/figma-mcp-server/plans-access-and-permissions/
-and https://forum.figma.com/report-a-problem-6/figma-mcp-no-edit-access-on-read-tools-with-a-view-link-works-after-can-edit-remote-server-claude-code-58984.
+2026-10-30: Moodio.art reads initially returned “no edit access” although
+Peter could view the original file. A later retry succeeded for session,
+metadata, screenshot and 13 design-context subtrees. `whoami` still listed
+only Peter's Starter / View team; which access setting changed is unknown.
+Do not infer that upgrading or edit access fixed it. Peter requires the
+original file through MCP, not a copy.
+
+Further reads then explicitly hit the View-seat tool-call limit (the error
+named the file's Professional plan). Treat access and quota as separate
+failures. Preserve returned code and download temporary assets immediately;
+cache metadata and filter it locally instead of rereading the entire page.
+Version 2 is node `4527:10114`, 1441 × 8856. Its parent `2256:2326` is a page,
+so design context needs the child frame; dot grids make full-frame responses
+sparse, requiring targeted content subtrees.
+See https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/.
