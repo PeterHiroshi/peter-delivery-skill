@@ -12,7 +12,7 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 | --- | --- |
 | Next.js foundation worktree, SSR or language redirects | Next.js foundation branch |
 | Which checks prove content and rendering | Verification boundaries |
-| Marketing metadata, native About sitemap or public social profiles | Marketing SEO |
+| Marketing metadata, locale route/sitemap consumers or public social profiles | Marketing SEO |
 | CMS fetch failure or explicit offline preview | Sanity content |
 | Lockfile, cached artwork, or encoded media paths | Asset and install traps |
 | Figma source swaps, MCP access, media, shader or opaque exports | Figma MCP access |
@@ -55,6 +55,12 @@ unless he explicitly requests/approves browser automation (rule 24). Repeated in
 Happy DOM mutation runs must await `happyDOM.close()` between cases; synchronous
 loops retaining windows exhausted the default 4GB heap.
 
+2026-10-30: source-mutation runners create and remove module copies inside
+`src`/`scripts`, which TypeScript scans. Running one alongside `next build`
+failed with TS6053 for a removed mutation file despite valid source. Run these
+runners sequentially with typecheck/build; temporary-copy isolation does not
+make compiler discovery independent.
+
 ## Sanity content
 
 Project `26ufsyvn`, dataset `production`. The Vite baseline writes root-level
@@ -89,6 +95,14 @@ VideoObject needs the actual first-publication date, not a download/build date;
 Peter confirmed it was unknown, so it remains deferred. Profile sharing queries
 can be dropped while retaining account paths; preserve supplied short URLs and
 do not turn copied social-share email fragments into company contact details.
+
+2026-10-30 warm-up clarification: EN/Chinese now share the native landing;
+Chinese About is `/zh-cn/about/`, with the active tab retained on language
+switch. `MARKETING_ROUTES` is the four-route registry for metadata/graphs and
+both sitemap consumers. Updating only the main sitemap leaked Chinese About
+into the content-only sitemap; live HTTP caught it. Derive every native-route
+exclusion from that registry and verify the actual XML. A valid `/zh-cn/` URL
+alone does not prove a switch preserves the new UI.
 
 ## Asset and install traps
 
@@ -166,6 +180,16 @@ gradients. Compare the composite before adding extra transforms. A later
 explicit MCP quota block left FAQ/Blog/footer rereads and transparent icon
 export unverified; declare those boundaries rather than inferring access loss.
 
+A later supplied screenshot omitted Work and About, but Peter's subsequent
+written warm-up requirements retained Selected Work and a brief About while
+moving detailed people/research to separate tabs. Reconcile content scope with
+the latest explicit requirements before forcing screenshot page height. Missing
+real film credits/testimonials and portraits remain declared gaps; never fill
+them with invented content. The flattened language PNG's white matte can be
+removed at render time with `filter: invert(1); mix-blend-mode: screen` on the
+dark navigation, preserving the asset; verify its composite and fix the actual
+locale renderer/navigation as well.
+
 ## Native dialog lifecycle
 
 2026-10-30, Version 2: closing a conditionally rendered native `<dialog>` in a
@@ -174,3 +198,5 @@ connected restored the trigger. `useLayoutEffect` cleanup closes before React
 removes the DOM node and restores the prior body overflow. Verify Escape and
 close-button dismissal through real browser input and read back the active
 trigger; a disappearing modal alone does not prove focus restoration.
+For a dialog opened from a mobile menu, keep its trigger visible underneath;
+closing the menu first makes native focus return target a hidden button.
