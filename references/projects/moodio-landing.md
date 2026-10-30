@@ -185,7 +185,9 @@ written warm-up requirements retained Selected Work and a brief About while
 moving detailed people/research to separate tabs. Reconcile content scope with
 the latest explicit requirements before forcing screenshot page height. Missing
 real film credits/testimonials and portraits remain declared gaps; never fill
-them with invented content. The flattened language PNG's white matte can be
+them with invented content. Peter later clarified the reference header has no
+Contact us; keep contact entries in the hero, FAQ and closing/footer, including
+mobile navigation parity. The flattened language PNG's white matte can be
 removed at render time with `filter: invert(1); mix-blend-mode: screen` on the
 dark navigation, preserving the asset; verify its composite and fix the actual
 locale renderer/navigation as well.
