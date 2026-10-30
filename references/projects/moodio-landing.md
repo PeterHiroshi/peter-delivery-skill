@@ -1,8 +1,8 @@
 # moodio-landing
 
-The main-checkout baseline `b9a1073` uses Vite + vanilla TypeScript + GSAP and
-build-time Sanity content rendering. Task 15654343 migrates it to Next.js in a
-separate worktree; consult the branch section below before choosing commands.
+The `landing-page-v2` worktree uses the Next.js baseline `d5dd41e` (#108).
+The older `b9a1073` baseline used Vite + vanilla TypeScript + GSAP and build-time
+Sanity rendering; consult the branch section before choosing commands.
 The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 (`app.moodio.art`). Remote org `JerryYang666`: one PR to main plus Lark hand-off.
 
@@ -14,7 +14,7 @@ The marketing site (`www.moodio.art`) is separate from `moodio-agent`
 | Which checks prove content and rendering | Verification boundaries |
 | CMS fetch failure or explicit offline preview | Sanity content |
 | Lockfile, cached artwork, or encoded media paths | Asset and install traps |
-| Figma MCP access, video originals, shader or opaque pattern exports | Figma MCP access |
+| Figma source swaps, MCP access, media, shader or opaque exports | Figma MCP access |
 | Browser testing explicitly requested | Browser via DevTools CLI |
 | Native modal closes but focus returns to body | Native dialog lifecycle |
 | PR targets | Git hand-off |
@@ -127,6 +127,18 @@ Inspect alpha and the composite render. The recruiting Pattern Grid shader
 returned source but required `file://shader-runtime-index.json/`; runtime
 resource access remained unresolved on this connection. Preserve source and
 declare that visual gap rather than replacing the shader with a guessed effect.
+
+2026-10-30 source replacement: `RGO3Dq5R0bkIxnwMZkb6TP`, frame `1:75`
+is named “第一版” although its page is “version 2”. Its section bounds match
+the old source while film/community images, Environment copy and layout, hero
+SVG dimensions and decorative accents differ. Confirm the actual selected
+frame and compare assets/copy, not just geometry. Matching hero/film hashes
+prove the already downloaded movies can be reused across the files; matching
+SHA-256 proves exact static asset reuse. Follow the returned design-context
+artwork layout: applying raw ImagePaint transforms again shifted the provided
+gradients. Compare the composite before adding extra transforms. A later
+explicit MCP quota block left FAQ/Blog/footer rereads and transparent icon
+export unverified; declare those boundaries rather than inferring access loss.
 
 ## Native dialog lifecycle
 
