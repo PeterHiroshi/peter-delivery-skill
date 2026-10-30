@@ -7,6 +7,7 @@
 | PR ownership CI fails although a local follow-up check passed | [Use the full PR base](#ownership-ci-must-use-the-full-pr-base) |
 | Adding a second tool operation breaks legacy reads or ignores host callback time | [Preserve read evaluation order](#preserve-read-evaluation-order) |
 | PostgreSQL tests skip or the existing venv has stale first-party artifacts | [Use an exact scratch PostgreSQL environment](#use-an-exact-scratch-postgresql-environment) |
+| Account-scoped browser keys still consume or overwrite legacy data | [Separate old and new key domains](#separate-old-and-new-key-domains) |
 
 ## Ownership CI must use the full PR base
 
@@ -31,3 +32,11 @@ Keep timeout fault delays beyond the test threshold: a 200 ms broker delay passe
 The known local tool was cached ARM64 `pgserver==0.1.4`. Its bundled initdb/postgres/pg_ctl binaries can run directly; importing the helper can touch a shared macOS platformdirs lock and search processes. Allocate new mode-0700 PGDATA/socket paths, explicit synthetic Unix DSN and no TCP listener. An exact Unix-socket sandbox was validated with Unix-positive, TCP-negative and real C/libpq controls; env-i alone is not network enforcement, and Python DNS guards are not comprehensive C-level DNS proof. This is a QA route, not a production PostgreSQL version decision.
 
 Collect explicit PostgreSQL node IDs before execution and compare each to its PASS entry. Capture the owned child PID, UID, start identity and PGDATA before stopping it; verify zero test schemas, process/PID/socket disappearance and unchanged source. Archive small evidence before removing only the new scratch copies; preserve shared caches and existing services. Never reuse ambient DSNs or repurpose HOME. A rejected retry must not overwrite old evidence: gate output on successful directory creation by that invocation and create result files exclusively. Seven local cases do not prove RDS/S3/native or whole-task acceptance.
+
+## Separate old and new key domains
+
+2026-10-30: local frontend candidate `5a3af8e` passed 69 helper tests, but `oldPrefix + account-v1:JSON(account,work)` still overlapped `oldPrefix + legacyWorkId`. The pinned work ID was an unrestricted string. An independent synthetic probe read a colliding old resume as the new account and overwrote its old bytes; no real-user occurrence was established.
+
+Put the new discriminator **before** every legacy fixed prefix, and keep the account/work tuple unambiguous. Do not assume all historical IDs are UUIDs without producer evidence. Exercise old-versus-new collisions, normal new-account writes, stale writes/removals and unchanged legacy bytes. Follow-up `b2294c7` passed seven collision regressions and 76 helper tests; its independent resume probe preserved old bytes while normal new writes worked. Full auth/caller/browser acceptance remains separate.
+
+Keep each rerun in a new evidence directory with exclusive outputs. A mutation rerun overwrote eight prior raw logs and their index; record that loss explicitly, preserve existing reviews and bind new claims only to the new bytes. Do not reconstruct missing raw logs or label later results as the old run.
