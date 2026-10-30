@@ -93,8 +93,10 @@ APIs; SSH `git fetch/push` worked. Do not block a PR on repairing CLI credential
 
 ## Figma MCP access
 
-2026-10-30: For Moodio.art Version 2, Figma MCP `create_session` and
-`get_design_context` both returned “no edit access”; `whoami` identified
-`peter.ma@moodio.art` with a View seat. Obtain file access or switch the MCP
-account, then retry the design context before deriving scope or implementing.
-A working fix has not yet been verified.
+2026-10-30: For Moodio.art Version 2, Figma MCP `create_session`,
+`get_design_context`, metadata and screenshot returned “no edit access”;
+`whoami` identified `peter.ma@moodio.art` with a View seat. This error does
+not prove edit permission is required: Figma documents view-only file access
+for reading, with usage limits for View seats. Check the account's actual file
+access and owning plan, then retry; a working fix has not yet been verified.
+See https://developers.figma.com/docs/figma-mcp-server/plans-access-and-permissions/.
