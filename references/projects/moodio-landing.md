@@ -152,6 +152,12 @@ Version 2 is node `4527:10114`, 1441 × 8856. Its parent `2256:2326` is a page,
 so design context needs the child frame; dot grids make full-frame responses
 sparse, requiring targeted content subtrees.
 See https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/.
+2026-11-01: one full-frame read returned 2.4 MB of sparse metadata, then
+screenshot and all targeted subtree reads hit the View-seat quota. Cache the
+metadata with repetitive dot ellipses filtered; it identifies changed node IDs
+but cannot establish visuals, copy or assets. Resume with a screenshot and
+high-fidelity subtree reads after access recovers; do not implement from sparse
+metadata alone.
 
 Later retries recovered quota-limited reads; the changed account/seat setting
 was not observed, so do not invent a cause. MCP `download_assets` exposed the
