@@ -158,6 +158,11 @@ metadata with repetitive dot ellipses filtered; it identifies changed node IDs
 but cannot establish visuals, copy or assets. Resume with a screenshot and
 high-fidelity subtree reads after access recovers; do not implement from sparse
 metadata alone.
+A later `whoami` reported Professional / Full for Peter’s team, while screenshot,
+design-context and `use_figma` reads still returned the Starter quota error. The
+error linked a different team ID from the paid seat. Do not assume the upgrade
+failed or recommend paying again; check file/host-team seat and connector state,
+and identify propagation as a hypothesis until confirmed.
 
 Later retries recovered quota-limited reads; the changed account/seat setting
 was not observed, so do not invent a cause. MCP `download_assets` exposed the
