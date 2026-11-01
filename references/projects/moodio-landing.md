@@ -158,6 +158,15 @@ metadata with repetitive dot ellipses filtered; it identifies changed node IDs
 but cannot establish visuals, copy or assets. Resume with a screenshot and
 high-fidelity subtree reads after access recovers; do not implement from sparse
 metadata alone.
+For the subsequent first-version update, Peter explicitly supplied a full-page
+screenshot as a fallback while MCP remained quota-blocked. Its visuals and the
+cached node bounds supported a reviewable layout candidate, but did not supply
+the six new original media assets, search/3D destinations or email behavior.
+Existing local images did not match; retain neutral slots and disabled inputs,
+report the gaps, and obtain the source assets and interaction details rather
+than cropping the screenshot or inventing content. The latest screenshot also
+removed the homepage About brief; preserve the separate About pages.
+
 A later `whoami` reported Professional / Full for Peter’s team, while screenshot,
 design-context and `use_figma` reads still returned the Starter quota error. The
 error linked a different team ID from the paid seat. Do not assume the upgrade
