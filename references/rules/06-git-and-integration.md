@@ -9,12 +9,6 @@ Committing, pushing, handing off, rebasing, and sharing a worktree with another 
 
 Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
 publishing it. Approval for one push does not carry to the next.
-A request to change something ("全部使用最新的git action命令版本") is the same: it covers the
-edit, not the push. On 2026-10-20 I pushed four repos' CI changes (one of them a `main` that
-deploys) on that request alone — wrong; commit, show the diff summary, ask.
-An approved deploy plan ("push main, let CI run") covers the pushes it names. A fix found while
-watching that CI is a NEW push — the same day I pushed five fix commits to a fresh repo's
-deploying `main` under the plan's approval. Commit the fix, ask, then push.
 
 **One standing exception** (Peter, 2026-09-20): **this skill's own repo**
 (`~/.claude/skills/peter-delivery`) — commit and push it without asking. It is
@@ -154,35 +148,3 @@ shot routes in the same worktree. Consequences, all of which bit or nearly bit:
   empty intersection plus "their file is dirty against HEAD" is the proof.
 - Re-run the gates right before reporting — a green run from ten minutes ago
   was over a different tree.
-- **Mutating a shared file can erase a peer's write.** "cp file → edit one
-  line → run tests → cp back" overwrites anything another session wrote to
-  that file inside the window (2026-10-19, five sessions on one branch).
-  Message the peers before mutating a file they work in, or compare its mtime
-  just before restoring and abort the restore if it moved.
-
-### 33. CI runs warning-free: every action on its latest release, verified (Peter 2026-10-20)
-
-Peter: 「Node.js 20 is deprecated. 作为完美主义者，现在git action中会有很多这种warning，请全部使用最新的git action命令版本」.
-math_ai, limfx-harness, limfx-skills and limfx-tools still pinned Node 20 actions (checkout@v4,
-setup-uv@v5, ssh-agent@v0.9.0, setup-qemu@v3 …); every run carried deprecation annotations.
-
-Whenever I add or touch a workflow — and once in each repo I start working in:
-- **Pin from a query, not from memory.** `gh api repos/<owner>/<repo>/releases/latest`, then the
-  `runs.using` of that tag's `action.yml` must be the current Node runtime (node24 as of 2026-10).
-  Use the floating major tag only when it resolves to that release
-  (`gh api repos/<o>/<r>/commits/vN`); some actions publish exact tags only (astral-sh/setup-uv
-  since v8 → `@v10.3.0`). A composite/docker action has no Node runtime — still take its latest.
-- **Read the breaking notes of every major crossed, against the inputs we pass.** 2026-10-20:
-  setup-uv v6 stopped auto-activating the venv (harmless only because every step uses `uv run`),
-  download-artifact v5 changed by-ID paths and v8 fails on hash mismatch, setup-node v5 caches
-  automatically, configure-aws-credentials v5 tightened boolean inputs.
-- **`actionlint` clean** (it runs shellcheck on `run:` blocks). A finding that is not mine or not
-  fixable — an unknown-but-valid key such as `concurrency.queue` — is named in the commit
-  message, not left silent.
-- **The next run's annotations are the evidence**: zero warnings, "Post Run" cache/agent lines
-  included. Version bumps without reading a run afterwards are not done.
-- **A commit has several workflow runs — read all of them.** `gh run list --commit <sha>`, wait for
-  every one, then the annotations of every check run (`gh api repos/<r>/commits/<sha>/check-runs`
-  → `check-runs/<id>/annotations`). 2026-10-20 I watched the first run of a commit (the submodule
-  check), saw green and reported "CI 全部通过" while the Deploy/test run had failed.
-

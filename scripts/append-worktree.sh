@@ -28,13 +28,10 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
                  Used for the first prompt; defaults to the slug and the link.
   --no-install   skip the background dependency install.
   --no-open      do not open the worktree in the editor.
-  --no-auto-start  do not arm the first Claude session in the new window.
-  --model <m>    model for that session (alias like opus/sonnet, or a full name).
-                 Default: ~/.claude/settings.json, i.e. the model the VSCode
-                 session already runs on.
-  --effort <l>   low | medium | high | xhigh | max. Default: that same file's
-                 effortLevel. Thinking is part of effort; there is no separate flag.
-  --permission-mode <m>  default: the extension's claudeCode.initialPermissionMode.
+  --no-auto-start  do not arm the first Codex session in the new window.
+  --model <m>    Codex model for that session (default: Codex config).
+  --effort <l>   low | medium | high | xhigh | max (default: Codex config).
+  --permission-mode <m>  Codex approval policy: on-request | never (default: never).
   --fetch        git fetch the base ref from origin before branching.
   --dry-run      print the plan, touch nothing.
 USAGE
@@ -42,7 +39,7 @@ USAGE
 
 TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD" TASK=""
 DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0 DO_AUTO_START=1
-MODEL="" EFFORT="" PERM_MODE="" NAMING_OVERRIDE=""
+MODEL="" EFFORT="" PERM_MODE="never" NAMING_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -112,22 +109,20 @@ case "${EFFORT:-none}" in
   *) die "--effort must be one of low, medium, high, xhigh, max" ;;
 esac
 
-# The session in the new window should be the session Peter already works in.
-# Model and effort need no flag for that: the terminal CLI and the VSCode
-# extension both read ~/.claude/settings.json (today: opus[1m], xhigh), so
-# passing nothing IS matching, and passing the extension's own stale
-# claudeCode.selectedModel would diverge from it. The permission mode does need
-# a flag — the extension starts sessions in claudeCode.initialPermissionMode,
-# a plain terminal claude starts in the default one.
-VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
-if [ -z "$PERM_MODE" ] && [ -f "$VSCODE_SETTINGS" ]; then
-  PERM_MODE="$(sed -n 's/.*"claudeCode\.initialPermissionMode"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$VSCODE_SETTINGS" | tail -1 || true)"
+# Start task sessions with full filesystem access and no command approval prompts.
+# Model and effort still inherit Codex config. Overrides are restricted to safe
+# CLI tokens because they enter a VS Code task command.
+if [ -n "$MODEL" ]; then
+  [[ "$MODEL" =~ ^[a-zA-Z0-9._-]+$ ]] || die "--model must contain only letters, digits, dots, underscores, or hyphens"
 fi
-
-CLAUDE_ARGS=""
-[ -n "$MODEL" ] && CLAUDE_ARGS="$CLAUDE_ARGS --model $MODEL"
-[ -n "$EFFORT" ] && CLAUDE_ARGS="$CLAUDE_ARGS --effort $EFFORT"
-[ -n "$PERM_MODE" ] && CLAUDE_ARGS="$CLAUDE_ARGS --permission-mode $PERM_MODE"
+case "${PERM_MODE:-none}" in
+  none|on-request|never) ;;
+  *) die "--permission-mode must be on-request or never" ;;
+esac
+CODEX_ARGS=" --sandbox danger-full-access"
+[ -n "$MODEL" ] && CODEX_ARGS="$CODEX_ARGS --model $MODEL"
+[ -n "$EFFORT" ] && CODEX_ARGS="$CODEX_ARGS -c model_reasoning_effort=$EFFORT"
+[ -n "$PERM_MODE" ] && CODEX_ARGS="$CODEX_ARGS --ask-for-approval $PERM_MODE"
 
 git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || die "$REPO is not a git repository"
 
@@ -330,26 +325,13 @@ fi
 
 # --- the first session in the new window -------------------------------------
 #
-# VSCode has no way to be told "open this folder and run this prompt": the CLI
-# has no --command, and the Claude extension registers no URI handler. The one
-# hook that exists is a task with runOn: folderOpen, which VSCode runs in the
-# integrated terminal the first time the folder is opened — after the user has
-# allowed automatic tasks for it (or set task.allowAutomaticTasks to "on").
-#
-# The prompt lives in its own file so nothing has to be escaped into JSON, and
-# the task consumes both files before starting Claude: this arms the FIRST open
-# of a new worktree and leaves nothing behind in git status afterwards.
-#
-# The env scrub is what makes the session a session. A VSCode terminal inherits
-# the extension host's CLAUDE_CODE_CHILD_SESSION, and an interactive claude that
-# sees that marker runs with transcript saving OFF — it never appears in any
-# history, which is exactly what Peter hit. The rest of the inherited variables
-# belong to the parent session (its id, its messaging socket, its effort) and a
-# fresh top-level session should have none of them.
+# VS Code's folderOpen task starts Codex in the new worktree. The prompt lives
+# in a one-shot file so it does not need JSON escaping. VS Code must allow
+# automatic tasks for this folder (or ask the user once).
 if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
   mkdir -p "$WORKTREE/.vscode"
   {
-    echo "/peter-delivery"
+    echo 'Use $peter-delivery.'
     echo
     echo "Task: ${TASK:-$(printf '%s' "$SLUG" | tr '-' ' ')}"
     [ -n "$ID_RAW" ] && echo "Meegle: $ID_RAW"
@@ -360,7 +342,7 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     echo "First round only: read the requirement (pull the Meegle item if there is a link),"
     echo "find the code it touches, then write the scope ledger and three design bullets and"
     echo "STOP for Peter. Do not write code, do not commit, do not start the dev server."
-  } > "$WORKTREE/.vscode/claude-task-prompt.txt"
+  } > "$WORKTREE/.vscode/codex-task-prompt.txt"
 
   cat > "$WORKTREE/.vscode/tasks.json" <<TASKS
 {
@@ -369,7 +351,7 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     {
       "label": "peter-delivery: start this task",
       "type": "shell",
-      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_EXECPATH -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_EFFORT CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${CLAUDE_ARGS} \"\$P\"",
+      "command": "P=\"\$(cat .vscode/codex-task-prompt.txt)\"; rm -f .vscode/codex-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec codex${CODEX_ARGS} \"\$P\"",
       "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
       "runOptions": { "runOn": "folderOpen" },
       "problemMatcher": []
@@ -383,17 +365,17 @@ TASKS
   # and no repo should carry a line about it. info/exclude sits in the common
   # dir, so it covers the main checkout and every worktree at once.
   EXCLUDE="$COMMON_DIR/info/exclude"
-  if ! grep -qxF '.vscode/claude-task-prompt.txt' "$EXCLUDE" 2>/dev/null; then
+  if ! grep -qxF '.vscode/codex-task-prompt.txt' "$EXCLUDE" 2>/dev/null; then
     mkdir -p "$(dirname "$EXCLUDE")"
     {
       echo ""
       echo "# one-shot session trigger written by peter-delivery append-worktree"
-      echo ".vscode/claude-task-prompt.txt"
+      echo ".vscode/codex-task-prompt.txt"
       echo ".vscode/tasks.json"
     } >> "$EXCLUDE"
   fi
 
-  echo "auto-start armed: the window's first terminal runs: claude${CLAUDE_ARGS} \"<task prompt>\""
+  echo "auto-start armed: the window's first terminal runs: codex${CODEX_ARGS} \"<task prompt>\""
   echo "          (one-shot: both files are git-excluded and delete themselves on run;"
   echo "           needs task.allowAutomaticTasks=\"on\", else one 'Allow Automatic Tasks in Folder')"
 elif [ "$DO_AUTO_START" = "1" ]; then

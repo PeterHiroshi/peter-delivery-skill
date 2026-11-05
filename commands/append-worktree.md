@@ -4,6 +4,10 @@ argument-hint: <meegle url> [<meegle url> ...] — or <meegle url or id> <what t
 allowed-tools: Bash(bash ~/.claude/skills/peter-delivery/scripts/append-worktree.sh:*), Bash(bash /Users/mahao/.claude/skills/peter-delivery/scripts/append-worktree.sh:*), Bash(meegle workitem +batch-get:*)
 ---
 
+> Claude Code legacy command. Codex does not load this `commands/` file as a
+> subcommand. Use `$peter-delivery-append-worktree` in Codex; its script starts
+> Codex in the new worktree.
+
 Create the task worktree for: $ARGUMENTS
 
 **Where the tasks come from.** Read the arguments first, then fall back to the

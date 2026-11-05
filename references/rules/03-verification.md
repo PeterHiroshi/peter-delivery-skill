@@ -5,6 +5,33 @@ Every rule here is one shape — I checked the thing I *could* check and reporte
 > Part of the `peter-delivery` contract. Rule numbers are stable — repo notes and
 > `SKILL.md`'s gate table address rules by number, so they are never renumbered.
 
+### Direct review by the implementing agent
+
+**Standing instruction, Peter, 2026-10-22:** Claude CLI is no longer available;
+review the work myself. An unavailable reviewer had delayed already reviewable
+artifacts. This personal policy replaces default external/subagent review for
+Peter's tasks; no reviewer login or client setup is a delivery prerequisite.
+
+Before reporting a review result:
+
+1. Read the actual candidate diff against the requirement and source evidence.
+   Include changed tests, configuration, generated-output bindings and relevant
+   unchanged callers; do not review only a summary or my intended behavior.
+2. Run a fact/consistency pass, then a separate adversarial pass over failure,
+   cancellation, stale inputs, permissions/privacy, data loss and compatibility.
+   Check the complete affected class; write down concrete counterexamples.
+3. Verify each finding, repair confirmed defects and rerun affected checks.
+   Use the existing runtime/rendered evidence rules; self-review cannot replace
+   tests, route calls, rendered inspection or other acceptance evidence.
+4. Record the reviewed commit/diff, findings and disposition, checks actually run
+   and remaining gaps. Recheck subsequent changes. Call this **self-review**;
+   a waived external review is neither a passed independent review nor evidence
+   of production readiness.
+
+Only a new explicit request changes this review policy. Repository-enforced CI,
+security controls, UI acceptance and merge/release authorization still apply.
+Do not silently bypass those controls or change account/client configuration.
+
 ### 1. Never say "完成 / done"
 
 Say what is verified and what is not:
@@ -50,14 +77,6 @@ pin that CSS contract; it still does not establish browser appearance.
 For anything that renders, see
 [`references/visual-verification.md`](references/visual-verification.md). If
 genuinely blocked, say so in those words and let Peter decide.
-
-**A gate that crashed looks green to a grep.** moodio-agent's `tsc` dies at
-Node's default heap (exit 134, no `error TS` lines), so `| grep 'error TS'`
-reads as clean (2026-10-19, flagged by a peer session). Read the gate's exit
-code and its last lines, never only a filtered count — the same holds for an
-eslint run whose file list a shell glob mangled (`app/(dashboard)/…`,
-`[[...session]]`): pass paths NUL-separated (`git diff --name-only -z | xargs
--0`) and expect the known warning count, not zero.
 
 ### 7. A config change is not live until the thing that reads it has re-read it
 
@@ -173,22 +192,6 @@ toggle. I had made one side of a double call idempotent and left the other.
   pin anchors on; body comments count toward the window.
 
 ### 27. A surviving mutation is an answer, not a gap to paper over (2026-09-18)
-
-**Restore by copy, never by `git checkout`, and only after a checkpoint commit
-(2026-10-08, moodio-agent).** The mutation loop restored each mutated file with
-`git checkout -- <file>` while the real change was still uncommitted: the first
-mutation wiped the rewrite of two files, and a second session's unstaged hunks
-in a shared file would have gone the same way. Commit first (gate 12), then `cp`
-the file aside and copy it back. A pattern that matches zero times after a
-restore is the symptom that the file is no longer what you think it is.
-
-**A mutant's verdict is only as fresh as the code that ran (2026-10-16,
-moodio-agent).** Two Python mutants of the same byte length, written within one
-second, ran the first one's cached `.pyc` (CPython validates it by mtime in
-whole seconds and size): the second "failed" with the first's error and was
-reported killed while it survived. Run the loop with `PYTHONDONTWRITEBYTECODE=1`
-and delete `__pycache__` before each run; any cache keyed on mtime has the same
-hole. Two mutants failing on the identical line is the symptom.
 
 **One-shot scheduler mocks must consume callbacks when dispatched.** On
 2026-10-27 (timeline picture fitting), removing a geometry notification still

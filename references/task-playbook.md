@@ -5,10 +5,12 @@ have to steer.
 
 ## Before anything: the worktree
 
-Task work does not happen in the main checkout. `/peter-delivery:append-worktree
-<meegle url> <a few words>` creates the branch and worktree in this repo's own
-layout, copies the ignored `.env`, starts the install and opens the editor. It
-refuses rather than guess when a repo has no worktrees to learn from — then ask
+Task work does not happen in the main checkout. Invoke
+`$peter-delivery-append-worktree <meegle URL or task description>` to create
+the branch and worktree in this repo's own layout, copy ignored `.env`, start
+the install, and open the editor. Its one-shot VS Code task starts Codex in the
+new worktree; `--no-auto-start` is available when only setup is wanted.
+The script refuses to guess when a repo has no worktrees to learn from — ask
 Peter for the directory and pass `--base`.
 
 ## Bug fix

@@ -123,19 +123,6 @@ labels, icons, copy) comes from the reference; the codebase supplies only
 what the reference cannot (ids, routes). A deviation is a defect to fix,
 not a question to ask.
 
-**A reference app's BEHAVIOUR is a rule to derive, not an option to offer.**
-Meegle 15308241 (2026-10-12): Peter sent three CapCut screenshots of
-"闭合空隙". I offered him three abstract rules to choose from; he picked
-one, then a batch rule, both of which his own screenshots contradicted
-(a lane with a clip at the click point still moved). It took four more
-screenshots and "先摸清楚剪映的逻辑，告知我，然后再工作" before I measured
-every screenshot (pixel edges → frames) and found the one rule that fit
-all seven. When the reference shows behaviour: measure each screenshot,
-state the rule that explains ALL of them with a per-screenshot table, list
-the cases no screenshot shows — THEN ask about only those. Options offered
-before the derivation make Peter choose blind, and his answer then
-overrides the reference he gave.
-
 **And 1:1 covers every screen the flow touches, not the first one.** Third
 round, same day: the dialog now matched, and Peter opened the RESULT —
 the imported page still had the app's own header (section label, small
@@ -152,18 +139,6 @@ that matters is "not what he asked for", and only his eyes find it. The
 same applies to any task where the acceptance criterion is visual and the
 reference exists: the reference is the spec, the replica is the first
 deliverable, everything else waits.
-
-**When the surface already ships, the first deliverable is the DIFF, not the
-replica** (Peter 2026-10-16, Editing tab vs a whole-product demo):
-「demo中不是每个UI都是要变的……列出来和当前UI/UX不一致的，然后我去逐个验收并做取舍；只有
-完成1后你才能再去产出最终的UI/UX报告以及交互json，否则又会出现之前“挤牙膏”式的修改」.
-A product-vision demo against a shipping screen is not a change list: 1:1 would
-build what he rejects, and finding the differences one review at a time is the
-toothpaste pattern. Run BOTH, hand over every difference as one ledger with
-demo|current crops and a decision per item (R1); turn his decisions into the
-final spec plus an interaction JSON — the acceptance oracle replayed before every
-hand-off (R2); only then stage A (R3). No code before R2 is accepted. Method,
-JSON shape and scripts: [`ui-replication.md`](../ui-replication.md).
 
 ### 23. `ccl-skills` is DISABLED, not merely opt-in — recall one by name for a genuine risk gate (Peter 2026-09-15, 2026-09-19, switched off 2026-09-20)
 
@@ -211,8 +186,8 @@ gate. The pack was never delivering the guarantee it was being paid for. What
 replaces it costs a small fraction:
 
 1. the repo's own gates — tsc, the whole suite, scoped eslint (the hardest of them);
-2. **one** adversarial diff pass (a single subagent with a numbered checklist, or
-   `/codex`) — Peter's review is the one that matters for UI;
+2. **one** direct adversarial self-review of the actual diff, following
+   `03-verification.md` — Peter's acceptance still decides the UI;
 3. mutation-checking every new assertion (rule 5 of the done table);
 4. calling a changed route on the running app (rule 29);
 5. the scope ledger (rule 30) for the half neither testing nor review ever covered.
