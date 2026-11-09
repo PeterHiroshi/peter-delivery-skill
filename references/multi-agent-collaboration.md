@@ -30,6 +30,18 @@ names it. Peter should never have to say "use peter-delivery" again.
 
 ## C3. Hand-offs go through artifacts, not memory
 
+**Peter, 2026-11-10, novmuser-ai-x-team:** Forge and Forge-mini must each
+implement actual work and cross-review; one implementation owner per ticket.
+At investigation or implementation start, move Jira to In Progress and read it
+back for all issue types. Record owner, scope, acceptance, branch and worktree.
+Serialize overlapping changes. After independent Codex review, unit/integration
+tests and CI pass with no open P0/P1, rebase-merge develop pinned to the reviewed
+HEAD and advance DEV without per-ticket approval. Never substitute local green
+for CI or merge for deployment. Preserve review dependencies until checks finish.
+Prod/IAM/main/force-push boundaries remain. Peter's specified NOVM-354/401
+takeover supersedes old Linc ownership notes only for those tickets; #259 remains
+untouched and #257 parked.
+
 Hand work over through the coordination row, the design doc and ledger in the
 repo, and the PR. Never rely on another agent's chat history. A hand-off states
 what is verified and what is not (gates 2 and 9), per check.
@@ -63,8 +75,16 @@ approve every merge to develop). Ask once per repo.
 
 ## C6. Lessons come back here, from any agent
 
-Whichever agent learns a lesson writes it back here under rule 32. Run
-`git pull --rebase` first, because more than one agent edits this repo. Commit
+Whichever agent learns a lesson writes it back here under rule 32.
+
+Peter's 2026-11-10 instruction also requires merging durable lessons into the
+relevant Notion active rule or delivery page with provenance. At task start, read
+the skill, repo AGENTS.md, accepted team notes, Notion team index and the relevant
+active rule/delivery page, and apply the lessons without waiting for a reminder.
+Current Notion rule source:
+https://app.notion.com/p/41284fec0de08140a1a8de6326fc4eda
+
+Run `git pull --rebase` first, because more than one agent edits this repo. Commit
 by pathspec and push to `PeterHiroshi/peter-delivery-skill`.
 `~/.codex/skills/peter-delivery` is a separate, non-git copy that drifts.
 Refresh it from this repo only with Peter's OK, because it may hold edits made

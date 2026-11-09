@@ -3,12 +3,17 @@ name: peter-delivery
 description: Use at the START of any coding task for Peter (feature, bug fix, refactor) — the delivery contract that prevents the failure modes that have actually cost him time, plus the delivery rhythm and the gate table. Invoke before writing code, not after.
 ---
 
-
 # Delivery contract (Peter)
 
 Peter uses me to get his time back. **The measure of success is not "the task is
 done". It is "Peter did not have to find my bugs for me" — and did not have to make
 a decision I could have made.**
+
+**Start every task:** read this contract, the repo AGENTS.md, accepted team memory, and the
+Notion [team index](https://app.notion.com/p/40f84fec0de0816b8677fe31fb535e75), then its
+[active rules](https://app.notion.com/p/41284fec0de08140a1a8de6326fc4eda) and relevant delivery page.
+Apply the relevant lessons before work; do not wait for Peter to remind you. Current explicit
+user instructions override stale notes, only within the scope actually authorized.
 
 Rules live in [`references/rules/`](references/rules/) — **load the one group the task
 needs**. This page is the always-on contract. Staying short is rule 32.
@@ -18,10 +23,30 @@ needs**. This page is the always-on contract. Staying short is rule 32.
 - The bots know the project better than he does. **Decide scope, priority, splitting,
   approach and acceptance yourself**; do not ask him to decide or sign off.
 - **Keep DEV simple.** DEV / local / reversible changes need no per-item yes.
-- **Merge** = green CI + Codex review with no open P0/P1 + real-Chrome gate PASS for
-  anything user-visible. No human sign-off.
+- **Merge** = green CI + unit/integration tests + Codex review with no open P0/P1. No
+  human sign-off. **Real-Chrome gate suspended this phase** (Peter 2026-11-05 15:49): he does
+  final unified testing with Codex computer use; at most an API/curl smoke where needed.
+  After tests, CI and independent Codex review pass with no open P0/P1, merge develop pinned
+  to that reviewed HEAD SHA and advance DEV without per-ticket approval. A new HEAD needs
+  review again. Check running CI once and return its link; do not poll in a shell loop.
+  Record PR, validation, merge and actual DEV readback in Jira; local green, CI green, merge
+  and deployment are separate facts. Retain review dependencies until independent checks finish.
+- **Roles (Peter 2026-11-10):** Forge and Forge-mini each own actual implementation,
+  with one implementation owner per ticket and the other independently reviewing. Do not
+  concentrate all coding on one bot. Use separate task worktrees; serialize shared-file changes.
+  Both may review, rebase-merge and deploy DEV. Peter-bot coordinates cross-team priority.
 - **Still need Peter's explicit yes:** prod, IAM / AWS account config, releases to
   `main`, runtime redeploys outside DEV, force-push, secret rotation.
+- **Jira-first sync (Peter 2026-11-06):** necessary handoffs / blockers / ownership
+  changes go in a **Jira comment + @ the human** so the other side's bots wake;
+  Slack is backup only. Before starting any ticket, **read comments first**; while
+  in flight, watch new comments. Tell Linc's bots the same.
+- **Start means In Progress (Peter 2026-11-10):** when actual investigation or implementation
+  starts, transition Jira and read it back, for every issue type, not just Bugs. Record owner,
+  scope, acceptance and branch/worktree; report a failed transition honestly.
+- **Ownership follows current authorization:** Peter explicitly reassigned NOVM-354/401 on
+  2026-11-10; do not wait on Linc for those tickets. This does not authorize taking all his
+  work. Preserve PR #259 untouched and #257 parked unless Peter explicitly changes that scope.
 
 ## The three failure modes to design against
 
@@ -43,7 +68,7 @@ Full evidence in [`references/failure-modes.md`](references/failure-modes.md).
 | 1 | **Design note in the repo (English, `docs/…`) + scope ledger BEFORE code** | more than one requirement, a reference, or a class sweep | r5, r30 · 02, 01 |
 | 2 | **Never say 完成 / done** — say what is verified and what is not | always | r1 · 03 |
 | 3 | **Self-review + Codex review of the actual diff + tsc / tests / scoped lint green, re-run right before reporting** | always | r2, r28 · 03, 06 |
-| 4 | **Real-Chrome first-content gate PASS** (`real-chrome-gate.sh <TICKET> [script]`, report linked) — or, for non-novmuser repos, looked at the render | anything that renders or changes a chat/agent path | r24, r19 · 02 |
+| 4 | *(suspended this phase, see Merge)* **Real-Chrome first-content gate PASS** (`real-chrome-gate.sh <TICKET> [script]`, report linked) — or, for non-novmuser repos, looked at the render | anything that renders or changes a chat/agent path | r24, r19 · 02 |
 | 5 | **Enumerated the whole class by MECHANISM**, set derived inside the test | any bug report | r3 · 01 |
 | 6 | **Mutation-tested every new assertion** | new tests | r27 · 03 |
 | 7 | **Read the value back where it is CONSUMED** | effect lands in another layer | r7, r8, r9, r18b · 03 |
@@ -75,7 +100,9 @@ Observable, sourced, no blanks. `not-built` is a declared cut. Derive from the r
 
 **Codex-first** (coding, QA, review): `codex exec` / `codex exec review` on the Mac mini,
 model **gpt-5.6-terra** — `xhigh` for complex logic, lower effort for conflicts and
-incremental re-reviews. Bots orchestrate and verify; they save their own tokens. If Codex
+incremental re-reviews. Bots orchestrate and verify; they save their own tokens (2026-11-05:
+bot balance near zero, Codex ample: push all coding/QA/review to Codex, keep bot turns short,
+non-novmuser work minimal). If Codex
 quota runs out, the bot codes/reviews itself (label it **self-reviewed**). Always pass
 Codex these hard rules: no secrets in output, no AWS/prod/IAM changes, ports, cleanup.
 CLI `codex exec` cannot use native Codex computer use (that needs the ChatGPT/Codex desktop
@@ -140,5 +167,16 @@ One page; twelve gates hard cap; new rules replace-or-sharpen; project notes rea
   marker and download I created once the deliverable exists (tell Codex the same). Keep only
   reports and evidence under `~/novmuser-qa/codex-runs/`.
 - Never print, log or move secrets/tokens between machines; redact Bearer values in logs.
-- Keep this skill current: a durable lesson ends with an edit here (under rule 32) and a push
-  to `PeterHiroshi/peter-delivery-skill`.
+- Keep this skill current: fold verified durable lessons into the relevant rule (rule 32),
+  synchronize the Notion active rules or relevant delivery page with source provenance, and
+  push to `PeterHiroshi/peter-delivery-skill`. At the next relevant task, proactively read and
+  apply them. Do not replace the procedure with a chat summary or a duplicate standalone skill.
+
+## Changelog
+
+- 2026-11-10: Peter's direct instructions in novmuser-ai-x-team: shared implementation,
+  investigation triggers In Progress for all issue types, gated develop merge/DEV without
+  per-ticket approval; integrate lessons here and in Notion and proactively reuse them.
+
+- 2026-11-05: real-Chrome gate suspended (merge = CI + tests + no P0/P1); Forge owns novmuser
+  delivery; bot-token austerity, Codex-first for all coding/QA/review.
