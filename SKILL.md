@@ -34,6 +34,10 @@ needs**. This page is the always-on contract. Staying short is rule 32.
 - **Roles (Peter 2026-11-10):** Forge and Forge-mini each own actual implementation,
   with one implementation owner per ticket and the other independently reviewing. Do not
   concentrate all coding on one bot. Use separate task worktrees; serialize shared-file changes.
+  **XP pairing (Peter, same room/date):** alternate driver and navigator across tickets.
+  The driver implements; the navigator challenges the approach, actual diff and regression
+  tests during the work. Review each other's candidate SHA and test evidence before merge;
+  fixes or a changed HEAD need re-review. Record findings and their resolution on the PR/Jira.
   Both may review, rebase-merge and deploy DEV. Peter-bot coordinates cross-team priority.
 - **Still need Peter's explicit yes:** prod, IAM / AWS account config, releases to
   `main`, runtime redeploys outside DEV, force-push, secret rotation.
