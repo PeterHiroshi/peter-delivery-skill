@@ -84,6 +84,15 @@ Full evidence in [`references/failure-modes.md`](references/failure-modes.md).
 
 ## The delivery rhythm: A → B → C (rule 31)
 
+**Bug backlogs use milestone batches with parallel execution (Peter, 2026-11-10):**
+fix-ready → batch integration → one DEV rollout per affected service → shared acceptance
+and per-ticket closure. Forge and Forge-mini drive separate ready tickets/worktrees;
+overlap implementation, builds and independent checks, with focused peer-review checkpoints.
+Serialize only dependencies and shared mutable resources. Reuse evidence bound to the
+relevant SHA/digest/configuration; repeat costly work only for a new risk or changed input.
+A real async wait needs a concrete continuation; queued work is not active concurrency.
+See [`milestone-delivery.md`](references/milestone-delivery.md) for exits and cost controls.
+
 - **A — interactive replica** on a typed seam; tsc green; screenshots + ledger + cases.
 - **B — wire the backend**; seam signature unchanged; tests, migration, route called live.
 - **C — harden**; risk gate only for money / permissions / data loss / migrations.
