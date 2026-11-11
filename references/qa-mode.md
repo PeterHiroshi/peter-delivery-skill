@@ -23,7 +23,9 @@ peter-delivery gates; it adds no thirteenth gate.
    version, operation, and final state where each is consumed. Verify cited
    excerpts against the returned bytes. A fake Gateway or preselected tool
    call tests transport only; it cannot prove spontaneous model choice, real
-   network reading, or citation quality. Keep `offline`, `rendered`, and
+   network reading, or citation quality. Preserve same-run test source and
+   configuration with a hashed artifact; a result bundle alone cannot prove
+   independent replay. Keep `offline`, `rendered`, and
    `live bounded` verdicts separate, following rules 12 and 13.
 4. **Classify a new bug before dispatch.** Reproduce or pin a falsifiable
    counterexample, enumerate siblings by mechanism, deduplicate against open
