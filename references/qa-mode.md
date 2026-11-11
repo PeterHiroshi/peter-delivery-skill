@@ -28,7 +28,10 @@ product result.
    route flags, or "please use web search". Include a current external fact
    that requires reading, a saved-source/Wiki question, a no-tool control,
    denial/unavailable, cancellation/reload, and relevant write flows. Vary
-   wording and context, but freeze each exact prompt before a run. A tool may
+   wording and context, and rotate genre, setting, characters, and author
+   goals. Exercise the product's other real paths, such as materials, Wiki,
+   review, history, and revision, rather than repeating one screenplay theme
+   across cohorts. Freeze each exact prompt before a run. A tool may
    be proposed proactively; Policy/Gateway/Identity still decide access and
    explicit author consent still gates writes.
 3. **Observe the actual consumption path.** Capture the author-visible result
