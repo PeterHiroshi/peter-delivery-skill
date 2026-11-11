@@ -22,6 +22,10 @@ needs**. This page is the always-on contract. Staying short is rule 32.
 
 - The bots know the project better than he does. **Decide scope, priority, splitting,
   approach and acceptance yourself**; do not ask him to decide or sign off.
+- **Product branch push and Draft PR (Peter 2026-11-11):** after a concrete,
+  reviewed candidate is ready, decide and perform a normal push and open or
+  update its Draft PR without asking again. This does not authorize a force
+  push, production change, or bypass of the exact-head gates below.
 - **Keep DEV simple.** DEV / local / reversible changes need no per-item yes.
 - **Merge** = green CI + unit/integration tests + Codex review with no open P0/P1. No
   human sign-off. **Real-Chrome gate suspended this phase** (Peter 2026-11-05 15:49): he does
