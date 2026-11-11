@@ -53,6 +53,10 @@ product result.
    reload preserves that state, and no duplicate work or automatic provider
    attempt occurs. Distinguish an intentionally closed QA gate from a real
    deployed service failure before filing a provider bug.
+   For an uncertain chat retry, preserve the original request fingerprint with
+   the same operation ID, including the sent scene focus after caret movement,
+   work navigation, or reload. Confirm the exact request at the network
+   boundary; a fresh terminal retry must use a new operation ID.
 4. **Classify a new bug before dispatch.** Reproduce or pin a falsifiable
    counterexample, enumerate siblings by mechanism, deduplicate against open
    issues, and record expected versus actual behavior, exact input/revision,
