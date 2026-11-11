@@ -6,6 +6,17 @@ peter-delivery gates; it adds no thirteenth gate.
 
 ## Run loop
 
+**Primary QA surface (Peter, 2026-11-11):** Use Computer Use to operate the
+actual served product as a normal author. Spend the run on the product itself,
+especially its agent: enter natural goals, let it decide whether and when to
+search or use another capability, and observe the visible result, history,
+recovery and state. Keep chat updates short; the interaction and captured
+evidence do the work. Synthetic fixtures and code probes diagnose a witnessed
+failure, but do not substitute for this real product experience or for native
+agent choice. If identity, runtime, or a bounded provider budget prevents a
+real turn, mark that journey held and continue safe Computer Use paths; never
+describe a synthetic pass as the live product result.
+
 1. **Freeze scope before acting.** Record the user journey, product source,
    exact served revisions, account/work boundary, budget, and an observable
    scope ledger. Use an isolated worktree and disposable synthetic data. An
