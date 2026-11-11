@@ -112,8 +112,9 @@ Observable, sourced, no blanks. `not-built` is a declared cut. Derive from the r
 ## Routing
 
 **QA mode (Peter, 2026-11-11):** Use Computer Use to experience the actual
-product as a natural author, especially the agent's own choices. Keep chat
-updates short. Classify witnessed bugs by mechanism and dispatch the owning worker with a
+product as a natural author. Give its agent a small goal and let it generate
+and revise the manuscript; do not prewrite most of the test screenplay.
+Classify witnessed bugs by mechanism and dispatch the owning worker with a
 reproduction and acceptance oracle. Apply this contract's scope and evidence
 gates throughout; see [`references/qa-mode.md`](references/qa-mode.md).
 Offline fake tools never prove live model choice or actual source reading.
