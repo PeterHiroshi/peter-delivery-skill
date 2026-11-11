@@ -47,6 +47,12 @@ product result.
    text, history and replay. A deny regex catching one sentence does not prove
    truthfulness; a host-owned typed answer policy and verified read receipt
    must govern any positive read claim.
+   For a new work, observe creation and the automatic opening agent turn as
+   separate outcomes. If the turn fails, verify that the work and premise were
+   saved, the author sees an accurate failure and explicit retry/edit path,
+   reload preserves that state, and no duplicate work or automatic provider
+   attempt occurs. Distinguish an intentionally closed QA gate from a real
+   deployed service failure before filing a provider bug.
 4. **Classify a new bug before dispatch.** Reproduce or pin a falsifiable
    counterexample, enumerate siblings by mechanism, deduplicate against open
    issues, and record expected versus actual behavior, exact input/revision,
