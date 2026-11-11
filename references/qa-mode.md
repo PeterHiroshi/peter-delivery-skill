@@ -57,6 +57,10 @@ product result.
    counterexample, enumerate siblings by mechanism, deduplicate against open
    issues, and record expected versus actual behavior, exact input/revision,
    non-secret evidence, affected boundary, severity and owning repository.
+   Assign each QA issue to Jira account `peter.ma` and read the assignee back,
+   so Peter receives the issue and its follow-up changes. If Jira is
+   unavailable, keep a durable pending-assignment entry with the evidence and
+   retry the write/readback; do not report it as assigned yet.
    Dispatch a worker in an isolated worktree with the old-red/new-green oracle.
    Do not auto-spawn from an unclassified failure or mark a ticket Done from a
    synthetic pass. Use the milestone batch rhythm for shared integration and
