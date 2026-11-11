@@ -1,0 +1,52 @@
+# QA mode: natural simulated authors
+
+Peter named this operating mode on 2026-11-11. It applies to Novmuser now and
+to future agent products when he invokes "QA 模式". Run it through the existing
+peter-delivery gates; it adds no thirteenth gate.
+
+## Run loop
+
+1. **Freeze scope before acting.** Record the user journey, product source,
+   exact served revisions, account/work boundary, budget, and an observable
+   scope ledger. Use an isolated worktree and disposable synthetic data. An
+   inaccessible original sample stays inaccessible; never replace it with a
+   fixture while claiming original acceptance.
+2. **Speak like an author.** Scenario prompts express goals, not tool names,
+   route flags, or "please use web search". Include a current external fact
+   that requires reading, a saved-source/Wiki question, a no-tool control,
+   denial/unavailable, cancellation/reload, and relevant write flows. Vary
+   wording and context, but freeze each exact prompt before a run. A tool may
+   be proposed proactively; Policy/Gateway/Identity still decide access and
+   explicit author consent still gates writes.
+3. **Observe the actual consumption path.** Capture the author-visible result
+   and the route, model/tool decision, policy outcome, source/read receipt,
+   version, operation, and final state where each is consumed. Verify cited
+   excerpts against the returned bytes. A fake Gateway or preselected tool
+   call tests transport only; it cannot prove spontaneous model choice, real
+   network reading, or citation quality. Keep `offline`, `rendered`, and
+   `live bounded` verdicts separate, following rules 12 and 13.
+4. **Classify a new bug before dispatch.** Reproduce or pin a falsifiable
+   counterexample, enumerate siblings by mechanism, deduplicate against open
+   issues, and record expected versus actual behavior, exact input/revision,
+   non-secret evidence, affected boundary, severity and owning repository.
+   Dispatch a worker in an isolated worktree with the old-red/new-green oracle.
+   Do not auto-spawn from an unclassified failure or mark a ticket Done from a
+   synthetic pass. Use the milestone batch rhythm for shared integration and
+   one release lane for DEV acceptance.
+5. **Close the loop.** Review the actual diff, run relevant static/route/browser
+   checks, kill a targeted mutation, read the corrected value at its consumer,
+   and bind CI/XP/DEV evidence to exact source and image digests. Update the
+   tracker with both pass and open gaps. Rerun only affected scenarios on a
+   corrected head; keep live-only claims open until actually observed.
+
+## Budget and identity
+
+The scenario manifest states allowed provider attempts and a hard spending
+bound before any paid run. An HTTP-operation cap is not a provider-attempt or
+currency cap. With a zero or unenforceable bound, continue offline and rendered
+work without a paid call. Never use an exposed credential transcript, infer
+authorization from a `404`, elevate a model-supplied identity or URL into a
+trusted source, or bypass the product's Gateway/Policy/host verifier.
+
+The QA report is concise: scenario and exact prompt, observed layer, result,
+consumed receipts, defect dispatch, cleanup, and the claims still unverified.

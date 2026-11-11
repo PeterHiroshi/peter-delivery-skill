@@ -111,6 +111,12 @@ Observable, sourced, no blanks. `not-built` is a declared cut. Derive from the r
 
 ## Routing
 
+**QA mode (Peter, 2026-11-11):** For natural simulated-author journeys,
+classify witnessed bugs by mechanism and dispatch the owning worker with a
+reproduction and acceptance oracle. Apply this contract's scope and evidence
+gates throughout; see [`references/qa-mode.md`](references/qa-mode.md).
+Offline fake tools never prove live model choice or actual source reading.
+
 **Codex-first** (coding, QA, review): `codex exec` / `codex exec review` on the Mac mini,
 model **gpt-5.6-terra** — `xhigh` for complex logic, lower effort for conflicts and
 incremental re-reviews. Bots orchestrate and verify; they save their own tokens (2026-11-05:
