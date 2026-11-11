@@ -26,7 +26,11 @@ peter-delivery gates; it adds no thirteenth gate.
    network reading, or citation quality. Preserve same-run test source and
    configuration with a hashed artifact; a result bundle alone cannot prove
    independent replay. Keep `offline`, `rendered`, and
-   `live bounded` verdicts separate, following rules 12 and 13.
+   `live bounded` verdicts separate, following rules 12 and 13. For a
+   no-tool answer, test paraphrases of fabricated read claims through visible
+   text, history and replay. A deny regex catching one sentence does not prove
+   truthfulness; a host-owned typed answer policy and verified read receipt
+   must govern any positive read claim.
 4. **Classify a new bug before dispatch.** Reproduce or pin a falsifiable
    counterexample, enumerate siblings by mechanism, deduplicate against open
    issues, and record expected versus actual behavior, exact input/revision,
