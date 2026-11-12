@@ -3216,3 +3216,13 @@ can contain a refused or unknown Steer, whose draft must survive cleanup. Notify
 mounted controls after IndexedDB commit; an early failed-run render can precede
 the save and otherwise hide Restore indefinitely. Restoring a draft never retries
 the native effect, releases an unknown reservation or changes canvas selection.
+Draft restoration can coexist with that reservation; only sending needs the
+execution gate.
+
+A native `canvas_switch` result must survive the next tool call: preserve an
+immutable initial project grant, allow explicit editable targets only within
+that project, and validate the actual cards/activity/episode destinations.
+Recheck live authority before returning cached or new private tool content.
+Keep canonical permission readers outside a transaction that holds a pool
+client: those readers need another connection. A one-client pool regression
+with real projection writes caught this nested checkout in both consumers.
