@@ -28,6 +28,11 @@ when that separate entry point is installed.
    only workers that can act now. Serialize shared branches, migrations, paid
    budgets and the DEV release lane. Do not spawn a worker to poll CI or merely
    forward messages.
+   Before parallel work crosses repositories, freeze the producer/consumer
+   identity and scope in one example that both owners can validate. Include
+   whether an anchor names saved content or an unadopted candidate, the exact
+   version and operation, and who may apply a choice. A field-name match is not
+   enough; stop the combined acceptance claim when these meanings differ.
 3. Prefer one focused implementation and one reviewer per independent change.
    Review the actual diff. Reuse exact-tree evidence; review only changed code
    after a follow-up. Run checks that observe the risk. Do not repeat a full
