@@ -60,6 +60,13 @@ never create a duplicate worker to resolve silence. A worker's completion must
 include its actual outcome, exact evidence, unresolved risk and resource cleanup.
 If it exited without `worker_done`, recover the existing dispatch; do not count
 an escalation as a finished task.
+When `worker-start` fails at `agent-update-prompt`, read that terminal's rendered
+screen before acting. If it is only the Codex update menu, choose its skip
+option, confirm the agent is idle and no task input ran, then release the failed
+Dispatch and retry the **same Task** with `--retry-of`, the same worktree and
+agent. Record both Dispatch IDs. Do not start a fresh Task, install an update,
+or resend the task to a prompt whose state is unknown. This recovery has twice
+prevented a blocked startup from turning into duplicate source work.
 
 ## Codex and product boundaries
 
