@@ -8,13 +8,15 @@ breaking it cost time — the evidence for each is in `references/failure-modes.
 ## Install
 
 ```bash
-git clone <this repo> ~/.claude/skills/peter-delivery
+git clone https://github.com/PeterHiroshi/peter-delivery-skill.git ~/.claude/skills/peter-delivery
 
 # the sub-commands (one symlink each) — a command file must live under
 # ~/.claude/commands/, so the repo keeps the original and links it in
 mkdir -p ~/.claude/commands/peter-delivery
 ln -s ~/.claude/skills/peter-delivery/commands/append-worktree.md \
       ~/.claude/commands/peter-delivery/append-worktree.md
+ln -s ~/.claude/skills/peter-delivery/commands/orca.md \
+      ~/.claude/commands/peter-delivery/orca.md
 ```
 
 Claude Code picks up `~/.claude/skills/*/SKILL.md` automatically, and the
@@ -26,6 +28,23 @@ subdirectory under `~/.claude/commands/` is what names the command
 | Command | What it does |
 | --- | --- |
 | `/peter-delivery:append-worktree <meegle url> [<meegle url> ...]` | One worktree per link (bare links get their title and type from one `meegle workitem +batch-get`; words beside a link win). Creates the task worktree the way the current repo already does it: layout and branch/directory naming detected from the worktrees that exist, ignored `.env` files copied, `npm install` started in the background, editor opened. `scripts/append-worktree.sh --help` for the flags. |
+| `/peter-delivery:orca <objective>` | Apply the same delivery contract through Orca's event-driven workers. The adapter lives in `skills/peter-delivery-orca/` and can also be installed as the separate Codex skill `$peter-delivery-orca`. |
+
+For a fresh Codex install, clone this same remote as the base skill and link
+the adapter as a separate discoverable skill:
+
+```bash
+mkdir -p ~/.codex/skills
+git clone https://github.com/PeterHiroshi/peter-delivery-skill.git ~/.codex/skills/peter-delivery
+ln -s ~/.codex/skills/peter-delivery/skills/peter-delivery-orca \
+      ~/.codex/skills/peter-delivery-orca
+```
+
+If `~/.codex/skills/peter-delivery` already exists, refresh that installation
+from the repository without discarding local edits, then create the same adapter
+symlink. Updating that checkout updates both skills. The Orca adapter loads the
+base skill; it does not replace it. The existing `append-worktree` command and
+script remain available for setup-only requests.
 
 ## What it is
 

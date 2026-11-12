@@ -5,6 +5,9 @@ description: Use at the START of any coding task for Peter (feature, bug fix, re
 
 # Delivery contract (Peter)
 
+When coordinating through Orca, load the separate `$peter-delivery-orca`
+adapter from `skills/peter-delivery-orca/`; this contract still applies in full.
+
 Peter uses me to get his time back. **The measure of success is not "the task is
 done". It is "Peter did not have to find my bugs for me" — and did not have to make
 a decision I could have made.**
