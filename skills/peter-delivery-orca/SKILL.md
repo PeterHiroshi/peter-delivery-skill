@@ -28,10 +28,18 @@ when that separate entry point is installed.
    only workers that can act now. Serialize shared branches, migrations, paid
    budgets and the DEV release lane. Do not spawn a worker to poll CI or merely
    forward messages.
+   Before parallel work crosses repositories, freeze the producer/consumer
+   identity and scope in one example that both owners can validate. Include
+   whether an anchor names saved content or an unadopted candidate, the exact
+   version and operation, and who may apply a choice. A field-name match is not
+   enough; stop the combined acceptance claim when these meanings differ.
 3. Prefer one focused implementation and one reviewer per independent change.
    Review the actual diff. Reuse exact-tree evidence; review only changed code
    after a follow-up. Run checks that observe the risk. Do not repeat a full
    suite because a different worker already ran it at the same immutable tree.
+   When a parallel PR merges and advances `develop`, its sibling owner integrates
+   that exact base normally, then rebinds focused checks, delta review and CI to
+   the resulting head. Earlier CI proves only the earlier base.
 
 ## Use the installed Orca protocol
 
@@ -61,10 +69,17 @@ an escalation as a finished task.
 - Use Computer Use to experience author-visible behavior in the real product.
   In QA, give the product agent a small goal and let it generate and revise;
   avoid writing its screenplay for it. A synthetic fixture proves only its
-  stated boundary. Record the consumed build, operation and visible result.
+  stated boundary. Match the fixture's admitted harness and scope to the actual
+  UI request before diagnosing a pre-admission error as a product defect. Record
+  the consumed build, operation and visible result.
 - Use the prescribed Jira skill/API, not a browser, for issue writes. Read back
   transitions, assignee and comments. Treat CI green, merged source, published
   artifact, DEV consumption and Jira acceptance as five separate facts.
+- When local secret scanning passes but CI fails, inspect the exact redacted
+  finding and CI ref scope before changing product code. A repository-wide scan
+  can include a closed PR's stale remote branch. Remove only an owned,
+  superseded ref after verifying it is closed and linked to its replacement;
+  rerun the exact CI gate. Do not add a broad secret-scan exemption.
 
 ## Deadline and recovery
 
