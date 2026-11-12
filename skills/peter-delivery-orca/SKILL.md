@@ -47,12 +47,14 @@ when that separate entry point is installed.
   when assigning implementation. A default-off seam, Draft PR or merged source
   is a dependency milestone; keep the issue moving through DEV consumption and
   real product acceptance without opening unrelated feature work.
-- Before each push, run the repository's cheap deterministic CI preflight on
-  the candidate tree: generated-file drift, contract/ownership checks, and the
-  focused old-red/new-green regression. For a guarded agent path, include one
-  ordinary creative control and one adversarial output-channel control. Let
-  hosted exact-head CI cover environment-specific suites; do not repeatedly
-  run a full local suite known to fail for an unchanged host limitation.
+- Before each push, run the cheap deterministic CI preflight that applies to
+  the changed surface: generated-file drift when generated files are affected,
+  contract/ownership checks when those records change, and a focused
+  old-red/new-green regression for a bug fix. For a changed guarded agent path,
+  include one ordinary creative control and one adversarial output-channel
+  control. A docs-only follow-up can use a mechanical delta check. Let hosted
+  exact-head CI cover environment-specific suites; do not repeatedly run a
+  full local suite known to fail for an unchanged host limitation.
 - A reproducible P0/P1 becomes the current author's next action. Send the
   minimal failing input, visible/storage consequence and exact files to that
   author, fence merge and DEV, then review only the repair delta and rerun the
