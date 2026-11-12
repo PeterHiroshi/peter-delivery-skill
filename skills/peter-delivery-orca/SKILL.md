@@ -41,6 +41,29 @@ when that separate entry point is installed.
    that exact base normally, then rebinds focused checks, delta review and CI to
    the resulting head. Earlier CI proves only the earlier base.
 
+## Keep the feedback loop short
+
+- Name the product-acceptance owner and the next executable integration step
+  when assigning implementation. A default-off seam, Draft PR or merged source
+  is a dependency milestone; keep the issue moving through DEV consumption and
+  real product acceptance without opening unrelated feature work.
+- Before each push, run the repository's cheap deterministic CI preflight on
+  the candidate tree: generated-file drift, contract/ownership checks, and the
+  focused old-red/new-green regression. For a guarded agent path, include one
+  ordinary creative control and one adversarial output-channel control. Let
+  hosted exact-head CI cover environment-specific suites; do not repeatedly
+  run a full local suite known to fail for an unchanged host limitation.
+- A reproducible P0/P1 becomes the current author's next action. Send the
+  minimal failing input, visible/storage consequence and exact files to that
+  author, fence merge and DEV, then review only the repair delta and rerun the
+  exact-head CI. Do not create a second writer on the same worktree or replace
+  the fix with another default-off side branch. If a settled Dispatch is reused,
+  confirm its terminal owns the worktree before starting any new worker there.
+- Count completion by the issue's user-visible oracle and Jira readback. When
+  reporting a deadline, show the remaining acceptance gap for each In Progress
+  issue; keep a held To Do separate from an unresolved bug. Do not count workers,
+  PRs, tests or green publication as closed issues.
+
 ## Use the installed Orca protocol
 
 Read `orca skills get orca-cli` and `orca skills get orchestration` before using
