@@ -21,9 +21,9 @@ at focused checkpoints rather than holding the other implementation lane idle.
 Only shared mutable resources (the same branch/file, DEV deployment, test fixture,
 port or migration head) and true dependencies serialize. A single active turn does
 not prove a worker is running: record thread/process/job identifiers and fresh
-start evidence; queued work stays queued. If room dispatch serializes bot turns,
-use supported independent work threads/workers; if that cannot run concurrently,
-report the specific runtime limit and keep available CI/build workers progressing.
+start evidence; queued work stays queued. Use supported independent work threads
+only for different deliverables; extra sessions reviewing the same SHA, waiting on
+the same CI or relaying each other's status create handoffs rather than throughput.
 Never claim a policy edit increased runtime concurrency.
 
 | Milestone | Exit evidence |
@@ -54,17 +54,24 @@ a relevant new risk.
   answers, the expected exit evidence, and a bounded attempt/time/cost limit in the
   release ledger. Start with one real provider probe per distinct required path;
   repeat only for a new hypothesis or a documented repeatability criterion.
+  If Peter sets a deadline, reserve the final five minutes for acceptance readback,
+  Jira transitions and a concise verified result; do not start a slow new lane that
+  cannot produce evidence before the deadline.
 - Keep required PR checks. Run the necessary combined release checks once on the
   frozen revision; do not repeat the same suite locally, through a helper and by
   the peer without a distinct verification purpose. Peer review verifies actual
-  diff and evidence and selectively reproduces risky assertions.
+  diff and evidence and selectively reproduces risky assertions. A docs-only or
+  identical-tree integration head gets a mechanical delta review and exact-head CI;
+  broaden tests only for an actual code, dependency, config or base interaction.
 - Evidence reuse requires matching relevant code, dependencies, artifact, config,
   environment and test inputs. Changes invalidate affected evidence; a release
   without relevant changes does not justify rerunning every closed ticket.
 - After two failed attempts at the same sub-goal, switch evidence route and record
   the blocker. Do not vary commands indefinitely or repeat expensive model calls.
-- Real Chrome remains suspended this phase; use the approved API/curl scope.
-  Do not weaken permission, data integrity or migration acceptance to save time.
+- For author-visible QA, use Computer Use on the actual served product and let its
+  agent generate and revise the content. API/curl and synthetic fixtures diagnose
+  a failure but do not close a real-product criterion. Do not weaken permission,
+  data integrity or migration acceptance to save time.
   No new paid resources or wider production/IAM authority is implied.
 
 ## Keep moving across asynchronous boundaries
@@ -72,6 +79,16 @@ a relevant new risk.
 Complete all currently executable steps in one turn. Check an external job once;
 never shell-poll, sleep-loop or rebuild merely because it is still running.
 While it runs, do other independent ready work if the execution environment permits.
+
+For Orca, create one Run for the objective and a small Task DAG. Each worker spec
+must name an owned branch/worktree, exact deliverable, allowed mutations, acceptance
+proof, dependencies, and the `worker_done` outcome. Start ready tasks, then yield;
+Orca's message wakes the coordinator. On a question, answer once from existing
+authority; on an escalation, inspect the terminal once before retry or stop.
+Do not repeatedly `check`, reopen an idle worker to ask for a status, or create a
+new dispatch merely to relay a finished worker's result. Record one owner and one
+next action per blocker. Use the CLI's version-matched orchestration guide for
+commands, rather than guessing flags.
 
 Before ending at a real wait, record the exact job/change-set ID, current state,
 owner and next command/acceptance criterion. On a user-started turn, use the
@@ -85,5 +102,7 @@ Keep standing intake/reconciliation automations.
 
 Update Jira at actual investigation start, material blockers and milestone exits;
 Notion holds shared release evidence. Report milestone results and real blockers,
-not every status lookup. Track elapsed build/deploy/acceptance time, paid-call
-count, rework and tickets accepted so the next batch addresses the actual bottleneck.
+not every status lookup. Transition an issue only when its own acceptance is observed;
+maintain a current-Sprint owner/status count so closing work is visible. Track elapsed
+build/deploy/acceptance time, paid-call count, rework and tickets accepted so the next
+batch addresses the actual bottleneck.

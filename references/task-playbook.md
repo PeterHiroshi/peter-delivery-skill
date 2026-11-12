@@ -33,12 +33,14 @@ A throwaway script printing a matrix is the fastest form. Delete it after.
 This one step collapsed three fixes into one and found an unreported bug in the
 session that produced this skill.
 
-### 2b. Write the design doc — in the repo, before any code
+### 2b. Write the design note — in the repo, before code for a broad class
 
 The class matrix from step 2 IS most of the document. Put it in
 `docs/design-<meegle-id>-<slug>.md` (English) with the root cause, each
 decision and its why, what the tests can and cannot cover, and the open
-questions. Present it, wait, then code. It ships in the branch.
+questions. Continue to code once the scope is concrete; do not stop for a
+routine design approval unless Peter explicitly reserved that decision.
+It ships in the branch.
 
 A bug fix is not exempt because it is a bug. Only a genuinely one-line fix is
 (rule 5). On Meegle 14959916 I wrote exactly this document into the scratchpad
@@ -59,9 +61,10 @@ and it is easy to declare fixed after checking only the one Peter mentioned.
 
 See `references/projects/` for a note on the repo at hand, if one exists.
 
-### 5. Fix, pin, mutate
+### 5. Fix and prove the regression
 
-Write the regression test, then break the code and confirm **that** test fails.
+Write a regression that observes the failure boundary. For a high-risk or
+potentially vacuous assertion, break the code and confirm **that** test fails.
 
 ### 6. Verify at the right layer
 
@@ -73,11 +76,11 @@ Renders → look at it. Logic → tests. Say which you did.
 apply — go to "Prototype task" below (SKILL.md rule 22).**
 
 1. **Scope** — restate what he asked for; flag ambiguity now, not after coding
-2. **Design doc** — file, present, wait (`design-doc-before-coding`)
+2. **Design note** — file scope and boundary, then continue unless a user decision is required
 3. **Route** — see the routing table in `SKILL.md`
 4. **Build** — derive over pass (`reuse-over-duplication.md`)
 5. **Verify** — gates + visual if it renders
-6. **Report** — verified / not verified, then ask before pushing
+6. **Deliver** — verified / not verified; normal push and Draft PR for a reviewed candidate
 
 ## Prototype task (a reference UI exists)
 
@@ -86,13 +89,14 @@ apply — go to "Prototype task" below (SKILL.md rule 22).**
    sizes). Fifteen minutes.
 2. **Replicate 1:1** — same structure, geometry, copy and assets. Copy the
    reference's images into the app. tsc green, nothing else.
-3. **Hand over both screenshots + a numbers table** and WAIT for Peter.
-4. After acceptance: tests, locale sweep, failure cases, harness runs.
+3. **Compare both screenshots + measured geometry**, correct discrepancies, then
+   test the result. Ask only if the reference is missing or materially ambiguous.
+4. Cover locale, failure cases and harness paths appropriate to the change.
 5. After that: backend stability (concurrency, caps, error codes, a
    focused adversarial pass).
 
-Do not write a design doc, do not load ccl-skills, do not run review
-agents before step 3 is accepted. The cost of the wrong order on
+Do not write a long design doc or run broad reviews before the visual comparison.
+The cost of the wrong order on
 2026-09-15 was most of a working day.
 
 ## UI task specifically

@@ -19,9 +19,12 @@ evidence that the change is correct.
 **Discovery does not come from writing more tests. It comes from enumerating and
 looking.**
 
-## Mutation testing is non-negotiable for new assertions
+## Use targeted mutation where a green test could mislead
 
-A green test proves nothing until you have seen it fail for the right reason.
+A green test has limited value when its assertion can pass without the behavior.
+Mutate that assertion's boundary, especially for authorization, data loss,
+financial caps and source provenance. A clear functional regression at the
+observing layer does not need a ritual mutation for every new assertion.
 
 ```
 1. write the test, watch it pass
@@ -38,7 +41,8 @@ expect(bar).toMatch(/^\s+layout="panel"$/m); // line-anchored — actually fails
 ```
 
 Version one stayed green with the real prop deleted. I only found it by
-mutating. Assume every new assertion is vacuous until proven otherwise.
+mutating. Challenge plausible false positives, then move to the actual product
+acceptance path.
 
 ## Choosing the layer
 

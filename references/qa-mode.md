@@ -72,17 +72,23 @@ product result.
    synthetic pass. Use the milestone batch rhythm for shared integration and
    one release lane for DEV acceptance.
 5. **Close the loop.** Review the actual diff, run relevant static/route/browser
-   checks, kill a targeted mutation, read the corrected value at its consumer,
+   checks, challenge a high-risk or potentially vacuous regression with a targeted
+   mutation, read the corrected value at its consumer,
    and bind CI/XP/DEV evidence to exact source and image digests. Update the
    tracker with both pass and open gaps. Rerun only affected scenarios on a
    corrected head; keep live-only claims open until actually observed.
 
 ## Budget and identity
 
-The scenario manifest states allowed provider attempts and a hard spending
-bound before any paid run. An HTTP-operation cap is not a provider-attempt or
-currency cap. With a zero or unenforceable bound, continue offline and rendered
-work without a paid call. Never use an exposed credential transcript, infer
+The scenario manifest states allowed provider attempts and a spending limit
+before any paid run. An HTTP-operation cap is not a provider-attempt or
+currency cap. If Peter explicitly authorizes a manual limit, record each
+admitted operation, known physical sends and a conservative cost estimate
+before starting the next one; stop when the remaining headroom is uncertain.
+Label the limit **manual**, never claim an automatic hard cap or exact billed
+cost. With no usable authorization or no defensible remaining headroom,
+continue offline and rendered work without a paid call. Never use an exposed
+credential transcript, infer
 authorization from a `404`, elevate a model-supplied identity or URL into a
 trusted source, or bypass the product's Gateway/Policy/host verifier.
 

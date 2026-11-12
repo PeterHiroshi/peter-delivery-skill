@@ -213,7 +213,8 @@ replaces it costs a small fraction:
 1. the repo's own gates — tsc, the whole suite, scoped eslint (the hardest of them);
 2. **one** adversarial diff pass (a single subagent with a numbered checklist, or
    `/codex`) — Peter's review is the one that matters for UI;
-3. mutation-checking every new assertion (rule 5 of the done table);
+3. targeted mutation where a new assertion could pass vacuously or guards a
+   high-risk boundary (rule 6 of the done table);
 4. calling a changed route on the running app (rule 29);
 5. the scope ledger (rule 30) for the half neither testing nor review ever covered.
 
@@ -227,7 +228,7 @@ one. A second copy splits the source of truth and doubles the maintenance; the
 only part of ccl-skills worth reproducing is the part that is not prose — a hook,
 which is deterministic and costs nothing until it fires.
 
-### 24. No headless-browser verification on Peter's dev server — hand him the test cases (Peter 2026-09-15)
+### 24. Use the current real-product QA instruction (updated 2026-11-12)
 
 Same session, one step later. After the cloud-doc editor replica I spent
 two-plus hours driving it through headless Chrome on the shared `:3000`
@@ -237,26 +238,20 @@ interaction that crashed for Peter within ten seconds of clicking. Peter:
 "目前先不要用无头浏览器去验证，相反可以将 test case 交给我，我去真实交互中去
 测试，从而提升研发时间".
 
-- For UI work in this repo: run tsc + scoped eslint + node tests, then STOP
-  and hand Peter a numbered test-case list. Do not open a browser.
-- Peter's second message on this (same day): "只有我要求你使用 devtools 或是
-  无头浏览器测试时你再去做，你也可以向我申请这种操作，总之不要擅自去做这种重的
-  测试任务". So: ANY heavy browser-driven testing — headless Chrome +
-  puppeteer, the chrome-devtools MCP, gstack `/browse`/`/qa` — needs either
-  his explicit request or my explicit ask ("这个缺陷我需要开浏览器复现，
-  可以吗？") answered yes. Never on my own initiative, not even "just a
-  quick screenshot". Applies to all his repos, not only moodio-agent.
-- The list is the deliverable of the round, not an afterthought. Per case:
-  the exact steps, the expected result stated as what he sees, and the
-  prototype screen it mirrors. Group by feature; put the risky/unverified
-  cases first and mark them so.
-- Say in one line what the automated checks did NOT cover so he knows where
-  to look hardest.
-- This does not lift rule 2. It moves the visual verification to Peter by
-  his choice — the report still says "browser: not verified by me".
-- The headless route (`references/projects/moodio-agent.md`) stays on
-  record for when he asks for it or when a defect needs a repro he cannot
-  give.
+That was a 2026-09-15 instruction for a costly shared dev-server loop. Peter's
+later novmuser QA instruction explicitly requests Computer Use on the real
+product, with the product's agent generating and revising varied work. Treat
+the older instruction as history, not a current prohibition.
+
+- For current novmuser author-visible acceptance, run focused code checks and
+  then exercise the served product with Computer Use. Record operation IDs,
+  saved versions and what survived reload. Do not write the creative content
+  yourself when the criterion is agent behavior.
+- Avoid unbounded browser exploration and duplicate automation. Give each
+  session one acceptance question and stop once its answer is observed.
+- If the product is unreachable, report the blocked visual claim and continue
+  independent work. Do not convert a synthetic API probe into a real-product
+  pass.
 
 ### 25. Layer UI, interaction and backend so the prototype replica can be reshaped (Peter 2026-09-16)
 

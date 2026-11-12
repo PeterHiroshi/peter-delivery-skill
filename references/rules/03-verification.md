@@ -5,9 +5,10 @@ Every rule here is one shape — I checked the thing I *could* check and reporte
 > Part of the `peter-delivery` contract. Rule numbers are stable — repo notes and
 > `SKILL.md`'s gate table address rules by number, so they are never renumbered.
 
-### 1. Never say "完成 / done"
+### 1. Claim only the verified scope
 
-Say what is verified and what is not:
+Say what is verified and what is not. Use "Done" for a Jira issue only when
+that issue's acceptance passed; do not confuse a merged PR with a closed bug:
 
 > Logic verified (tsc, 462 tests, lint). **Visual: not verified** — I could not
 > reach the panel in a browser. Do you want to look, or should I get the dev
@@ -15,7 +16,8 @@ Say what is verified and what is not:
 
 Peter's single largest time sink is acting on a "done" that meant "the checks I
 happen to be able to run are green." Never use one signal to stand in for
-another.
+another. A scoped regression can close its ticket while broader capability
+remains open under a separate tracked criterion.
 
 ### 2. Know what the test suite CANNOT see — then cover that gap yourself
 
@@ -160,9 +162,9 @@ toggle. I had made one side of a double call idempotent and left the other.
 - A double-call is fixed only when BOTH callers land on the same idempotent
   path. Grep for every site that reaches the state (`onOpenChange=`,
   `onClose=`, the setter itself), not just the one I am editing.
-- The sentence "checked by reading, not verified" in my own report is not a
-  disclaimer — it is the address of the missing guard test. Write that test
-  BEFORE `gh pr create`; the bot will otherwise write it for me as a finding.
+- The sentence "checked by reading, not verified" in my own report is the
+  address of an open claim. If the claim matters to this release, verify it
+  at the observing layer before the PR; otherwise leave the claim open.
   Here it was a 60-line source pin (`setIsAssetPickerOpen((v) => !v)` must
   not exist; dismiss and upload share `closeAssetPicker`), mutation-checked.
 - Run the test suite BEFORE the push, not in parallel with it. Same session:
@@ -271,7 +273,8 @@ the measured value through stored metadata into the consumer's frame count.
 Test a previously saved rounded clip too: repairing the producer alone cannot
 repair immutable revisions already made from its output.
 
-Mutation testing (#5) is cheap and has repeatedly caught my own vacuous
-assertions — including one that passed because it matched a string inside a
-comment. Break the code, confirm the specific test fails, restore. See
+Targeted mutation has repeatedly caught vacuous assertions, including one
+that passed because it matched a string inside a comment. Use it where an
+assertion can pass without the guarded behavior or the boundary is high risk;
+confirm the specific test fails, then restore. See
 [`references/testing-that-earns-its-keep.md`](references/testing-that-earns-its-keep.md).

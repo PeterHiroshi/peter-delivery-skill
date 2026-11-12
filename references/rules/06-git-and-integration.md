@@ -5,24 +5,17 @@ Committing, pushing, handing off, rebasing, and sharing a worktree with another 
 > Part of the `peter-delivery` contract. Rule numbers are stable — repo notes and
 > `SKILL.md`'s gate table address rules by number, so they are never renumbered.
 
-### 6. Push and PR need their own approval, every time
+### 6. Deliver a reviewed candidate without a permission round trip
 
-Commit locally, then ask. `/goal` and "autonomously" cover doing the work, not
-publishing it. Approval for one push does not carry to the next.
-A request to change something ("全部使用最新的git action命令版本") is the same: it covers the
-edit, not the push. On 2026-10-20 I pushed four repos' CI changes (one of them a `main` that
-deploys) on that request alone — wrong; commit, show the diff summary, ask.
-An approved deploy plan ("push main, let CI run") covers the pushes it names. A fix found while
-watching that CI is a NEW push — the same day I pushed five fix commits to a fresh repo's
-deploying `main` under the plan's approval. Commit the fix, ask, then push.
-
-**One standing exception** (Peter, 2026-09-20): **this skill's own repo**
-(`~/.claude/skills/peter-delivery`) — commit and push it without asking. It is
-his own tooling, nobody reviews it, and asking each time was pure friction. It
-does not extend to any product repo, and it does not make PRs automatic
-anywhere. Note the repo has other sessions in it (rule 28): push what you
-committed, and read `git log origin/main..HEAD` first — someone else's commit
-riding along is worth a line in the report.
+Peter's 2026-11-11 authorization supersedes the older per-push approval rule:
+after focused checks and review, normally push a product branch and open or
+update its Draft PR. Do not ask again for a routine push, merge or DEV rollout
+when this contract's exact-head gates pass. Force-push, production,
+IAM/account changes, `main`, non-DEV runtime redeploys and secret rotation still
+need Peter's explicit yes. Before any push, check whether the PR is already
+merged and read `git log origin/<branch>..HEAD`; report any other session's
+commit that would ride along. This skill's own repo may likewise be committed
+and pushed after focused verification without separate approval.
 
 **The moment `gh pr create` prints a URL, the PR is not delivered yet — the
 hand-off text is part of it, and it is written in the SAME reply, unprompted.**
@@ -70,13 +63,11 @@ read `gh pr view <n> --json state,mergedAt`; if merged, the fix is a new PR off 
 target branch, and Jira moves the moment the merge is seen (🔒 rule), not when I
 finish polishing.
 
-**Then wait for the CI review bots and act on what they say** (standing
-instruction, Peter 2026-09-08). Any repo whose pipeline runs an automated
-reviewer — Copilot on GitHub, or the equivalent elsewhere — has not finished
-reviewing when `gh pr create` returns. Poll for the review, read every comment,
-fix what is right, and reply on each thread saying what changed or why it was
-declined. Do not wait to be asked, and do not treat the bot's verdict as
-advisory noise.
+**Read CI review comments when they arrive and act on what they say.** A PR URL
+alone is not a review verdict. Use event or CI continuation rather than a
+terminal polling loop. Read each substantive comment once, fix confirmed
+findings, and reply on its thread with the change or reason for declining it.
+Do not treat a bot's verdict as advisory noise.
 
 ```bash
 gh pr view <n> --json reviews --jq '.reviews[].body'
@@ -120,11 +111,13 @@ resolved sensibly:
    The delta must be empty, or every remaining line must be explained by a
    deliberate accommodation of the target's change — list those lines in
    the report.
-4. A clean textual merge is not a clean semantic merge. Run the full gates
-   (tsc, the whole suite, any project scripts) on the rebased tree, and
-   grep the target's incoming diff for the mechanism the branch generalised
-   (a new special case the branch's abstraction should now cover, a renamed
-   function the target still calls by the old name).
+4. A clean textual merge is not a clean semantic merge. If the resulting tree
+   is byte-identical to the reviewed candidate, prove that identity and rely
+   on exact-head CI plus a focused integration check. If the base changed
+   relevant code, dependencies, config or migration order, run the affected
+   gates and inspect the incoming diff for the mechanism the branch changed.
+   Run the full suite when that risk is broad, not by reflex for a docs-only
+   merge. Keep exact-head CI mandatory.
 5. Report: incoming commits, overlapping files, the delta result, the
    gates — and say "rebased onto <sha>" with the sha, not "rebased".
 
@@ -132,6 +125,12 @@ Never `--force` over a remote branch someone else may have pulled without
 saying so; never use `git checkout --ours/--theirs` on a file that both
 sides changed; never let `npm install`'s lockfile drift ride along with a
 rebase.
+
+Prefer `gh pr merge --rebase --match-head-commit <reviewed-sha>`. If GitHub
+rejects rebase on a reviewed merge-history branch, a normal merge is acceptable
+only after verifying the resulting tree equals the reviewed integrated tree,
+the exact head passed CI, and the exception is recorded. Never squash merely
+to make a non-rebasable branch merge.
 
 ### 28. A worktree can have another session in it (2026-09-18)
 
