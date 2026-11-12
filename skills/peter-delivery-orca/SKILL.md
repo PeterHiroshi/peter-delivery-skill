@@ -66,10 +66,17 @@ an escalation as a finished task.
 - Use Computer Use to experience author-visible behavior in the real product.
   In QA, give the product agent a small goal and let it generate and revise;
   avoid writing its screenplay for it. A synthetic fixture proves only its
-  stated boundary. Record the consumed build, operation and visible result.
+  stated boundary. Match the fixture's admitted harness and scope to the actual
+  UI request before diagnosing a pre-admission error as a product defect. Record
+  the consumed build, operation and visible result.
 - Use the prescribed Jira skill/API, not a browser, for issue writes. Read back
   transitions, assignee and comments. Treat CI green, merged source, published
   artifact, DEV consumption and Jira acceptance as five separate facts.
+- When local secret scanning passes but CI fails, inspect the exact redacted
+  finding and CI ref scope before changing product code. A repository-wide scan
+  can include a closed PR's stale remote branch. Remove only an owned,
+  superseded ref after verifying it is closed and linked to its replacement;
+  rerun the exact CI gate. Do not add a broad secret-scan exemption.
 
 ## Deadline and recovery
 
