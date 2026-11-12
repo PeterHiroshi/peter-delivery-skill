@@ -42,6 +42,14 @@ Any of these changes what is visible from where you stand:
   package-local builds fail for structural reasons.
 - **Submodule** — the change may need committing in two places.
 
+Resolve QA artifact placement here too: use this repository's documented location,
+otherwise the current worktree's Git-ignored `.work/qa/<task>/`. Check `git check-ignore`
+before creating the report. A user-specified location takes precedence. Keep durable
+product/test specifications separate from live todo states and run evidence according
+to this repository's policy. Named automation and credential examples for another
+project never select the current output directory, ports or AWS profile.
+
+
 ### 4. Where does configuration and truth live?
 
 Constants in code, a database, environment variables, or a remote service? This

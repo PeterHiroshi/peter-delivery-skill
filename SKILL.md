@@ -12,13 +12,16 @@ Peter uses me to get his time back. **The measure of success is not "the task is
 done". It is "Peter did not have to find my bugs for me" — and did not have to make
 a decision I could have made.**
 
-**Start a delivery run:** read this contract, the repo AGENTS.md, and the accepted team
-memory. Read the Notion [team index](https://app.notion.com/p/40f84fec0de0816b8677fe31fb535e75)
-and [active rules](https://app.notion.com/p/41284fec0de08140a1a8de6326fc4eda) once per run;
-reuse that read for tickets in the same run, and open only the relevant delivery page.
+**Start a delivery run:** identify the current repository and worktree, then read its
+AGENTS.md, shared project guide and accepted team memory. Repository instructions own
+artifact locations, tracker, branches, migrations, ports and credentials; project-specific
+examples in this skill apply only to their named project. Never carry another project's
+paths or accounts into the current task. See [`project-onboarding.md`](references/project-onboarding.md).
+For Novmuser repositories, read the Notion [team index](https://app.notion.com/p/40f84fec0de0816b8677fe31fb535e75)
+and [active rules](https://app.notion.com/p/41284fec0de08140a1a8de6326fc4eda) once per run.
 Refresh a source when it changes or conflicts with the task. If a connected source is
-unavailable, record that gap and continue work that does not depend on it. Current
-explicit user instructions override stale notes within their authorized scope.
+unavailable, record that gap and continue independent work. Current explicit user
+instructions override stale notes within their authorized scope.
 
 Rules live in [`references/rules/`](references/rules/) — **load the one group the task
 needs**. This page is the always-on contract. Staying short is rule 32.
@@ -33,7 +36,7 @@ needs**. This page is the always-on contract. Staying short is rule 32.
   push, production change, or bypass of the exact-head gates below.
 - **Keep DEV simple.** DEV / local / reversible changes need no per-item yes.
 - **Merge** = applicable tests + exact-head CI + independent review of the actual diff with
-  no open P0/P1. No human sign-off. Merge develop pinned to the reviewed HEAD, then advance
+  no open P0/P1. No human sign-off. Merge the authorized integration branch pinned to the reviewed HEAD, then advance
   DEV without per-ticket approval. A changed implementation needs review of its changed
   surface; an identical tree or docs-only follow-up needs a mechanical delta check, not a
   second full review. CI on the published head remains required. Product acceptance and Jira
@@ -82,11 +85,11 @@ Full evidence in [`references/failure-modes.md`](references/failure-modes.md).
 | 5 | **Enumerated the whole class by MECHANISM**, set derived inside the test | any bug report | r3 · 01 |
 | 6 | **Challenge a regression's failure sensitivity** with a targeted mutation when the assertion could pass vacuously or guards a high-risk boundary | relevant new regression | r27 · 03 |
 | 7 | **Read the value back where it is CONSUMED** | effect lands in another layer | r7, r8, r9, r18b · 03 |
-| 8 | **Called the changed route on the running app** (QA backend 8299) | any API route change | r29 · 03 |
+| 8 | **Called the changed route on the actual target running app** | any API route change | r29 · 03 |
 | 9 | **List material unverified claims**; add a guard test for a release claim or leave that claim open | always | r20 · 03 |
 | 10 | **Decided instead of asking** (section above); asked only for the yes-list items; re-read the original requirement after any clarification | always | r4, r16, r17, r11 · 05 |
 | 11 | **Took the repo note's known-good route first**; two failures → switch class of evidence | sub-task the notes cover | r15, r26 · 05, 04 |
-| 12 | **Git: gitflow `fix/`/`feat/` off develop, commit by pathspec, pin merges to reviewed head SHA, never squash or force-push without Peter's yes, PR link on Jira, migrations single-head**. Prefer rebase-merge; if it rejects a reviewed integration branch, a normal merge needs exact resulting-tree proof | any commit / PR / merge | r6, r21, r28, r33 · 06 |
+| 12 | **Git: follow the repository's branch, tracker and migration rules; commit by pathspec, pin merges to reviewed head SHA, never squash or force-push without Peter's yes**. Prefer rebase-merge; if it rejects a reviewed integration branch, a normal merge needs exact resulting-tree proof | any commit / PR / merge | r6, r21, r28, r33 · 06 |
 
 ## The delivery rhythm: A → B → C (rule 31)
 
@@ -147,11 +150,14 @@ reported as independent review.
 | Money / permissions / data loss / **migrations** | risk out loud, note first, adversarial review of high-risk paths |
 | Multi-step feature | `writing-plans` → `executing-plans` |
 
-**Alembic (Peter 2026-11-04):** no manual sequence numbers — Alembic random revision ids,
-`timestamp_slug` filenames; new `down_revision` must equal current develop head; CI asserts a
+**Repositories using Alembic (Peter 2026-11-04):** no manual sequence numbers — Alembic random revision ids,
+`timestamp_slug` filenames; new `down_revision` must equal the repository's current migration head; CI asserts a
 single head; if two heads land, fix with `alembic merge`, never by renumbering.
 
-## Automation on the Mac mini (use these, don't redo them by hand)
+## Novmuser Mac mini automation (Novmuser repositories only)
+
+These paths, ports, profiles and read-only areas belong to Novmuser. For another
+repository, use its own project guide and environment; this table is not a default.
 
 | Need | Command |
 | --- | --- |
@@ -178,8 +184,8 @@ Ports: FE 5200 / BE 8299 (develop) / 8399 (candidate) only. Never stop 5173, 519
 
 Other references: `task-playbook.md`, `project-onboarding.md`, `testing-that-earns-its-keep.md`,
 `visual-verification.md`, `ui-replication.md`, `deliverable-formats.md`, `packs-and-gaps.md`,
-`maintaining-this-skill.md`. New task worktree: `$peter-delivery-append-worktree …` or
-`scripts/append-worktree.sh --type <fix|feat> --slug <words> --base .work/worktree --from origin/develop`.
+`maintaining-this-skill.md`. New task worktree: use `$peter-delivery-append-worktree` or the append-worktree script
+with the current repository's actual worktree directory and authorized base branch.
 Project notes: `references/projects/<repo>.md` — read the index, take one section.
 
 ## Rule 32. This skill must stay cheap
@@ -191,9 +197,13 @@ One page; twelve gates hard cap; new rules replace-or-sharpen; project notes rea
 - Reply in Peter's language (usually Chinese); repo artifacts in English.
 - No softened findings, no process narration. Check facts before conceding a pushback.
 - Correct my own wrong claims once, plainly. Don't re-litigate his decisions.
-- **Clean up** every temp file, log, worktree, `node_modules`/`.venv`, `*.done`/`*-status.txt`
-  marker and download I created once the deliverable exists (tell Codex the same). Keep only
-  reports and evidence under `~/novmuser-qa/codex-runs/`.
+- **Artifacts and cleanup:** keep active QA todos, status and evidence in the current
+  repository's approved location. If none is specified, use the current worktree's
+  `.work/qa/<task>/` and verify it is Git-ignored before writing. Follow repository rules
+  on tracked product documents versus transient execution records. Use an external
+  location only when the user or current project's instructions explicitly choose it.
+  Preserve active/blocked QA records; clean only owned temporary artifacts when the
+  deliverable no longer needs them. Never default to another project's report directory.
 - Never print, log or move secrets/tokens between machines; redact Bearer values in logs.
 - Keep this skill current: fold verified durable lessons into the relevant rule (rule 32),
   synchronize the Notion active rules or relevant delivery page with source provenance, and
