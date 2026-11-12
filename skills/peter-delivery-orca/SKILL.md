@@ -37,6 +37,9 @@ when that separate entry point is installed.
    Review the actual diff. Reuse exact-tree evidence; review only changed code
    after a follow-up. Run checks that observe the risk. Do not repeat a full
    suite because a different worker already ran it at the same immutable tree.
+   When a parallel PR merges and advances `develop`, its sibling owner integrates
+   that exact base normally, then rebinds focused checks, delta review and CI to
+   the resulting head. Earlier CI proves only the earlier base.
 
 ## Use the installed Orca protocol
 
