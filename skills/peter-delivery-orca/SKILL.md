@@ -55,6 +55,16 @@ when that separate entry point is installed.
   control. A docs-only follow-up can use a mechanical delta check. Let hosted
   exact-head CI cover environment-specific suites; do not repeatedly run a
   full local suite known to fail for an unchanged host limitation.
+- Before a DEV rollout, freeze the exact FE, backend and agent runtime source
+  SHAs and artifacts that will run together. Exercise the affected author flow
+  locally across those same versions, including its real transport boundaries,
+  saved-state readback, one ordinary creative control and the bug's
+  old-red/new-green failure control. Use actual built services where available;
+  a mocked provider or synthetic source may replace only the external call it
+  names. Record any environment-only gap explicitly and resolve it with a
+  reviewed DEV acceptance step. Single-repository tests and green CI do not
+  substitute for this integration gate. Batch accepted changes into one
+  reviewed rollout per service instead of redeploying after each PR.
 - A reproducible P0/P1 becomes the current author's next action. Send the
   minimal failing input, visible/storage consequence and exact files to that
   author, fence merge and DEV, then review only the repair delta and rerun the
