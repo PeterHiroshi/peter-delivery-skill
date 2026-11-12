@@ -12,6 +12,7 @@ symptom below, then `grep -n "^## <heading>"` and read from there to the next
 **Environment & dev server**
 
 - `Environment traps`
+- `Local Harness QA must pin its runtime and keep transient inputs (2026-11-12)`
 - `Decoder fallback can discard audio trims (2026-10-27)`
 - `HAST component types resolve an enclosing React installation (2026-10-23, PR #1195)`
 - `Testing reality` — incl. running the `*-postgres` suites locally (CI runs them, local skips them) — CORRECTION 2026-10-08: `frame-editor-persistence-postgres.test.ts` runs locally (50 cases) and caught an approve-applies regression; run it before claiming an editor server change is green
@@ -3194,3 +3195,24 @@ Check the prospective merge tree too: main can omit non-solo lanes entirely,
 so assert silence for an omitted lane or a zero-volume consumer, while audible
 fixtures still require their audio consumer. Keep failure injection and private
 media outside the product repository.
+
+
+## Local Harness QA must pin its runtime and keep transient inputs (2026-11-12)
+
+The globally installed Codex advanced through three versions during Bridge QA,
+and an older release path disappeared. Pin the approved vendor runtime in an
+owned QA directory, including its companion files; verify version and executable
+SHA-256 at launch and bind the Bridge with `MOODIO_CODEX_BINARY`. Do not change
+the user's global install or silently widen the supported-version contract to
+keep a test running. A protocol comparison and config readback do not certify
+arbitrary plugin execution or a different OS.
+
+Composer snapshots intentionally omit unfinished uploads. Check all live media
+trays and document placeholders before local admission and before/after async
+Restore, or a text send/restore can discard an uploading video or audio. Preserve
+quote identity and generation quantity outside the snapshot where necessary.
+Recover by each admitted input's identity and outcome: a successful parent turn
+can contain a refused or unknown Steer, whose draft must survive cleanup. Notify
+mounted controls after IndexedDB commit; an early failed-run render can precede
+the save and otherwise hide Restore indefinitely. Restoring a draft never retries
+the native effect, releases an unknown reservation or changes canvas selection.
