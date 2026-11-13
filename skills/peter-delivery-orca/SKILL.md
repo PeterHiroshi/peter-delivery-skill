@@ -43,6 +43,15 @@ when that separate entry point is installed.
 
 ## Keep the feedback loop short
 
+- **Progress reports always include a percentage (Peter, 2026-11-13).** For one
+  active issue, state its estimated end-to-end completion, for example
+  `NOVM-72: about 80%`, with the verified change and remaining acceptance gap.
+  Explain the basis when first reporting or when it changes; tests, PRs and CI
+  are evidence, not a completion denominator. For a backlog, use accepted issues
+  over the explicit total (`3/6 accepted, 50%`), and show active-issue estimates
+  separately. Reserve 100% for full user-visible acceptance and Jira Done
+  readback. If new evidence reopens work, revise the estimate and say why.
+
 - Name the product-acceptance owner and the next executable integration step
   when assigning implementation. A default-off seam, Draft PR or merged source
   is a dependency milestone; keep the issue moving through DEV consumption and
