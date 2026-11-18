@@ -412,29 +412,33 @@ echo "runner    $RUNNER${RESOLVED_MODEL:+ (model: $RESOLVED_MODEL)}${EFFORT:+ (e
 
 if [ "$DRY_RUN" = "1" ]; then echo "dry-run   nothing created"; exit 0; fi
 
-# Already there? Say so and stop — never a second worktree for one branch.
+# Already there? Reuse it and continue so missing .env / install / tasks.json can be armed.
+EXISTING_WORKTREE=0
 if git -C "$MAIN" worktree list --porcelain | grep -qxF "worktree $WORKTREE"; then
-  echo "status    already exists — reusing it, nothing created"
-  exit 0
+  echo "status    already exists — reusing it"
+  EXISTING_WORKTREE=1
+else
+  CHECKED_OUT_AT="$(existing_worktrees | awk -F'\t' -v b="$BRANCH" '$2 == b { print $1; exit }' || true)"
+  if [ -n "$CHECKED_OUT_AT" ]; then
+    echo "status    branch already checked out at $CHECKED_OUT_AT — use that worktree, nothing created"
+    exit 0
+  fi
+  [ -e "$WORKTREE" ] && die "$WORKTREE exists but is not a registered worktree; remove it or pass --base"
 fi
-CHECKED_OUT_AT="$(existing_worktrees | awk -F'\t' -v b="$BRANCH" '$2 == b { print $1; exit }' || true)"
-if [ -n "$CHECKED_OUT_AT" ]; then
-  echo "status    branch already checked out at $CHECKED_OUT_AT — use that worktree, nothing created"
-  exit 0
-fi
-[ -e "$WORKTREE" ] && die "$WORKTREE exists but is not a registered worktree; remove it or pass --base"
 
 # --- create ------------------------------------------------------------------
 
-mkdir -p "$BASE_DIR"
-if git -C "$MAIN" show-ref --quiet --verify "refs/heads/$BRANCH"; then
-  add_output="$(git -C "$MAIN" worktree add "$WORKTREE" "$BRANCH" 2>&1)" \
-    || { echo "$add_output" >&2; die "git worktree add failed"; }
-  echo "status    created on the EXISTING branch $BRANCH"
-else
-  add_output="$(git -C "$MAIN" worktree add -b "$BRANCH" "$WORKTREE" "$FROM" 2>&1)" \
-    || { echo "$add_output" >&2; die "git worktree add failed"; }
-  echo "status    created"
+if [ "$EXISTING_WORKTREE" = "0" ]; then
+  mkdir -p "$BASE_DIR"
+  if git -C "$MAIN" show-ref --quiet --verify "refs/heads/$BRANCH"; then
+    add_output="$(git -C "$MAIN" worktree add "$WORKTREE" "$BRANCH" 2>&1)" \
+      || { echo "$add_output" >&2; die "git worktree add failed"; }
+    echo "status    created on the EXISTING branch $BRANCH"
+  else
+    add_output="$(git -C "$MAIN" worktree add -b "$BRANCH" "$WORKTREE" "$FROM" 2>&1)" \
+      || { echo "$add_output" >&2; die "git worktree add failed"; }
+    echo "status    created"
+  fi
 fi
 
 # Persist what we learned, so the next run in this repo decides nothing. The
@@ -467,11 +471,12 @@ echo "env      ${COPIED:- none found}"
 
 INSTALL_LOG=""
 if [ "$DO_INSTALL" = "1" ] && [ -f "$WORKTREE/package.json" ]; then
-  # A worktree can carry an empty node_modules/ that passes -d and holds nothing.
-  if [ "$(ls "$WORKTREE/node_modules" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
+  # Check .package-lock.json so an empty node_modules/ or a SIGHUP-interrupted install is restarted.
+  if [ ! -f "$WORKTREE/node_modules/.package-lock.json" ]; then
     INSTALL_LOG="$BASE_DIR/npm-install-${ID:-$SLUG}.log"
     # npm, never pnpm; npm install, never npm ci (see the moodio-agent note).
-    ( cd "$WORKTREE" && nohup npm install > "$INSTALL_LOG" 2>&1 & ) >/dev/null 2>&1
+    # Start in a new session so closing the caller's shell does not SIGHUP npm install.
+    python3 -c 'import subprocess, sys; subprocess.Popen(["npm", "install"], cwd=sys.argv[1], stdin=subprocess.DEVNULL, stdout=open(sys.argv[2], "w"), stderr=subprocess.STDOUT, start_new_session=True)' "$WORKTREE" "$INSTALL_LOG"
     echo "install   npm install started in the background -> $INSTALL_LOG"
   else
     echo "install   node_modules already populated"
@@ -518,15 +523,15 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
   ENV_SCRUB="-u ANTIGRAVITY_AGENT -u ANTIGRAVITY_CONVERSATION_ID -u ANTIGRAVITY_TRAJECTORY_ID -u ANTIGRAVITY_LS_ADDRESS -u ANTIGRAVITY_CSRF_TOKEN -u ANTIGRAVITY_PROJECT_ID -u ANTIGRAVITY_SOURCE_METADATA -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_EXECPATH -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_EFFORT"
   case "$RUNNER" in
     agy)
-      EXEC_CMD="exec env $ENV_SCRUB agy${RUNNER_ARGS} -i \"\$P\""
+      EXEC_CMD="exec env $ENV_SCRUB agy${RUNNER_ARGS} -i \\\"\$P\\\""
       DISPLAY_CMD="agy${RUNNER_ARGS} -i \"<task prompt>\""
       ;;
     codex)
-      EXEC_CMD="exec env $ENV_SCRUB codex${RUNNER_ARGS} \"\$P\""
+      EXEC_CMD="exec env $ENV_SCRUB codex${RUNNER_ARGS} \\\"\$P\\\""
       DISPLAY_CMD="codex${RUNNER_ARGS} \"<task prompt>\""
       ;;
     *)
-      EXEC_CMD="exec env $ENV_SCRUB CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${RUNNER_ARGS} \"\$P\""
+      EXEC_CMD="exec env $ENV_SCRUB CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${RUNNER_ARGS} \\\"\$P\\\""
       DISPLAY_CMD="claude${RUNNER_ARGS} \"<task prompt>\""
       ;;
   esac
