@@ -73,14 +73,26 @@ prompt, which reads the requirement and stops at the scope ledger — it does no
 write code. Add `--no-auto-start` when Peter only wants the worktree, and say in
 the report that the window will just sit there.
 
-**The session's own settings.** Model and effort are inherited, not set: the
-terminal session and the VSCode one both read `~/.claude/settings.json`, so
-passing nothing is what keeps them identical (thinking is part of effort — there
-is no separate switch). The permission mode is taken from the extension's
-`claudeCode.initialPermissionMode`, because a terminal session would not have it.
-When Peter names any of them in his message ("用 sonnet 跑"、"effort 开到 max"、
-"这次别 bypass"), pass `--model <m>`, `--effort <low|medium|high|xhigh|max>` or
-`--permission-mode <m>` — per task, so different links can run differently.
+**The session's own settings (`agy` / `claude` / `codex`).**
+- **Runner (`--runner <agy|claude|codex>`):** inferred automatically from `--model`
+  (when an Antigravity or Codex model is given) or from the calling environment
+  (Antigravity → `agy`, Codex → `codex`, otherwise `claude`). Pass `--runner`
+  when Peter explicitly names the agent CLI ("用 agy 跑"、"用 codex 跑"、"用 claude 跑").
+- **Model & effort (`--model <m>`, `--effort <low|medium|high|xhigh|max>`):**
+  when omitted, `agy` reads `~/.gemini/antigravity-cli/settings.json`, `claude`
+  reads `~/.claude/settings.json`, and `codex` reads `~/.codex/config.toml`.
+  For Antigravity (`agy`), pass any `agy models` ID/display name or shorthand
+  family (`argon`, `carbon`, `hydrogen`, `flash`, `orchestrator`,
+  `orchestrator-argon`, `opus-5.5`, `sonnet-5.5`, `gpt-oss`; combined with
+  `--effort` when given, e.g. `--model argon --effort high` →
+  `gemini-4-argon-high`).
+- **Permission mode (`--permission-mode <m>`):** for `claude`, defaults to the
+  extension's `claudeCode.initialPermissionMode`; for `agy`, accepts
+  `accept-edits`, `auto`, `plan`, or `bypassPermissions`.
+When Peter names any of them in his message ("用 argon high 跑"、"用 carbon 跑"、
+"用 sonnet 跑"、"effort 开到 max"、"这次别 bypass"), pass `--runner`, `--model`,
+`--effort`, or `--permission-mode` — per task, so different links can run
+differently.
 
 Add `--repo <path>` when the working directory is not the target repo. Pass
 nothing else: the worktrees directory, the directory-vs-branch naming, the base

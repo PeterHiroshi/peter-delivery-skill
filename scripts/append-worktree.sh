@@ -28,13 +28,24 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
                  Used for the first prompt; defaults to the slug and the link.
   --no-install   skip the background dependency install.
   --no-open      do not open the worktree in the editor.
-  --no-auto-start  do not arm the first Claude session in the new window.
-  --model <m>    model for that session (alias like opus/sonnet, or a full name).
-                 Default: ~/.claude/settings.json, i.e. the model the VSCode
-                 session already runs on.
-  --effort <l>   low | medium | high | xhigh | max. Default: that same file's
-                 effortLevel. Thinking is part of effort; there is no separate flag.
-  --permission-mode <m>  default: the extension's claudeCode.initialPermissionMode.
+  --no-auto-start  do not arm the first agent session in the new window.
+  --runner <r>   agy | claude | codex (alias: --cli, --agent). Default: inferred
+                 from --model if it names an Antigravity or Codex model, else from
+                 the calling environment (Antigravity -> agy, Codex -> codex,
+                 otherwise claude).
+  --model <m>    model for that session.
+                 - agy: full ID/display name from `agy models` or shorthand family
+                   (argon, carbon, hydrogen, flash, orchestrator, orchestrator-argon,
+                   opus-5.5, sonnet-5.5, gpt-oss; e.g. gemini-4-argon-medium,
+                   gemini-4-carbon-high, gemini-4-hydrogen-xhigh, claude-opus-5-5-high).
+                   Default: ~/.gemini/antigravity-cli/settings.json.
+                 - claude: alias like opus/sonnet or full name. Default: ~/.claude/settings.json.
+                 - codex: model name (e.g. gpt-5.4, o3). Default: ~/.codex/config.toml.
+  --effort <l>   low | medium | high | xhigh | max. For agy family shorthands
+                 (e.g. --model argon --effort high -> gemini-4-argon-high) and
+                 passed as --effort to agy/claude or model_reasoning_effort to codex.
+  --permission-mode <m>  for claude: default from claudeCode.initialPermissionMode;
+                 for agy: accept-edits | auto | plan | bypassPermissions.
   --fetch        git fetch the base ref from origin before branching.
   --dry-run      print the plan, touch nothing.
 USAGE
@@ -42,7 +53,7 @@ USAGE
 
 TYPE="" SLUG="" ID="" FROM="" BASE_OVERRIDE="" REPO="$PWD" TASK=""
 DO_INSTALL=1 DO_OPEN=1 DO_FETCH=0 DRY_RUN=0 DO_AUTO_START=1
-MODEL="" EFFORT="" PERM_MODE="" NAMING_OVERRIDE=""
+RUNNER="" MODEL="" EFFORT="" PERM_MODE="" NAMING_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -56,6 +67,7 @@ while [ $# -gt 0 ]; do
     --task) TASK="${2:-}"; shift 2 ;;
     --no-install) DO_INSTALL=0; shift ;;
     --no-auto-start) DO_AUTO_START=0; shift ;;
+    --runner|--cli|--agent) RUNNER="${2:-}"; shift 2 ;;
     --model) MODEL="${2:-}"; shift 2 ;;
     --effort) EFFORT="${2:-}"; shift 2 ;;
     --permission-mode) PERM_MODE="${2:-}"; shift 2 ;;
@@ -112,22 +124,163 @@ case "${EFFORT:-none}" in
   *) die "--effort must be one of low, medium, high, xhigh, max" ;;
 esac
 
-# The session in the new window should be the session Peter already works in.
-# Model and effort need no flag for that: the terminal CLI and the VSCode
-# extension both read ~/.claude/settings.json (today: opus[1m], xhigh), so
-# passing nothing IS matching, and passing the extension's own stale
-# claudeCode.selectedModel would diverge from it. The permission mode does need
-# a flag — the extension starts sessions in claudeCode.initialPermissionMode,
-# a plain terminal claude starts in the default one.
+# --- runner & model resolution (agy / claude / codex) ------------------------
+
+is_agy_model() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    gemini-*|argon*|carbon*|hydrogen*|flash*|orchestrator*|*opus-5-5*|*opus-5.5*|*opus\ 5.5*|*sonnet-5-5*|*sonnet-5.5*|*sonnet\ 5.5*|gpt-oss*)
+      return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_codex_model() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    gpt-5*|o3*|o4*|codex*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if [ -n "$RUNNER" ]; then
+  case "$(printf '%s' "$RUNNER" | tr '[:upper:]' '[:lower:]')" in
+    agy|antigravity) RUNNER="agy" ;;
+    claude|claude-code) RUNNER="claude" ;;
+    codex) RUNNER="codex" ;;
+    *) die "--runner must be one of agy, claude, codex" ;;
+  esac
+elif [ -n "$MODEL" ] && is_agy_model "$MODEL"; then
+  RUNNER="agy"
+elif [ -n "$MODEL" ] && is_codex_model "$MODEL"; then
+  RUNNER="codex"
+elif [ -n "${ANTIGRAVITY_AGENT:-}${ANTIGRAVITY_CONVERSATION_ID:-}${AGY_ENABLE_HUB:-}" ]; then
+  RUNNER="agy"
+elif [ -n "${CODEX_SANDBOX:-}${CODEX_THREAD_ID:-}" ]; then
+  RUNNER="codex"
+else
+  RUNNER="claude"
+fi
+
+# Resolve Antigravity (agy) model aliases, display names, and family + effort
+# combinations to canonical slug IDs from `agy models`.
+resolve_agy_model() {
+  local raw="${1:-}" eff="${2:-}" norm
+  [ -n "$raw" ] || return 0
+  norm="$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[[:space:]()]+/-/g; s/^-+//; s/-+$//; s/-{2,}/-/g')"
+  case "$norm" in
+    argon|gemini-4-argon)
+      case "$eff" in
+        low) echo "gemini-4-argon-low" ;;
+        high|xhigh|max) echo "gemini-4-argon-high" ;;
+        *) echo "gemini-4-argon-medium" ;;
+      esac ;;
+    argon-low|gemini-4-argon-low) echo "gemini-4-argon-low" ;;
+    argon-medium|gemini-4-argon-medium) echo "gemini-4-argon-medium" ;;
+    argon-high|gemini-4-argon-high) echo "gemini-4-argon-high" ;;
+
+    carbon|gemini-4-carbon)
+      case "$eff" in
+        low) echo "gemini-4-carbon-low" ;;
+        high|xhigh|max) echo "gemini-4-carbon-high" ;;
+        *) echo "gemini-4-carbon-medium" ;;
+      esac ;;
+    carbon-low|gemini-4-carbon-low) echo "gemini-4-carbon-low" ;;
+    carbon-medium|gemini-4-carbon-medium) echo "gemini-4-carbon-medium" ;;
+    carbon-high|gemini-4-carbon-high) echo "gemini-4-carbon-high" ;;
+
+    hydrogen|gemini-4-hydrogen)
+      case "$eff" in
+        low) echo "gemini-4-hydrogen-low" ;;
+        medium) echo "gemini-4-hydrogen-medium" ;;
+        xhigh|max) echo "gemini-4-hydrogen-xhigh" ;;
+        *) echo "gemini-4-hydrogen-high" ;;
+      esac ;;
+    hydrogen-low|gemini-4-hydrogen-low) echo "gemini-4-hydrogen-low" ;;
+    hydrogen-medium|gemini-4-hydrogen-medium) echo "gemini-4-hydrogen-medium" ;;
+    hydrogen-high|gemini-4-hydrogen-high) echo "gemini-4-hydrogen-high" ;;
+    hydrogen-xhigh|gemini-4-hydrogen-xhigh) echo "gemini-4-hydrogen-xhigh" ;;
+
+    flash|gemini-3.8-flash|gemini-3-8-flash)
+      case "$eff" in
+        low) echo "gemini-3.8-flash-low" ;;
+        medium) echo "gemini-3.8-flash-medium" ;;
+        *) echo "gemini-3.8-flash-high" ;;
+      esac ;;
+    flash-low|gemini-3.8-flash-low|gemini-3-8-flash-low) echo "gemini-3.8-flash-low" ;;
+    flash-medium|gemini-3.8-flash-medium|gemini-3-8-flash-medium) echo "gemini-3.8-flash-medium" ;;
+    flash-high|gemini-3.8-flash-high|gemini-3-8-flash-high) echo "gemini-3.8-flash-high" ;;
+
+    orchestrator|orchestrator-carbon|gemini-pro-orchestrator) echo "gemini-pro-orchestrator" ;;
+    orchestrator-argon|gemini-pro-orchestrator-argon) echo "gemini-pro-orchestrator-argon" ;;
+
+    opus|opus-5.5|opus-5-5|claude-opus-5.5|claude-opus-5-5)
+      case "$eff" in
+        low) echo "claude-opus-5-5-low" ;;
+        medium) echo "claude-opus-5-5-medium" ;;
+        *) echo "claude-opus-5-5-high" ;;
+      esac ;;
+    opus-low|opus-5.5-low|opus-5-5-low|claude-opus-5.5-low|claude-opus-5-5-low) echo "claude-opus-5-5-low" ;;
+    opus-medium|opus-5.5-medium|opus-5-5-medium|claude-opus-5.5-medium|claude-opus-5-5-medium) echo "claude-opus-5-5-medium" ;;
+    opus-high|opus-5.5-high|opus-5-5-high|claude-opus-5.5-high|claude-opus-5-5-high) echo "claude-opus-5-5-high" ;;
+
+    sonnet|sonnet-5.5|sonnet-5-5|claude-sonnet-5.5|claude-sonnet-5-5)
+      case "$eff" in
+        low) echo "claude-sonnet-5-5-low" ;;
+        medium) echo "claude-sonnet-5-5-medium" ;;
+        *) echo "claude-sonnet-5-5-high" ;;
+      esac ;;
+    sonnet-low|sonnet-5.5-low|sonnet-5-5-low|claude-sonnet-5.5-low|claude-sonnet-5-5-low) echo "claude-sonnet-5-5-low" ;;
+    sonnet-medium|sonnet-5.5-medium|sonnet-5-5-medium|claude-sonnet-5.5-medium|claude-sonnet-5-5-medium) echo "claude-sonnet-5-5-medium" ;;
+    sonnet-high|sonnet-5.5-high|sonnet-5-5-high|claude-sonnet-5.5-high|claude-sonnet-5-5-high) echo "claude-sonnet-5-5-high" ;;
+
+    gpt-oss|gpt-oss-120b|gpt-oss-120b-medium) echo "gpt-oss-120b-medium" ;;
+    *) echo "$raw" ;;
+  esac
+}
+
+RESOLVED_MODEL="$MODEL"
+if [ "$RUNNER" = "agy" ] && [ -n "$MODEL" ]; then
+  RESOLVED_MODEL="$(resolve_agy_model "$MODEL" "$EFFORT")"
+fi
+
 VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
-if [ -z "$PERM_MODE" ] && [ -f "$VSCODE_SETTINGS" ]; then
+if [ "$RUNNER" = "claude" ] && [ -z "$PERM_MODE" ] && [ -f "$VSCODE_SETTINGS" ]; then
   PERM_MODE="$(sed -n 's/.*"claudeCode\.initialPermissionMode"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$VSCODE_SETTINGS" | tail -1 || true)"
 fi
 
-CLAUDE_ARGS=""
-[ -n "$MODEL" ] && CLAUDE_ARGS="$CLAUDE_ARGS --model $MODEL"
-[ -n "$EFFORT" ] && CLAUDE_ARGS="$CLAUDE_ARGS --effort $EFFORT"
-[ -n "$PERM_MODE" ] && CLAUDE_ARGS="$CLAUDE_ARGS --permission-mode $PERM_MODE"
+RUNNER_ARGS=""
+case "$RUNNER" in
+  agy)
+    [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS --model $RESOLVED_MODEL"
+    [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS --effort $EFFORT"
+    case "${PERM_MODE:-}" in
+      "") ;;
+      bypassPermissions|bypass|dangerously-skip-permissions)
+        RUNNER_ARGS="$RUNNER_ARGS --dangerously-skip-permissions" ;;
+      acceptEdits|accept-edits)
+        RUNNER_ARGS="$RUNNER_ARGS --mode accept-edits" ;;
+      auto|plan)
+        RUNNER_ARGS="$RUNNER_ARGS --mode $PERM_MODE" ;;
+      *)
+        RUNNER_ARGS="$RUNNER_ARGS --mode $PERM_MODE" ;;
+    esac
+    ;;
+  codex)
+    [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS -m $RESOLVED_MODEL"
+    [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS -c model_reasoning_effort=\\\"$EFFORT\\\""
+    case "${PERM_MODE:-}" in
+      "") ;;
+      bypassPermissions|bypass|dangerously-skip-permissions)
+        RUNNER_ARGS="$RUNNER_ARGS --dangerously-bypass-approvals-and-sandbox" ;;
+      auto|full-auto|acceptEdits|accept-edits)
+        RUNNER_ARGS="$RUNNER_ARGS --full-auto" ;;
+    esac
+    ;;
+  claude)
+    [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS --model $RESOLVED_MODEL"
+    [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS --effort $EFFORT"
+    [ -n "$PERM_MODE" ] && RUNNER_ARGS="$RUNNER_ARGS --permission-mode $PERM_MODE"
+    ;;
+esac
 
 git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || die "$REPO is not a git repository"
 
@@ -255,6 +408,7 @@ echo "layout    $BASE_DIR  (naming: $NAMING, id-in-branch: $ID_IN_BRANCH)"
 echo "branch    $BRANCH"
 echo "worktree  $WORKTREE"
 echo "base      $FROM ($FROM_SHA)"
+echo "runner    $RUNNER${RESOLVED_MODEL:+ (model: $RESOLVED_MODEL)}${EFFORT:+ (effort: $EFFORT)}"
 
 if [ "$DRY_RUN" = "1" ]; then echo "dry-run   nothing created"; exit 0; fi
 
@@ -337,19 +491,18 @@ fi
 # allowed automatic tasks for it (or set task.allowAutomaticTasks to "on").
 #
 # The prompt lives in its own file so nothing has to be escaped into JSON, and
-# the task consumes both files before starting Claude: this arms the FIRST open
-# of a new worktree and leaves nothing behind in git status afterwards.
+# the task consumes both files before starting the agent: this arms the FIRST
+# open of a new worktree and leaves nothing behind in git status afterwards.
 #
-# The env scrub is what makes the session a session. A VSCode terminal inherits
-# the extension host's CLAUDE_CODE_CHILD_SESSION, and an interactive claude that
-# sees that marker runs with transcript saving OFF — it never appears in any
-# history, which is exactly what Peter hit. The rest of the inherited variables
-# belong to the parent session (its id, its messaging socket, its effort) and a
-# fresh top-level session should have none of them.
+# The env scrub is what makes the session a fresh top-level session instead of
+# attaching to the parent window's Antigravity LS/conversation or Claude child
+# session markers.
 if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
   mkdir -p "$WORKTREE/.vscode"
+  ENTRY_CMD="/peter-delivery"
+  [ "$RUNNER" = "codex" ] && ENTRY_CMD="\$peter-delivery"
   {
-    echo "/peter-delivery"
+    echo "$ENTRY_CMD"
     echo
     echo "Task: ${TASK:-$(printf '%s' "$SLUG" | tr '-' ' ')}"
     [ -n "$ID_RAW" ] && echo "Meegle: $ID_RAW"
@@ -362,6 +515,22 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     echo "STOP for Peter. Do not write code, do not commit, do not start the dev server."
   } > "$WORKTREE/.vscode/claude-task-prompt.txt"
 
+  ENV_SCRUB="-u ANTIGRAVITY_AGENT -u ANTIGRAVITY_CONVERSATION_ID -u ANTIGRAVITY_TRAJECTORY_ID -u ANTIGRAVITY_LS_ADDRESS -u ANTIGRAVITY_CSRF_TOKEN -u ANTIGRAVITY_PROJECT_ID -u ANTIGRAVITY_SOURCE_METADATA -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_EXECPATH -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_EFFORT"
+  case "$RUNNER" in
+    agy)
+      EXEC_CMD="exec env $ENV_SCRUB agy${RUNNER_ARGS} -i \"\$P\""
+      DISPLAY_CMD="agy${RUNNER_ARGS} -i \"<task prompt>\""
+      ;;
+    codex)
+      EXEC_CMD="exec env $ENV_SCRUB codex${RUNNER_ARGS} \"\$P\""
+      DISPLAY_CMD="codex${RUNNER_ARGS} \"<task prompt>\""
+      ;;
+    *)
+      EXEC_CMD="exec env $ENV_SCRUB CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${RUNNER_ARGS} \"\$P\""
+      DISPLAY_CMD="claude${RUNNER_ARGS} \"<task prompt>\""
+      ;;
+  esac
+
   cat > "$WORKTREE/.vscode/tasks.json" <<TASKS
 {
   "version": "2.0.0",
@@ -369,7 +538,7 @@ if [ "$DO_AUTO_START" = "1" ] && [ ! -e "$WORKTREE/.vscode/tasks.json" ]; then
     {
       "label": "peter-delivery: start this task",
       "type": "shell",
-      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; exec env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_CODE_EXECPATH -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_EFFORT CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 claude${CLAUDE_ARGS} \"\$P\"",
+      "command": "P=\"\$(cat .vscode/claude-task-prompt.txt)\"; rm -f .vscode/claude-task-prompt.txt .vscode/tasks.json; rmdir .vscode 2>/dev/null; $EXEC_CMD",
       "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
       "runOptions": { "runOn": "folderOpen" },
       "problemMatcher": []
@@ -393,7 +562,7 @@ TASKS
     } >> "$EXCLUDE"
   fi
 
-  echo "auto-start armed: the window's first terminal runs: claude${CLAUDE_ARGS} \"<task prompt>\""
+  echo "auto-start armed: the window's first terminal runs: $DISPLAY_CMD"
   echo "          (one-shot: both files are git-excluded and delete themselves on run;"
   echo "           needs task.allowAutomaticTasks=\"on\", else one 'Allow Automatic Tasks in Folder')"
 elif [ "$DO_AUTO_START" = "1" ]; then
