@@ -49,7 +49,15 @@ do not start implementing the feature in the current checkout.
        - `gpt-oss` / `gpt-oss-120b` → `gpt-oss-120b-medium`
      - When `--model` is omitted under `agy`, `agy` uses the default model in
        `~/.gemini/antigravity-cli/settings.json`.
-     - The one-shot `.vscode/tasks.json` task launches `agy [--model ...] [--effort ...] -i "$P"`
+     - The one-shot `.vscode/tasks.json` task defaults to full permissions across
+       all runners (`agy --dangerously-skip-permissions`,
+       `claude --permission-mode bypassPermissions`,
+       `codex --dangerously-bypass-approvals-and-sandbox`) so sessions do not
+       pause for manual tool approval prompts; pass `--permission-mode default`
+       (or `auto`, `accept-edits`, `plan`, `manual`) to opt out or narrow
+       permissions.
+     - Under `agy`, the terminal runs
+       `agy --dangerously-skip-permissions [--model ...] [--effort ...] -i "$P"`
        with parent `ANTIGRAVITY_*` / `CLAUDE_*` session variables scrubbed so a
        fresh top-level session starts in the new worktree.
 

@@ -44,8 +44,12 @@ append-worktree.sh --type fix|feat|<other> --slug <kebab-case> [options]
   --effort <l>   low | medium | high | xhigh | max. For agy family shorthands
                  (e.g. --model argon --effort high -> gemini-4-argon-high) and
                  passed as --effort to agy/claude or model_reasoning_effort to codex.
-  --permission-mode <m>  for claude: default from claudeCode.initialPermissionMode;
-                 for agy: accept-edits | auto | plan | bypassPermissions.
+  --permission-mode <m>  permission preset (default: full).
+                 full -> agy: --dangerously-skip-permissions,
+                         claude: --permission-mode bypassPermissions,
+                         codex: --dangerously-bypass-approvals-and-sandbox.
+                 Override/opt-out: default | auto | accept-edits | plan | manual
+                 (plus claude's dontAsk).
   --fetch        git fetch the base ref from origin before branching.
   --dry-run      print the plan, touch nothing.
 USAGE
@@ -242,43 +246,79 @@ if [ "$RUNNER" = "agy" ] && [ -n "$MODEL" ]; then
   RESOLVED_MODEL="$(resolve_agy_model "$MODEL" "$EFFORT")"
 fi
 
-VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
-if [ "$RUNNER" = "claude" ] && [ -z "$PERM_MODE" ] && [ -f "$VSCODE_SETTINGS" ]; then
-  PERM_MODE="$(sed -n 's/.*"claudeCode\.initialPermissionMode"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$VSCODE_SETTINGS" | tail -1 || true)"
-fi
+[ -n "$PERM_MODE" ] || PERM_MODE="full"
 
 RUNNER_ARGS=""
+PERM_LABEL=""
 case "$RUNNER" in
   agy)
     [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS --model $RESOLVED_MODEL"
     [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS --effort $EFFORT"
-    case "${PERM_MODE:-}" in
-      "") ;;
-      bypassPermissions|bypass|dangerously-skip-permissions)
-        RUNNER_ARGS="$RUNNER_ARGS --dangerously-skip-permissions" ;;
+    case "$PERM_MODE" in
+      full|bypassPermissions|bypass|dangerously-skip-permissions|dangerously-bypass-approvals-and-sandbox)
+        RUNNER_ARGS="$RUNNER_ARGS --dangerously-skip-permissions"
+        PERM_LABEL="full (--dangerously-skip-permissions)" ;;
+      default|none|manual)
+        PERM_LABEL="default" ;;
       acceptEdits|accept-edits)
-        RUNNER_ARGS="$RUNNER_ARGS --mode accept-edits" ;;
-      auto|plan)
-        RUNNER_ARGS="$RUNNER_ARGS --mode $PERM_MODE" ;;
+        RUNNER_ARGS="$RUNNER_ARGS --mode accept-edits"
+        PERM_LABEL="accept-edits" ;;
+      auto|full-auto)
+        RUNNER_ARGS="$RUNNER_ARGS --mode auto"
+        PERM_LABEL="auto" ;;
+      plan)
+        RUNNER_ARGS="$RUNNER_ARGS --mode plan"
+        PERM_LABEL="plan" ;;
       *)
-        RUNNER_ARGS="$RUNNER_ARGS --mode $PERM_MODE" ;;
+        die "--permission-mode '$PERM_MODE' is not supported for agy (use full|auto|accept-edits|plan|default)" ;;
     esac
     ;;
   codex)
     [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS -m $RESOLVED_MODEL"
     [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS -c model_reasoning_effort=\\\"$EFFORT\\\""
-    case "${PERM_MODE:-}" in
-      "") ;;
-      bypassPermissions|bypass|dangerously-skip-permissions)
-        RUNNER_ARGS="$RUNNER_ARGS --dangerously-bypass-approvals-and-sandbox" ;;
-      auto|full-auto|acceptEdits|accept-edits)
-        RUNNER_ARGS="$RUNNER_ARGS --full-auto" ;;
+    case "$PERM_MODE" in
+      full|bypassPermissions|bypass|dangerously-skip-permissions|dangerously-bypass-approvals-and-sandbox)
+        RUNNER_ARGS="$RUNNER_ARGS --dangerously-bypass-approvals-and-sandbox"
+        PERM_LABEL="full (--dangerously-bypass-approvals-and-sandbox)" ;;
+      default|none)
+        PERM_LABEL="default" ;;
+      manual)
+        RUNNER_ARGS="$RUNNER_ARGS -a on-request"
+        PERM_LABEL="manual (-a on-request)" ;;
+      auto|full-auto)
+        RUNNER_ARGS="$RUNNER_ARGS --approve-for-me"
+        PERM_LABEL="auto (--approve-for-me)" ;;
+      acceptEdits|accept-edits)
+        RUNNER_ARGS="$RUNNER_ARGS -a never -s workspace-write"
+        PERM_LABEL="workspace-write (-a never -s workspace-write)" ;;
+      plan)
+        RUNNER_ARGS="$RUNNER_ARGS -s read-only -a on-request"
+        PERM_LABEL="plan (-s read-only -a on-request)" ;;
+      *)
+        die "--permission-mode '$PERM_MODE' is not supported for codex (use full|auto|accept-edits|plan|manual|default)" ;;
     esac
     ;;
   claude)
     [ -n "$RESOLVED_MODEL" ] && RUNNER_ARGS="$RUNNER_ARGS --model $RESOLVED_MODEL"
     [ -n "$EFFORT" ] && RUNNER_ARGS="$RUNNER_ARGS --effort $EFFORT"
-    [ -n "$PERM_MODE" ] && RUNNER_ARGS="$RUNNER_ARGS --permission-mode $PERM_MODE"
+    case "$PERM_MODE" in
+      full|bypassPermissions|bypass|dangerously-skip-permissions|dangerously-bypass-approvals-and-sandbox)
+        RUNNER_ARGS="$RUNNER_ARGS --permission-mode bypassPermissions"
+        PERM_LABEL="full (bypassPermissions)" ;;
+      default|none)
+        PERM_LABEL="default" ;;
+      acceptEdits|accept-edits)
+        RUNNER_ARGS="$RUNNER_ARGS --permission-mode acceptEdits"
+        PERM_LABEL="acceptEdits" ;;
+      auto|full-auto)
+        RUNNER_ARGS="$RUNNER_ARGS --permission-mode auto"
+        PERM_LABEL="auto" ;;
+      manual|dontAsk|plan)
+        RUNNER_ARGS="$RUNNER_ARGS --permission-mode $PERM_MODE"
+        PERM_LABEL="$PERM_MODE" ;;
+      *)
+        die "--permission-mode '$PERM_MODE' is not supported for claude (use full|bypassPermissions|auto|acceptEdits|dontAsk|plan|manual|default)" ;;
+    esac
     ;;
 esac
 
@@ -408,7 +448,7 @@ echo "layout    $BASE_DIR  (naming: $NAMING, id-in-branch: $ID_IN_BRANCH)"
 echo "branch    $BRANCH"
 echo "worktree  $WORKTREE"
 echo "base      $FROM ($FROM_SHA)"
-echo "runner    $RUNNER${RESOLVED_MODEL:+ (model: $RESOLVED_MODEL)}${EFFORT:+ (effort: $EFFORT)}"
+echo "runner    $RUNNER${RESOLVED_MODEL:+ (model: $RESOLVED_MODEL)}${EFFORT:+ (effort: $EFFORT)}${PERM_LABEL:+ (permissions: $PERM_LABEL)}"
 
 if [ "$DRY_RUN" = "1" ]; then echo "dry-run   nothing created"; exit 0; fi
 

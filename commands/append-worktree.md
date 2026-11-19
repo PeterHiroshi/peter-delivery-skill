@@ -86,13 +86,17 @@ the report that the window will just sit there.
   `orchestrator-argon`, `opus-5.5`, `sonnet-5.5`, `gpt-oss`; combined with
   `--effort` when given, e.g. `--model argon --effort high` →
   `gemini-4-argon-high`).
-- **Permission mode (`--permission-mode <m>`):** for `claude`, defaults to the
-  extension's `claudeCode.initialPermissionMode`; for `agy`, accepts
-  `accept-edits`, `auto`, `plan`, or `bypassPermissions`.
+- **Permission mode (`--permission-mode <m>`):** defaults to `full` across all
+  runners so opened task sessions do not pause for manual tool approvals
+  (`agy` passes `--dangerously-skip-permissions`, `claude` passes
+  `--permission-mode bypassPermissions`, `codex` passes
+  `--dangerously-bypass-approvals-and-sandbox`). Pass `--permission-mode` to opt
+  out or narrow permissions (`default`, `auto`, `accept-edits`, `plan`,
+  `manual`, or `dontAsk` for `claude`).
 When Peter names any of them in his message ("用 argon high 跑"、"用 carbon 跑"、
-"用 sonnet 跑"、"effort 开到 max"、"这次别 bypass"), pass `--runner`, `--model`,
-`--effort`, or `--permission-mode` — per task, so different links can run
-differently.
+"用 sonnet 跑"、"effort 开到 max"、"这次别 bypass"、"不要 full 权限"), pass
+`--runner`, `--model`, `--effort`, or `--permission-mode` — per task, so
+different links can run differently.
 
 Add `--repo <path>` when the working directory is not the target repo. Pass
 nothing else: the worktrees directory, the directory-vs-branch naming, the base
