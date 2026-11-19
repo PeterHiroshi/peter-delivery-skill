@@ -1,18 +1,20 @@
 ---
 name: peter-delivery-orca
-description: Run Peter's delivery contract through Orca worktrees and supervised workers, with Codex implementation and independent review. Use when a delivery task uses Orca sessions or Peter asks to optimize Orca coordination; not for worktree setup alone.
+description: Run Peter's delivery contract through Orca worktrees and supervised workers across Codex, Antigravity, and Claude, with independent cross-agent review. Use when a delivery task uses Orca sessions or Peter asks to optimize Orca coordination; not for worktree setup alone.
 ---
 
 # Peter delivery on Orca
 
-This is an adapter, not a second delivery policy. First read the installed
-`~/.codex/skills/peter-delivery/SKILL.md` and the relevant references, or the
-same repo's root `SKILL.md` when working from its source checkout. Its scope,
-authorization, QA, review, CI, Jira, merge and DEV gates remain authoritative.
-User instructions take precedence. For mechanical worktree setup alone, use
-the installed `/peter-delivery:append-worktree` command or the root skill's
-`scripts/append-worktree.sh`; use `$peter-delivery-append-worktree` in Codex
-when that separate entry point is installed.
+This is an adapter, not a second delivery policy. First read the installed root
+`SKILL.md` (`~/.gemini/config/skills/peter-delivery/SKILL.md`,
+`~/.codex/skills/peter-delivery/SKILL.md`, `~/.claude/skills/peter-delivery/SKILL.md`,
+or the source checkout's root `SKILL.md`) and relevant references. When the
+active session runs in Antigravity (`ANTIGRAVITY_AGENT=1`), also load
+`/peter-delivery-antigravity`. Root scope, authorization, QA, review, CI, Jira,
+merge and DEV gates remain authoritative. User instructions take precedence. For
+mechanical worktree setup alone, use `/peter-delivery-append-worktree`
+(Antigravity), `$peter-delivery-append-worktree` (Codex),
+`/peter-delivery:append-worktree` (Claude), or `scripts/append-worktree.sh`.
 
 ## Start from the outcome
 
@@ -42,6 +44,35 @@ when that separate entry point is installed.
    the resulting head. Earlier CI proves only the earlier base.
 
 ## Keep the feedback loop short
+
+- **Serial topics and next-task confirmation (Peter, 2026-11-13).** For Peter's
+  current Jira queue, keep one active product topic and one implementation
+  owner; the coordinator reviews, integrates and accepts that topic. After its
+  full goal and Jira Done are verified, proactively select the best next issue
+  and explain the reason and acceptance scope. Wait for Peter's confirmation
+  before starting it or moving it to In Progress. Continue the already
+  authorized active topic without asking again. Before final source freeze,
+  reconcile both the issue description and all current scope-changing comments
+  against the ledger; do not close from an earlier, smaller ledger.
+
+- **Jira ownership tags (Peter, 2026-11-15).** Use Jira labels as the shared
+  reservation source: `owner-peter` for Peter and `owner-orca` for this agent.
+  New automatic pickup excludes both labels with
+  `(labels IS EMPTY OR labels NOT IN ("owner-peter", "owner-orca"))`; resume only
+  the known active issue owned by this run. Preserve existing assignees and
+  unrelated labels. Before work, add `owner-orca` using an additive label update
+  and read it back. Re-read reservations before work and publication. If Peter
+  reserves an active issue, stop duplicate edits and hand off its branch/evidence;
+  `owner-peter` takes precedence if both labels appear. Never clear Peter's tag
+  to make an issue eligible. A local queue mirrors Jira, not the other way around.
+
+- **Remote freshness (Peter, 2026-11-15).** Refresh relevant remote refs at task
+  start, after a long wait or an external merge, and before commit, push, merge
+  or deployment. Use `git pull --ff-only` for a clean tracking checkout. The sole
+  task writer integrates latest `develop` normally into a feature branch after
+  preserving pending edits; the coordinator may fetch without changing files in
+  that lane. Record remote SHA and actual DEV consumption separately. Rebind
+  delta review and CI if the integrated tree changes; reuse identical-tree evidence.
 
 - **Progress reports always include a percentage (Peter, 2026-11-13).** For one
   active issue, state its estimated end-to-end completion, for example
@@ -86,6 +117,11 @@ when that separate entry point is installed.
   reporting a deadline, show the remaining acceptance gap for each In Progress
   issue; keep a held To Do separate from an unresolved bug. Do not count workers,
   PRs, tests or green publication as closed issues.
+- **Closure: Jira Done + worktree cleanup (Peter, 2026-11-19).** Once a task is
+  verified accepted, transition its Jira issue to `Done` and read it back, then
+  remove its local Orca/Git worktree (after landing/pushing commits and releasing
+  finished workers) to free local disk space. Propagate this closure rule to
+  child sessions that manage worktrees or sub-tasks.
 
 ## Use the installed Orca protocol
 
@@ -114,11 +150,21 @@ agent. Record both Dispatch IDs. Do not start a fresh Task, install an update,
 or resend the task to a prompt whose state is unknown. This recovery has twice
 prevented a blocked startup from turning into duplicate source work.
 
-## Codex and product boundaries
+## Agent harnesses and product boundaries
 
-- Codex may implement in its owned Orca worktree; a separate reviewer checks
-  the immutable candidate. Keep the review independent of the author. Do not
-  silently change model, effort or permission settings when creating sessions.
+- Codex (`--agent codex`), Antigravity (`--agent antigravity`), or Claude
+  (`--agent claude`) may implement in its owned Orca worktree; a separate
+  reviewer checks the immutable candidate. Keep the review independent of the
+  author (cross-family pairing — e.g. Codex author + Antigravity reviewer, or
+  Antigravity author + `codex exec review --base <base>` — is preferred). Do not
+  silently change model, effort or permission settings when creating sessions;
+  note that in `orca`, passing `--effort` requires passing `--model`.
+- **Antigravity inside Orca (`ANTIGRAVITY_AGENT=1`):** after `orca orchestration
+  worker-start`, yield by ending the Antigravity turn cleanly so Orca's event
+  wake delivers completion. Never schedule an Antigravity `schedule` cron/timer
+  to run `orca orchestration check` (which consumes Orca mail and hides wakes),
+  and keep Gate 1 design docs and `.work/qa/<task>/` evidence inside the owned
+  worktree rather than Antigravity's private `brain/<conversation-id>/` folder.
 - Use Computer Use to experience author-visible behavior in the real product.
   In QA, give the product agent a small goal and let it generate and revise;
   avoid writing its screenplay for it. A synthetic fixture proves only its
