@@ -117,11 +117,13 @@ mechanical worktree setup alone, use `/peter-delivery-append-worktree`
   reporting a deadline, show the remaining acceptance gap for each In Progress
   issue; keep a held To Do separate from an unresolved bug. Do not count workers,
   PRs, tests or green publication as closed issues.
-- **Closure: Jira Done + worktree cleanup (Peter, 2026-11-19).** Once a task is
-  verified accepted, transition its Jira issue to `Done` and read it back, then
-  remove its local Orca/Git worktree (after landing/pushing commits and releasing
-  finished workers) to free local disk space. Propagate this closure rule to
-  child sessions that manage worktrees or sub-tasks.
+- **Review handoff & closure: `@peter.ma` on Jira + Done + worktree cleanup (Peter, 2026-11-19).**
+  Sync routine progress/percentages to the Orca workspace board (`orca worktree set`).
+  Whenever an issue is ready for Peter to review or accept, post a Jira comment with a
+  native `@peter.ma` mention stating the verified build/evidence and what to check.
+  Once verified accepted, transition Jira to `Done` and read it back, then remove the
+  local Orca/Git worktree (after landing/pushing commits and releasing finished workers)
+  to free disk space. Propagate these rules to child sessions that manage worktrees or sub-tasks.
 
 ## Use the installed Orca protocol
 

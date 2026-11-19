@@ -5,8 +5,10 @@ description: Use at the START of any coding task for Peter (feature, bug fix, re
 
 # Delivery contract (Peter)
 
-When coordinating through Orca, load the separate `$peter-delivery-orca`
-adapter from `skills/peter-delivery-orca/`; this contract still applies in full.
+**Host adapters (this contract still applies in full):**
+- **Antigravity (`ANTIGRAVITY_AGENT=1`, `agy`, Antigravity 2.0 / IDE):** also load `/peter-delivery-antigravity` (`skills/peter-delivery-antigravity/`) for reactive subagent/swarm/workflow waits, `share` workspace `kill` guards, `brain/<id>/` vs repo artifact rules, and cross-agent `codex exec review`.
+- **Orca (`ORCA_WORKSPACE_ID` or supervised Orca workers):** also load `/peter-delivery-orca` (`$peter-delivery-orca`, `skills/peter-delivery-orca/`).
+- **Codex / Claude Code:** invoke `$peter-delivery` / `/peter-delivery` directly; never install or invoke retired `ccl-skills`.
 
 Peter uses me to get his time back. **The measure of success is not "the task is
 done". It is "Peter did not have to find my bugs for me" — and did not have to make
@@ -50,10 +52,11 @@ needs**. This page is the always-on contract. Staying short is rule 32.
   Review at focused checkpoints; do not duplicate the same test suite in three lanes.
 - **Still need Peter's explicit yes:** prod, IAM / AWS account config, releases to
   `main`, runtime redeploys outside DEV, force-push, secret rotation.
-- **Jira-first sync (Peter 2026-11-06):** necessary handoffs / blockers / ownership
-  changes go in a **Jira comment + @ the human** so the other side's bots wake;
-  Slack is backup only. Before starting any ticket, **read comments first**; while
-  in flight, watch new comments. Tell Linc's bots the same.
+- **Jira-first sync (Peter 2026-11-06, 2026-11-19):** necessary handoffs / blockers / ownership
+  changes — and **any issue ready for Peter to review or accept** (e.g., live on DEV or awaiting his
+  yes-list decision) — go in a **Jira comment + native `@peter.ma` mention** summarizing verified
+  scope and what to check; Slack is backup only. Before starting any ticket, **read comments first**;
+  while in flight, watch new comments. Tell Linc's bots the same.
 - **Start means In Progress (Peter 2026-11-10):** when actual investigation or implementation
   starts, transition Jira and read it back, for every issue type, not just Bugs. Record owner,
   scope, acceptance and branch/worktree; report a failed transition honestly.
@@ -184,7 +187,7 @@ Ports: FE 5200 / BE 8299 (develop) / 8399 (candidate) only. Never stop 5173, 519
 
 Other references: `task-playbook.md`, `project-onboarding.md`, `testing-that-earns-its-keep.md`,
 `visual-verification.md`, `ui-replication.md`, `deliverable-formats.md`, `packs-and-gaps.md`,
-`maintaining-this-skill.md`. New task worktree: use `$peter-delivery-append-worktree` or the append-worktree script
+`maintaining-this-skill.md`. New task worktree: use `/peter-delivery-append-worktree` (Antigravity), `$peter-delivery-append-worktree` (Codex), `/peter-delivery:append-worktree` (Claude), or `scripts/append-worktree.sh`
 with the current repository's actual worktree directory and authorized base branch.
 Project notes: `references/projects/<repo>.md` — read the index, take one section.
 
@@ -194,13 +197,15 @@ One page; twelve gates hard cap; new rules replace-or-sharpen; project notes rea
 
 ## Working style
 
-- Reply in Peter's language (usually Chinese); repo artifacts in English.
+- Reply in Peter's language (usually Chinese); repo artifacts in English. In Antigravity, link referenced files as `[basename](file:///abs/path#L10-L20)`.
 - No softened findings, no process narration. Check facts before conceding a pushback.
 - Correct my own wrong claims once, plainly. Don't re-litigate his decisions.
 - **Artifacts and cleanup:** keep active QA todos, status and evidence in the current
   repository's approved location. If none is specified, use the current worktree's
   `.work/qa/<task>/` and verify it is Git-ignored before writing. Follow repository rules
-  on tracked product documents versus transient execution records. Use an external
+  on tracked product documents versus transient execution records (in Antigravity, never
+  store Gate 1 design docs or repo QA ledgers solely in `brain/<conversation-id>/`, and
+  omit `ArtifactMetadata` on repo files). Use an external
   location only when the user or current project's instructions explicitly choose it.
   Preserve active/blocked QA records; clean only owned temporary artifacts when the
   deliverable no longer needs them. Never default to another project's report directory.
@@ -211,6 +216,8 @@ One page; twelve gates hard cap; new rules replace-or-sharpen; project notes rea
   apply them. Do not replace the procedure with a chat summary or a duplicate standalone skill.
 
 ## Changelog
+
+- 2026-11-18: Added `peter-delivery-antigravity` host partition (`agy` / Antigravity 2.0 / IDE inside Orca), unified `append-worktree` across Antigravity/Codex/Claude + Orca/VS Code + Jira/Meegle IDs, and permanently retired `ccl-skills`.
 
 - 2026-11-12: Peter asked for a faster Orca delivery loop. Current guidance uses
   distinct worker deliverables, event-driven CI/worker continuation, focused
