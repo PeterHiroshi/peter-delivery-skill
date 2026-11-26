@@ -135,6 +135,12 @@ Prefer `orca orchestration worker-start` for supervised tasks and
 and branch identifiers at creation; treat a started worker and a queued worker
 as different states. Do not infer success from an accepted terminal input.
 
+For `moodio-agent`, copy the same host's main checkout `.env` to the root of
+each new worktree as a setup step, before running the app or QA. With native
+Orca creation, make this explicit in the worker brief; with `append-worktree.sh`,
+verify the copy it already makes. See the
+[Moodio worktree instructions](../../references/projects/moodio-agent.md#copy-env-into-new-worktrees).
+
 After dispatch, yield for Orca's event wake. Do not repeatedly call
 `orca orchestration check`, poll CI in a loop, or send terminal keystrokes as
 task steering. `check` consumes mail and can hide a wake. Use

@@ -150,6 +150,25 @@ When Peter references a path that is not there: look in the main checkout at
 `/Users/mahao/Develop/projs/moodio/moodio-agent/`, and if still not found,
 **ask** (trigger 1 of the ask rule).
 
+### Copy `.env` into new worktrees
+
+On creation, copy `.env` from the same host's main `moodio-agent` checkout to
+the new worktree root. `append-worktree.sh` copies the ignored file; for
+worktrees created by Orca or Git directly, do the copy as part of setup. With
+`main` and `worktree` set to the respective absolute checkout paths:
+
+```bash
+test -f "$main/.env" &&
+  git -C "$worktree" check-ignore -q -- .env &&
+  (umask 077; cp -n "$main/.env" "$worktree/.env") &&
+  test -f "$worktree/.env"
+```
+
+Keep an existing worktree `.env`. Report a missing source or a destination
+that is not Git-ignored as a setup blocker. Do not print, commit, or transfer
+the file between hosts. Before starting the app, running migrations, or
+changing flags for QA, confirm the configured targets are non-production.
+
 ### npm, never pnpm
 
 `package-lock.json` is the lockfile. Running `pnpm install` in a worktree
