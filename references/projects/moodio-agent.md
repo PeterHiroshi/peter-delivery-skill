@@ -160,7 +160,7 @@ worktrees created by Orca or Git directly, do the copy as part of setup. With
 ```bash
 test -f "$main/.env" &&
   git -C "$worktree" check-ignore -q -- .env &&
-  (umask 077; cp -n "$main/.env" "$worktree/.env") &&
+  (test -f "$worktree/.env" || (umask 077; cp -n "$main/.env" "$worktree/.env")) &&
   test -f "$worktree/.env"
 ```
 
